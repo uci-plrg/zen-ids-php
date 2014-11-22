@@ -52,6 +52,10 @@ END_EXTERN_C()
 
 #define SYMTABLE_CACHE_SIZE 32
 
+enum {
+  false,
+  true
+};
 
 #include "zend_compile.h"
 
@@ -229,6 +233,8 @@ struct _zend_executor_globals {
 #if XPFPA_HAVE_CW
 	XPFPA_CW_DATATYPE saved_fpu_cw;
 #endif
+
+  zend_bool print_ir;
 
 	void *reserved[ZEND_MAX_RESERVED_RESOURCES];
 };
