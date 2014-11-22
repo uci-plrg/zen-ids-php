@@ -433,3 +433,9 @@ else
     AC_MSG_RESULT(no) 
   fi 
 fi 
+
+AC_ARG_ENABLE(zend-monitor,
+[  --enable-zend-monitor   Enable Zend opcode monitoring],[
+	AC_DEFINE(ZEND_MONITOR, 1, [Enable Zend opcode monitoring])
+	CFLAGS="$CFLAGS -DZEND_MONITOR"
+])  

@@ -308,10 +308,6 @@ static zend_uchar zend_user_opcodes[256] = {0,
 
 static opcode_handler_t zend_vm_get_opcode_handler(zend_uchar opcode, const zend_op* op);
 
-#ifdef SCRIPT_CFI
-extern void script_cfi_event(bool print_ir, zend_op *op);
-#endif
-
 #undef OPLINE
 #undef DCL_OPLINE
 #undef USE_OPLINE
@@ -340,7 +336,9 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 {
 	DCL_OPLINE
 
-
+#ifdef ZEND_MONITOR
+  extern void (*opcode_monitor_callback)(zend_op *op);
+#endif
 
 	LOAD_OPLINE();
 
@@ -352,8 +350,9 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 		}
 #endif
 
-#ifdef SCRIPT_CFI
-    script_cfi_event(EG(print_ir), OPLINE);
+#ifdef ZEND_MONITOR 
+    if (opcode_monitor_callback != NULL)
+      opcode_monitor_callback(OPLINE);
 #endif
 
 		if (UNEXPECTED((ret = OPLINE->handler(execute_data TSRMLS_CC)) != 0)) {

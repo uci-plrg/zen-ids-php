@@ -712,8 +712,6 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			}
 		}
 
-    EG(print_ir) = false;
-
 		/* Set some CLI defaults */
 		SG(options) |= SAPI_OPTION_NO_CHDIR;
 
@@ -854,10 +852,6 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 				}
 				behavior=PHP_MODE_STRIP;
 				break;
-
-      case 'p':
-        EG(print_ir) = true;
-        break;
 
 			case 'z': /* load extension file */
 				zend_load_extension(php_optarg TSRMLS_CC);

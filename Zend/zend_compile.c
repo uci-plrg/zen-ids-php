@@ -6391,6 +6391,15 @@ void zend_eval_const_expr(zend_ast **ast_ptr TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
+#ifdef ZEND_MONITOR
+void (*opcode_monitor_callback)(const zend_op *op) = NULL;
+
+void register_opcode_monitor(void (*callback)(const zend_op *op))
+{
+  opcode_monitor_callback = callback;
+}
+#endif
+
 /*
  * Local variables:
  * tab-width: 4
