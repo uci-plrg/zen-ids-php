@@ -3,9 +3,15 @@
 #define PHP_OPCODE_MONITOR_VERSION "1.0"
 #define PHP_OPCODE_MONITOR_EXTNAME "hello"
 
-PHP_FUNCTION(opcode_monitor);
+#ifdef HAVE_LIBOPCODE_MONITOR
 
 extern zend_module_entry opcode_monitor_module_entry;
 #define phpext_opcode_monitor_ptr &opcode_monitor_module_entry
+
+PHP_FUNCTION(opcode_monitor_string);
+
+#else
+#define phpext_opcode_monitor_ptr NULL
+#endif
 
 #endif
