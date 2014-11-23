@@ -6,6 +6,8 @@
 
 #define EC(f) opcode_monitor_globals.execution_context.f
 
+#define PRINT(...) fprintf(stderr, "\t> "__VA_ARGS__)
+
 typedef struct _execution_context_t {
   const zend_op *base_op;
 } execution_context_t;
@@ -58,30 +60,28 @@ static void opcode_executing(const zend_op *op)
     EC(base_op) = op;
 
   if (EG(current_execute_data) != NULL && EG(current_execute_data)->func != NULL)
-    current_opcodes = &EG(current_execute_data)->func->op_array.opcodes;
+    current_opcodes = EG(current_execute_data)->func->op_array.opcodes;
 
   if (current_opcodes == NULL)
     op_index = 0xffffffff;
   else
     op_index = (uint)(op - current_opcodes);
 
-  fprintf(stderr, "[op %d, line #%d): 0x%x:%s\n", op_index, op->lineno,
+  PRINT("[op %d, line #%d): 0x%x:%s\n", op_index, op->lineno,
       op->opcode, zend_get_opcode_name(op->opcode));
 
   if (op->opcode == ZEND_INCLUDE_OR_EVAL) {
-    fprintf(stderr, "  == entering new script context\n");
+    PRINT("  == entering new script context\n");
   } else if (op->opcode == ZEND_DO_FCALL) {
-    fprintf(stderr, "  == call function by name\n");
+    PRINT("  == call function\n");
   } else if (op->opcode == ZEND_RETURN) {
-    fprintf(stderr, "  == return\n");
+    PRINT("  == return\n");
   }
-
-  printf("Opcode monitor observes execution of opcode %d\n", op->opcode);
 }
 
 PHP_MINIT_FUNCTION(opcode_monitor)
 {
-  printf("Initializing the opcode monitor\n");
+  PRINT("Initializing the opcode monitor\n");
 
   register_opcode_monitor(opcode_executing);
 }
@@ -93,6 +93,6 @@ static PHP_GINIT_FUNCTION(opcode_monitor)
 
 PHP_FUNCTION(opcode_monitor_string)
 {
-  printf("Executing the opcode monitor function\n");
+  PRINT("Executing the opcode monitor function\n");
   RETURN_STRING("Opcode monitor says: 'Hello World'");
 }
