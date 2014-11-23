@@ -4,8 +4,6 @@
 #include "php.h"
 #include "php_opcode_monitor.h"
 
-static PHP_FUNCTION(opcode_monitor_string);
-
 ZEND_BEGIN_MODULE_GLOBALS(opcode_monitor)
   uint foo;
 ZEND_END_MODULE_GLOBALS(opcode_monitor)
@@ -28,7 +26,7 @@ zend_module_entry opcode_monitor_module_entry = {
     STANDARD_MODULE_HEADER,
     PHP_OPCODE_MONITOR_EXTNAME,
     php_opcode_monitor_functions,
-    NULL,
+    PHP_MINIT(opcode_monitor),
     NULL,
     NULL,
     NULL,
@@ -45,6 +43,11 @@ zend_module_entry opcode_monitor_module_entry = {
 ZEND_GET_MODULE(opcode_monitor)
 #endif
 
+PHP_MINIT_FUNCTION(opcode_monitor)
+{
+    printf("foo! %d\n", opcode_monitor_globals.foo);
+}
+
 static PHP_GINIT_FUNCTION(opcode_monitor)
 {
   opcode_monitor_globals->foo = 3U;
@@ -52,5 +55,6 @@ static PHP_GINIT_FUNCTION(opcode_monitor)
 
 PHP_FUNCTION(opcode_monitor_string)
 {
+    printf("foo! %d\n", opcode_monitor_globals.foo);
     RETURN_STRING("Opcode monitor says: 'Hello World'", 1);
 }
