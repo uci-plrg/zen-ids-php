@@ -1,12 +1,11 @@
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+# include "config.h"
 #endif
 #include "php.h"
+#include "opcode_monitor_context.h"
 #include "php_opcode_monitor.h"
 
 #define EC(f) opcode_monitor_globals.execution_context.f
-
-#define PRINT(...) fprintf(stderr, "\t> "__VA_ARGS__)
 
 typedef struct _execution_context_t {
   const zend_op *base_op;
@@ -69,13 +68,18 @@ static void opcode_executing(const zend_op *op)
 
   PRINT("[op %d, line #%d): 0x%x:%s\n", op_index, op->lineno,
       op->opcode, zend_get_opcode_name(op->opcode));
+  
+  verify_context(current_opcodes, op_index);
 
   if (op->opcode == ZEND_INCLUDE_OR_EVAL) {
     PRINT("  == entering new script context\n");
+    push_context(current_opcodes, op_index);
   } else if (op->opcode == ZEND_DO_FCALL) {
     PRINT("  == call function\n");
+    push_context(current_opcodes, op_index);
   } else if (op->opcode == ZEND_RETURN) {
     PRINT("  == return\n");
+    pop_context();
   }
 }
 
@@ -84,6 +88,7 @@ PHP_MINIT_FUNCTION(opcode_monitor)
   PRINT("Initializing the opcode monitor\n");
 
   register_opcode_monitor(opcode_executing);
+  initialize_opcode_monitor_context();
 }
 
 static PHP_GINIT_FUNCTION(opcode_monitor)
