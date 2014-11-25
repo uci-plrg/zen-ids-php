@@ -9,7 +9,8 @@
 #define EC(f) opcode_monitor_globals.execution_context.f
 
 typedef struct _execution_context_t {
-  const zend_op *base_op;
+  //const zend_op *base_op;
+  uint foo;
 } execution_context_t;
 
 ZEND_BEGIN_MODULE_GLOBALS(opcode_monitor)
@@ -56,9 +57,6 @@ static void opcode_executing(const zend_op *op)
   uint op_index;
   zend_op *current_opcodes;
 
-  if (EC(base_op) == NULL)
-    EC(base_op) = op;
-
   if (EG(current_execute_data) != NULL && EG(current_execute_data)->func != NULL)
     current_opcodes = EG(current_execute_data)->func->op_array.opcodes;
 
@@ -67,14 +65,17 @@ static void opcode_executing(const zend_op *op)
   else
     op_index = (uint)(op - current_opcodes);
 
-  PRINT("[op %d, line #%d): 0x%x:%s\n", op_index, op->lineno,
+  PRINT("[%s:%d, line %d]: 0x%x:%s\n", get_current_context_name(), op_index, op->lineno,
       op->opcode, zend_get_opcode_name(op->opcode));
   
   verify_context(current_opcodes, op_index);
 
   if (op->opcode == ZEND_INCLUDE_OR_EVAL) {
     switch (op->extended_value) {
-      case ZEND_EVAL: PRINT("  === entering `eval` context\n"); break;
+      case ZEND_EVAL: {
+        PRINT("  === entering `eval` context\n"); 
+        set_pending_context_name("eval");
+      } break;
       case ZEND_INCLUDE:
       case ZEND_INCLUDE_ONCE: {
         zval temp_filename, *inc_filename = op->op1.zv;
@@ -83,8 +84,9 @@ static void opcode_executing(const zend_op *op)
           ZVAL_STR(&temp_filename, zval_get_string(inc_filename));
           inc_filename = &temp_filename;
         }
-        PRINT("  === entering `include` context for %s\n", Z_STRVAL_P(inc_filename)); break;
-      }
+        PRINT("  === entering `include` context for %s\n", Z_STRVAL_P(inc_filename)); 
+        set_pending_context_name(Z_STRVAL_P(inc_filename));
+      } break;
       case ZEND_REQUIRE:
       case ZEND_REQUIRE_ONCE: {
         zval temp_filename, *inc_filename = op->op1.zv;
@@ -93,20 +95,19 @@ static void opcode_executing(const zend_op *op)
           ZVAL_STR(&temp_filename, zval_get_string(inc_filename));
           inc_filename = &temp_filename;
         }
-        PRINT("  === entering `require` context for %s\n", Z_STRVAL_P(inc_filename)); break;
+        PRINT("  === entering `require` context for %s\n", Z_STRVAL_P(inc_filename)); 
+        set_pending_context_name(Z_STRVAL_P(inc_filename));
+      } break;
+      default: {
+        PRINT("  === entering unknown context\n");
+        set_pending_context_name("unknown");
       }
-      default: PRINT("  === entering unknown context\n");
     }
     push_context(current_opcodes, op_index);
+  } else if (op->opcode == ZEND_INIT_FCALL_BY_NAME) {
+    PRINT("  === init call to function %s\n", op->op2.zv->value.str->val);
+    set_pending_context_name(op->op2.zv->value.str->val);
   } else if (op->opcode == ZEND_DO_FCALL) {
-    switch (op->extended_value) {
-      case ZEND_INTERNAL_FUNCTION: PRINT("  === call internal function\n"); break;
-      case ZEND_USER_FUNCTION: PRINT("  === call user function\n"); break;
-      case ZEND_OVERLOADED_FUNCTION: PRINT("  === call overloaded function\n"); break;
-      case ZEND_EVAL_CODE: PRINT("  === call eval code\n"); break;
-      case ZEND_OVERLOADED_FUNCTION_TEMPORARY: PRINT("  === call overloaded function temporary\n"); break;
-      default: PRINT("  === call unknown function type\n"); 
-    }
     push_context(current_opcodes, op_index);
   } else if (op->opcode == ZEND_RETURN) {
     PRINT("  === return\n");
@@ -138,7 +139,7 @@ PHP_MINIT_FUNCTION(opcode_monitor)
 
 static PHP_GINIT_FUNCTION(opcode_monitor)
 {
-  opcode_monitor_globals->execution_context.base_op = NULL;
+  opcode_monitor_globals->execution_context.foo = 3;
 }
 
 PHP_FUNCTION(opcode_monitor_string)

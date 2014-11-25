@@ -7,6 +7,10 @@
 #define PRINT(...) fprintf(stderr, "\t> "__VA_ARGS__)
 #define PX "0x%llx"
 
+#define ASSERT(b) do { \
+  if (!(b)) PRINT("Assert failure: %s", #b); \
+} while (0);
+
 typedef unsigned long long uint64;
 
 extern zend_module_entry opcode_monitor_module_entry;
