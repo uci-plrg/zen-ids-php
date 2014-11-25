@@ -2,6 +2,7 @@
 # include "config.h"
 #endif
 #include "php.h"
+#include "zend_types.h"
 #include "opcode_monitor_context.h"
 #include "php_opcode_monitor.h"
 
@@ -30,20 +31,20 @@ static zend_function_entry php_opcode_monitor_functions[] = {
 };
 
 zend_module_entry opcode_monitor_module_entry = {
-  STANDARD_MODULE_HEADER,
-  PHP_OPCODE_MONITOR_EXTNAME,
+  STANDARD_MODULE_HEADER,        /* 6 members */
+  PHP_OPCODE_MONITOR_EXTNAME,    
   php_opcode_monitor_functions,
-  PHP_MINIT(opcode_monitor),
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+  PHP_MINIT(opcode_monitor),     /* module startup */
+  NULL,                          /* module shutdown */
+  NULL,                          /* request startup */
+  NULL,                          /* request shutdown */
+  NULL,                          /* info */
   PHP_OPCODE_MONITOR_VERSION,
   PHP_MODULE_GLOBALS(opcode_monitor),
-  PHP_GINIT(opcode_monitor),
-  NULL,
-  NULL,
-  STANDARD_MODULE_PROPERTIES_EX
+  PHP_GINIT(opcode_monitor),     /* globals init */
+  NULL,                          /* globals ctor */
+  NULL,                          /* globals dtor */
+  STANDARD_MODULE_PROPERTIES_EX  /* 6 members */
 };
 
 #ifdef COMPILE_DL_OPMON
@@ -72,14 +73,58 @@ static void opcode_executing(const zend_op *op)
   verify_context(current_opcodes, op_index);
 
   if (op->opcode == ZEND_INCLUDE_OR_EVAL) {
-    PRINT("  == entering new script context\n");
+    switch (op->extended_value) {
+      case ZEND_EVAL: PRINT("  === entering `eval` context\n"); break;
+      case ZEND_INCLUDE:
+      case ZEND_INCLUDE_ONCE: {
+        zval temp_filename, *inc_filename = op->op1.zv;
+        ZVAL_UNDEF(&temp_filename);
+        if (Z_TYPE_P(inc_filename) != IS_STRING) {
+          ZVAL_STR(&temp_filename, zval_get_string(inc_filename));
+          inc_filename = &temp_filename;
+        }
+        PRINT("  === entering `include` context for %s\n", Z_STRVAL_P(inc_filename)); break;
+      }
+      case ZEND_REQUIRE:
+      case ZEND_REQUIRE_ONCE: {
+        zval temp_filename, *inc_filename = op->op1.zv;
+        ZVAL_UNDEF(&temp_filename);
+        if (Z_TYPE_P(inc_filename) != IS_STRING) {
+          ZVAL_STR(&temp_filename, zval_get_string(inc_filename));
+          inc_filename = &temp_filename;
+        }
+        PRINT("  === entering `require` context for %s\n", Z_STRVAL_P(inc_filename)); break;
+      }
+      default: PRINT("  === entering unknown context\n");
+    }
     push_context(current_opcodes, op_index);
   } else if (op->opcode == ZEND_DO_FCALL) {
-    PRINT("  == call function\n");
+    switch (op->extended_value) {
+      case ZEND_INTERNAL_FUNCTION: PRINT("  === call internal function\n"); break;
+      case ZEND_USER_FUNCTION: PRINT("  === call user function\n"); break;
+      case ZEND_OVERLOADED_FUNCTION: PRINT("  === call overloaded function\n"); break;
+      case ZEND_EVAL_CODE: PRINT("  === call eval code\n"); break;
+      case ZEND_OVERLOADED_FUNCTION_TEMPORARY: PRINT("  === call overloaded function temporary\n"); break;
+      default: PRINT("  === call unknown function type\n"); 
+    }
     push_context(current_opcodes, op_index);
   } else if (op->opcode == ZEND_RETURN) {
-    PRINT("  == return\n");
+    PRINT("  === return\n");
     pop_context();
+  } else if (op->opcode == ZEND_DECLARE_FUNCTION) {
+    PRINT("  === declare function\n");
+  } else if (op->opcode == ZEND_DECLARE_LAMBDA_FUNCTION) {
+    PRINT("  === ZEND_DECLARE_LAMBDA_FUNCTION\n");
+  } else if (op->opcode == ZEND_INIT_FCALL_BY_NAME) {
+    PRINT("  === ZEND_INIT_FCALL_BY_NAME\n");
+  } else if (op->opcode == ZEND_INIT_FCALL) {
+    PRINT("  === ZEND_INIT_FCALL\n");
+  } else if (op->opcode == ZEND_INIT_NS_FCALL_BY_NAME) {
+    PRINT("  === ZEND_INIT_NS_FCALL_BY_NAME\n");
+  } else if (op->opcode == ZEND_EXT_FCALL_BEGIN) {
+    PRINT("  === ZEND_EXT_FCALL_BEGIN\n");
+  } else if (op->opcode == ZEND_EXT_FCALL_END) {
+    PRINT("  === ZEND_EXT_FCALL_END\n");
   }
 }
 
