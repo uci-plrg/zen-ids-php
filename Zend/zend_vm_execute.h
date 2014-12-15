@@ -337,7 +337,7 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 	DCL_OPLINE
 
 #ifdef ZEND_MONITOR
-  extern void (*opcode_monitor_callback)(zend_op *op, zend_bool compiling);
+  extern zend_opcode_monitor_t *opcode_monitor;
 #endif
 
 	LOAD_OPLINE();
@@ -352,7 +352,7 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 
 #ifdef ZEND_MONITOR 
   if (opcode_monitor != NULL)
-    opcode_monitor->notify_opcode_interp(OPLINE, false);
+    opcode_monitor->notify_opcode_interp(OPLINE);
 #endif
 
 		if (UNEXPECTED((ret = OPLINE->handler(execute_data TSRMLS_CC)) != 0)) {

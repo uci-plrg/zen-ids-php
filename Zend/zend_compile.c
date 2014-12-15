@@ -78,7 +78,7 @@ ZEND_API zend_executor_globals executor_globals;
 #endif
 
 #ifdef ZEND_MONITOR
-static zend_opcode_monitor_t *opcode_monitor = NULL;
+zend_opcode_monitor_t *opcode_monitor = NULL;
 
 void register_opcode_monitor(zend_opcode_monitor_t *monitor);
 {
@@ -462,7 +462,7 @@ static void zend_assign_opcode(zend_op *opline, zend_uchar opcode)
   
 #ifdef ZEND_MONITOR 
   if (opcode_monitor != NULL)
-    opcode_monitor->notify_opcode_interp(opline, true);
+    opcode_monitor->notify_opcode_interp(opline);
 #endif
 }
   
@@ -4136,7 +4136,10 @@ static void zend_begin_func_decl(znode *result, zend_op_array *op_array, zend_as
 		opline->op2_type = IS_CONST;
 		LITERAL_STR(opline->op2, zend_string_copy(lcname));
     
-    fprintf(stderr, "Begin compiling function %s()\n", lcname->val);
+#ifdef ZEND_MONITOR 
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_function_compile_start(lcname->val);
+#endif
 	}
 
 	{
@@ -4218,8 +4221,10 @@ void zend_compile_func_decl(znode *result, zend_ast *ast TSRMLS_DC) /* {{{ */
 	pass_two(CG(active_op_array) TSRMLS_CC);
 	zend_release_labels(0 TSRMLS_CC);
 
-  if (!(op_array->fn_flags & ZEND_ACC_CLOSURE))
-    fprintf(stderr, "Finish compiling function (%s)\n", decl->name->val);
+#ifdef ZEND_MONITOR 
+  if (!(op_array->fn_flags & ZEND_ACC_CLOSURE) && opcode_monitor != NULL)
+    opcode_monitor->notify_function_compile_complete();
+#endif
   
 	/* Pop the loop variable stack separator */
 	zend_stack_del_top(&CG(loop_var_stack));
