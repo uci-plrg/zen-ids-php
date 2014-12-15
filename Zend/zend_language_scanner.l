@@ -121,6 +121,10 @@ do {																			\
 #define ZEND_IS_OCT(c)  ((c)>='0' && (c)<='7')
 #define ZEND_IS_HEX(c)  (((c)>='0' && (c)<='9') || ((c)>='a' && (c)<='f') || ((c)>='A' && (c)<='F'))
 
+#ifdef ZEND_MONITOR
+extern zend_opcode_monitor_t *opcode_monitor;
+#endif
+
 BEGIN_EXTERN_C()
 
 static size_t encoding_filter_script_to_internal(unsigned char **to, size_t *to_length, const unsigned char *from, size_t from_length TSRMLS_DC)
@@ -535,8 +539,6 @@ ZEND_API int open_file_for_scanning(zend_file_handle *file_handle TSRMLS_DC)
 		file_path = file_handle->filename;
 	}
   
-  fprintf(stderr, "Open file %s for compilation\n", file_path);
-
 	compiled_filename = zend_string_init(file_path, strlen(file_path), 0);
 	zend_set_compiled_filename(compiled_filename TSRMLS_CC);
 	zend_string_release(compiled_filename);
@@ -687,7 +689,10 @@ ZEND_API int zend_prepare_string_for_scanning(zval *str, char *filename TSRMLS_D
 
 	yy_scan_buffer(buf, (unsigned int)size TSRMLS_CC);
 
-  fprintf(stderr, "Prepare string %s for compilation\n", filename);
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_file_compile_start(NULL);
+#endif
   
 	new_compiled_filename = zend_string_init(filename, strlen(filename), 0);
 	zend_set_compiled_filename(new_compiled_filename TSRMLS_CC);

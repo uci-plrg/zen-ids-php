@@ -80,7 +80,7 @@ ZEND_API zend_executor_globals executor_globals;
 #ifdef ZEND_MONITOR
 zend_opcode_monitor_t *opcode_monitor = NULL;
 
-void register_opcode_monitor(zend_opcode_monitor_t *monitor);
+void register_opcode_monitor(zend_opcode_monitor_t *monitor)
 {
   opcode_monitor = monitor;
 }
