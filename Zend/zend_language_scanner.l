@@ -534,6 +534,8 @@ ZEND_API int open_file_for_scanning(zend_file_handle *file_handle TSRMLS_DC)
 	} else {
 		file_path = file_handle->filename;
 	}
+  
+  fprintf(stderr, "Open file %s for compilation\n", file_path);
 
 	compiled_filename = zend_string_init(file_path, strlen(file_path), 0);
 	zend_set_compiled_filename(compiled_filename TSRMLS_CC);
@@ -685,6 +687,8 @@ ZEND_API int zend_prepare_string_for_scanning(zval *str, char *filename TSRMLS_D
 
 	yy_scan_buffer(buf, (unsigned int)size TSRMLS_CC);
 
+  fprintf(stderr, "Prepare string %s for compilation\n", filename);
+  
 	new_compiled_filename = zend_string_init(filename, strlen(filename), 0);
 	zend_set_compiled_filename(new_compiled_filename TSRMLS_CC);
 	zend_string_release(new_compiled_filename);

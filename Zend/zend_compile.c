@@ -77,6 +77,15 @@ ZEND_API zend_compiler_globals compiler_globals;
 ZEND_API zend_executor_globals executor_globals;
 #endif
 
+#ifdef ZEND_MONITOR
+void (*opcode_monitor_callback)(const zend_op *op, zend_bool compiling) = NULL;
+
+void register_opcode_monitor(void (*callback)(const zend_op *op, zend_bool compiling))
+{
+  opcode_monitor_callback = callback;
+}
+#endif
+
 static void zend_destroy_property_info(zval *zv) /* {{{ */
 {
 	zend_property_info *property_info = Z_PTR_P(zv);
@@ -219,6 +228,8 @@ void shutdown_compiler(TSRMLS_D) /* {{{ */
 ZEND_API zend_string *zend_set_compiled_filename(zend_string *new_compiled_filename TSRMLS_DC) /* {{{ */
 {
 	zend_string *p;
+  
+  fprintf(stderr, "Compiling file %s\n", new_compiled_filename->val);
 
 	p = zend_hash_find_ptr(&CG(filenames_table), new_compiled_filename);
 	if (p != NULL) {
@@ -1683,6 +1694,11 @@ static zend_op *zend_emit_op(znode *result, zend_uchar opcode, znode *op1, znode
 	zend_op *opline = get_next_op(CG(active_op_array) TSRMLS_CC);
 	opline->opcode = opcode;
 
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor_callback != NULL)
+    opcode_monitor_callback(opline, true);
+#endif
+  
 	if (op1 == NULL) {
 		SET_UNUSED(opline->op1);
 	} else {
@@ -1707,6 +1723,11 @@ static zend_op *zend_emit_op_tmp(znode *result, zend_uchar opcode, znode *op1, z
 	zend_op *opline = get_next_op(CG(active_op_array) TSRMLS_CC);
 	opline->opcode = opcode;
 
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor_callback != NULL)
+    opcode_monitor_callback(opline, true);
+#endif
+  
 	if (op1 == NULL) {
 		SET_UNUSED(opline->op1);
 	} else {
@@ -6390,15 +6411,6 @@ void zend_eval_const_expr(zend_ast **ast_ptr TSRMLS_DC) /* {{{ */
 	*ast_ptr = zend_ast_create_zval(&result);
 }
 /* }}} */
-
-#ifdef ZEND_MONITOR
-void (*opcode_monitor_callback)(const zend_op *op) = NULL;
-
-void register_opcode_monitor(void (*callback)(const zend_op *op))
-{
-  opcode_monitor_callback = callback;
-}
-#endif
 
 /*
  * Local variables:
