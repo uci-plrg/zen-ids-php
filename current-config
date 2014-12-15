@@ -1,0 +1,9 @@
+#!/bin/bash
+
+./configure \
+    --prefix=/stash/script-safe/php \
+    --enable-debug \
+    --enable-zend-monitor \
+    --with-config-file-path=/stash/script-safe/php/conf.d \
+    --with-config-file-scan-dir=/stash/script-safe/php/conf.d/ext
+
