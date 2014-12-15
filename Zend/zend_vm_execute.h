@@ -351,8 +351,8 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 #endif
 
 #ifdef ZEND_MONITOR 
-    if (opcode_monitor_callback != NULL)
-      opcode_monitor_callback(OPLINE, false);
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_opcode_interp(OPLINE, false);
 #endif
 
 		if (UNEXPECTED((ret = OPLINE->handler(execute_data TSRMLS_CC)) != 0)) {

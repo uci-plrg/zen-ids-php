@@ -78,11 +78,11 @@ ZEND_API zend_executor_globals executor_globals;
 #endif
 
 #ifdef ZEND_MONITOR
-void (*opcode_monitor_callback)(const zend_op *op, zend_bool compiling) = NULL;
+static zend_opcode_monitor_t *opcode_monitor = NULL;
 
-void register_opcode_monitor(void (*callback)(const zend_op *op, zend_bool compiling))
+void register_opcode_monitor(zend_opcode_monitor_t *monitor);
 {
-  opcode_monitor_callback = callback;
+  opcode_monitor = monitor;
 }
 #endif
 
@@ -461,8 +461,8 @@ static void zend_assign_opcode(zend_op *opline, zend_uchar opcode)
   opline->opcode = opcode;
   
 #ifdef ZEND_MONITOR 
-  if (opcode_monitor_callback != NULL)
-    opcode_monitor_callback(opline, true);
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_opcode_interp(opline, true);
 #endif
 }
   
@@ -4113,8 +4113,6 @@ static void zend_begin_func_decl(znode *result, zend_op_array *op_array, zend_as
 	lcname = zend_string_alloc(name->len, 0);
 	zend_str_tolower_copy(lcname->val, name->val, name->len);
 
-  fprintf(stderr, "Begin declaration of function %s()\n", lcname->val);
-
 	if (CG(current_import_function)) {
 		zend_string *import_name = zend_hash_find_ptr(CG(current_import_function), lcname);
 		if (import_name && !zend_string_equals_str_ci(lcname, import_name)) {
@@ -4137,6 +4135,8 @@ static void zend_begin_func_decl(znode *result, zend_op_array *op_array, zend_as
 		zend_assign_opcode(opline, ZEND_DECLARE_FUNCTION);
 		opline->op2_type = IS_CONST;
 		LITERAL_STR(opline->op2, zend_string_copy(lcname));
+    
+    fprintf(stderr, "Begin compiling function %s()\n", lcname->val);
 	}
 
 	{
@@ -4218,6 +4218,9 @@ void zend_compile_func_decl(znode *result, zend_ast *ast TSRMLS_DC) /* {{{ */
 	pass_two(CG(active_op_array) TSRMLS_CC);
 	zend_release_labels(0 TSRMLS_CC);
 
+  if (!(op_array->fn_flags & ZEND_ACC_CLOSURE))
+    fprintf(stderr, "Finish compiling function (%s)\n", decl->name->val);
+  
 	/* Pop the loop variable stack separator */
 	zend_stack_del_top(&CG(loop_var_stack));
 

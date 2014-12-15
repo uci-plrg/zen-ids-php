@@ -695,7 +695,12 @@ static zend_always_inline int zend_check_arg_send_type(const zend_function *zf, 
 #define ZEND_ARRAY_SIZE_SHIFT		2
 
 #ifdef ZEND_MONITOR
-ZEND_API void register_opcode_monitor(void (*callback)(const zend_op *op, zend_bool compiling));
+typedef struct _zend_opcode_monitor_t {
+  void (*notify_opcode_interp)(const zend_op *op, zend_bool compiling);
+  void (*notify_opcode_interp)(const zend_op *op, zend_bool compiling);
+} zend_opcode_monitor_t;
+
+ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);
 #endif
 
 END_EXTERN_C()
