@@ -539,6 +539,11 @@ ZEND_API int open_file_for_scanning(zend_file_handle *file_handle TSRMLS_DC)
 		file_path = file_handle->filename;
 	}
   
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_file_compile_start(file_path);
+#endif
+  
 	compiled_filename = zend_string_init(file_path, strlen(file_path), 0);
 	zend_set_compiled_filename(compiled_filename TSRMLS_CC);
 	zend_string_release(compiled_filename);
@@ -596,6 +601,12 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type TSR
 		zend_do_end_compilation(TSRMLS_C);
 		zend_emit_final_return(&retval_zv TSRMLS_CC);
 		CG(in_compilation) = original_in_compilation;
+    
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_file_compile_complete();
+#endif
+    
 		compilation_successful=1;
 	}
 
@@ -772,6 +783,12 @@ zend_op_array *compile_string(zval *source_string, char *filename TSRMLS_DC)
 	zend_restore_lexical_state(&original_lex_state TSRMLS_CC);
 	zval_dtor(&tmp);
 	CG(in_compilation) = original_in_compilation;
+  
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_file_compile_complete();
+#endif
+  
 	return op_array;
 }
 

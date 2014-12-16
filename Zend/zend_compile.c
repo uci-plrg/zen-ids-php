@@ -229,11 +229,6 @@ ZEND_API zend_string *zend_set_compiled_filename(zend_string *new_compiled_filen
 {
 	zend_string *p;
   
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_file_compile_start(new_compiled_filename->val);
-#endif
-
 	p = zend_hash_find_ptr(&CG(filenames_table), new_compiled_filename);
 	if (p != NULL) {
 		CG(compiled_filename) = p;
@@ -465,7 +460,7 @@ static void zend_assign_opcode(zend_op *opline, zend_uchar opcode)
   
 #ifdef ZEND_MONITOR 
   if (opcode_monitor != NULL)
-    opcode_monitor->notify_opcode_interp(opline);
+    opcode_monitor->notify_opcode_compile(opline);
 #endif
 }
   
@@ -1555,11 +1550,6 @@ void zend_do_end_compilation(TSRMLS_D) /* {{{ */
 {
 	CG(has_bracketed_namespaces) = 0;
 	zend_end_namespace(TSRMLS_C);
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_file_compile_complete();
-#endif
 }
 /* }}} */
 
