@@ -1768,6 +1768,10 @@ static inline uint32_t zend_emit_jump(uint32_t opnum_target TSRMLS_DC) /* {{{ */
 	uint32_t opnum = get_next_op_number(CG(active_op_array));
 	zend_op *opline = zend_emit_op(NULL, ZEND_JMP, NULL, NULL TSRMLS_CC);
 	opline->op1.opline_num = opnum_target;
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_edge_compile(opnum, opnum_target);
+#endif
 	return opnum;
 }
 /* }}} */
@@ -1777,6 +1781,10 @@ static inline uint32_t zend_emit_cond_jump(zend_uchar opcode, znode *cond, uint3
 	uint32_t opnum = get_next_op_number(CG(active_op_array));
 	zend_op *opline = zend_emit_op(NULL, opcode, cond, NULL TSRMLS_CC);
 	opline->op2.opline_num = opnum_target;
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_edge_compile(opnum, opnum_target);
+#endif
 	return opnum;
 }
 /* }}} */
@@ -1787,12 +1795,20 @@ static inline void zend_update_jump_target(uint32_t opnum_jump, uint32_t opnum_t
 	switch (opline->opcode) {
 		case ZEND_JMP:
 			opline->op1.opline_num = opnum_target;
+#ifdef ZEND_MONITOR 
+      if (opcode_monitor != NULL)
+        opcode_monitor->notify_edge_compile(opnum_jump, opnum_target);
+#endif
 			break;
 		case ZEND_JMPZ:
 		case ZEND_JMPNZ:
 		case ZEND_JMPZ_EX:
 		case ZEND_JMPNZ_EX:
 			opline->op2.opline_num = opnum_target;
+#ifdef ZEND_MONITOR 
+      if (opcode_monitor != NULL)
+        opcode_monitor->notify_edge_compile(opnum_jump, opnum_target);
+#endif
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE()
 	}

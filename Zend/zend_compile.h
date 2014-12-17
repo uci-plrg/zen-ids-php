@@ -698,6 +698,7 @@ static zend_always_inline int zend_check_arg_send_type(const zend_function *zf, 
 typedef struct _zend_opcode_monitor_t {
   void (*notify_opcode_interp)(const zend_op *op);
   void (*notify_opcode_compile)(const zend_op *op);
+  void (*notify_edge_compile)(uint from_index, uint to_index);
   void (*notify_file_compile_start)(const char *path);
   void (*notify_file_compile_complete)();
   void (*notify_function_compile_start)(const char *function_name);

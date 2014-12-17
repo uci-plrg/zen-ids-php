@@ -355,8 +355,8 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
       opcode_monitor->notify_opcode_interp(OPLINE);
 #endif
     
-    if (OPLINE->opcode == ZEND_JMPNZ)
-      fprintf(stderr, "foo\n");
+    //if (OPLINE->opcode == ZEND_JMPNZ)
+    //  fprintf(stderr, "foo\n");
 
 		if (UNEXPECTED((ret = OPLINE->handler(execute_data TSRMLS_CC)) != 0)) {
 			if (EXPECTED(ret > 0)) {
