@@ -117,6 +117,10 @@ PHPAPI extern char *php_ini_scanned_files;
 #define PHP_MODE_REFLECTION_ZEND_EXTENSION 12
 #define PHP_MODE_SHOW_INI_CONFIG        13
 
+#ifdef ZEND_MONITOR
+  extern zend_opcode_monitor_t *opcode_monitor;
+#endif
+
 cli_shell_callbacks_t cli_shell_callbacks = { NULL, NULL, NULL };
 PHP_CLI_API cli_shell_callbacks_t *php_cli_get_shell_callbacks()
 {
@@ -921,6 +925,10 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 					translated_path = strdup(real_path);
 				}
 				script_filename = script_file;
+#ifdef ZEND_MONITOR 
+        if (opcode_monitor != NULL)
+          opcode_monitor->set_top_level_script(script_filename);
+#endif
 			}
 		} else {
 			/* We could handle PHP_MODE_PROCESS_STDIN in a different manner  */
