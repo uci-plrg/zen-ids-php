@@ -1,0 +1,230 @@
+	> Initializing the opcode monitor
+	> > Push compilation unit /stash/script-safe/samples/pseudo-function.php
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/pseudo-function.php|<none>, 0x6d24f3a4|0x0}]
+	> > Push compilation function foobar
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/pseudo-function.php|foobar, 0x6d24f3a4|0x2f82e2d4}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/pseudo-function.php|foobar, 0x6d24f3a4|0x2f82e2d4}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/pseudo-function.php|foobar, 0x6d24f3a4|0x2f82e2d4}]
+	> > Pop compilation function
+	> [emit ZEND_NOP for {/stash/script-safe/samples/pseudo-function.php|<none>, 0x6d24f3a4|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/pseudo-function.php|<none>, 0x6d24f3a4|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/pseudo-function.php|<none>, 0x6d24f3a4|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/pseudo-function.php|<none>, 0x6d24f3a4|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step 1
+	>   === [ZEND_FREE]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine-leaf.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step .1
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .2
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_PRINT]
+	> Verified return from <root> to <root>.3
+step 2
+	>   === [ZEND_FREE]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine-leaf.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step .1
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .2
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_PRINT]
+	> Verified return from <root> to <root>.6
+step 3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_NOP]
+	> Verified return from <root> to <root>.1
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step 1
+	>   === [ZEND_FREE]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine-leaf.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step .1
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .2
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_PRINT]
+	> Verified return from <root> to <root>.3
+step 2
+	>   === [ZEND_FREE]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine-leaf.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step .1
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .2
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_PRINT]
+	> Verified return from <root> to <root>.6
+step 3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> Verified return from <root> to <root>.3
+	> > Push compilation unit /stash/script-safe/samples/routine.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine.php|<none>, 0xcfe27778|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step 1
+	>   === [ZEND_FREE]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine-leaf.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step .1
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .2
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_PRINT]
+	> Verified return from <root> to <root>.3
+step 2
+	>   === [ZEND_FREE]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/routine-leaf.php
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/routine-leaf.php|<none>, 0xc178dbbd|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+step .1
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .2
+	>   === [ZEND_FREE]
+	>   === [ZEND_PRINT]
+step .3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_PRINT]
+	> Verified return from <root> to <root>.6
+step 3
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.4
+	>   === return

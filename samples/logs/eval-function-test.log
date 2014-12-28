@@ -1,0 +1,204 @@
+	> Initializing the opcode monitor
+	> > Push compilation unit /stash/script-safe/samples/eval-function-test.php
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_SEND_VAL_EX for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_SEND_VAL_EX for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_INIT_FCALL_BY_NAME for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_SEND_VAL_EX for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_DO_FCALL for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/eval-function-test.php|<none>, 0x2e4eee64|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> > Push compilation unit /stash/script-safe/samples/static-eval.php
+	> [skip ZEND_DECLARE_FUNCTION]
+	> > Push compilation function static_eval
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/static-eval.php|static_eval, 0x6676714f|0x3f75d756}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/static-eval.php|static_eval, 0x6676714f|0x3f75d756}]
+	> > Pop compilation function
+	> [emit ZEND_NOP for {/stash/script-safe/samples/static-eval.php|<none>, 0x6676714f|0x0}]
+	> [skip ZEND_DECLARE_FUNCTION]
+	> > Push compilation function define_foo
+	> [skip ZEND_DECLARE_FUNCTION]
+	> > Push compilation function foo
+	> [emit ZEND_PRINT for {/stash/script-safe/samples/static-eval.php|foo, 0x6676714f|0x666f6f}]
+	> [emit ZEND_FREE for {/stash/script-safe/samples/static-eval.php|foo, 0x6676714f|0x666f6f}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/static-eval.php|foo, 0x6676714f|0x666f6f}]
+	> > Pop compilation function
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/static-eval.php|define_foo, 0x6676714f|0x5d4052a5}]
+	> > Pop compilation function
+	> [emit ZEND_NOP for {/stash/script-safe/samples/static-eval.php|<none>, 0x6676714f|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/static-eval.php|<none>, 0x6676714f|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_NOP]
+	>   === [ZEND_NOP]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.1
+	>   === init call to function /stash/script-safe/samples/static-eval.php|define_foo
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_DECLARE_FUNCTION]
+	>   === declare function
+	>   === [ZEND_RETURN]
+	> Error! Expected opcode (null) at index 189327568, but found opcode ZEND_RETURN
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.3
+	>   === init call to function /stash/script-safe/samples/static-eval.php|static_eval
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	>   === entering `eval` context #1
+	> > Push eval 0x1
+	> [emit ZEND_PRINT for {<eval>|<eval>, 0x0|0x1}]
+	> [emit ZEND_FREE for {<eval>|<eval>, 0x0|0x1}]
+	> [emit ZEND_RETURN for {<eval>|<eval>, 0x0|0x1}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+eval in a function
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.1
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.5
+	>   === init call to function /stash/script-safe/samples/static-eval.php|static_eval
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	>   === entering `eval` context #2
+	> > Push eval 0x2
+	> [emit ZEND_PRINT for {<eval>|<eval>, 0x0|0x2}]
+	> [emit ZEND_FREE for {<eval>|<eval>, 0x0|0x2}]
+	> [emit ZEND_RETURN for {<eval>|<eval>, 0x0|0x2}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+eval in a function
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.1
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.7
+	>   === init call to function /stash/script-safe/samples/static-eval.php|static_eval
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	>   === entering `eval` context #3
+	> > Push eval 0x3
+	> [emit ZEND_PRINT for {<eval>|<eval>, 0x0|0x3}]
+	> [emit ZEND_FREE for {<eval>|<eval>, 0x0|0x3}]
+	> [emit ZEND_RETURN for {<eval>|<eval>, 0x0|0x3}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+eval in a function
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.1
+	>   === return
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> Verified return from <root> to <root>.9
+	> > Push compilation unit /stash/script-safe/samples/dynamic-eval.php
+	> [skip ZEND_DECLARE_FUNCTION]
+	> > Push compilation function dynamic_eval
+	> [skip ZEND_RECV]
+	> [emit ZEND_INCLUDE_OR_EVAL for {/stash/script-safe/samples/dynamic-eval.php|dynamic_eval, 0x807be21f|0x7e4dbcc}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/dynamic-eval.php|dynamic_eval, 0x807be21f|0x7e4dbcc}]
+	> > Pop compilation function
+	> [emit ZEND_NOP for {/stash/script-safe/samples/dynamic-eval.php|<none>, 0x807be21f|0x0}]
+	> [emit ZEND_RETURN for {/stash/script-safe/samples/dynamic-eval.php|<none>, 0x807be21f|0x0}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_NOP]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.10
+	>   === init call to function /stash/script-safe/samples/dynamic-eval.php|dynamic_eval
+	>   === [ZEND_SEND_VAL_EX]
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> Error! Expected index 0 on context entry, but found 1
+	>   === entering `eval` context #4
+	> > Push eval 0x4
+	> [emit ZEND_PRINT for {<eval>|<eval>, 0x0|0x4}]
+	> [emit ZEND_FREE for {<eval>|<eval>, 0x0|0x4}]
+	> [emit ZEND_RETURN for {<eval>|<eval>, 0x0|0x4}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+dynamic eval
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.2
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.13
+	>   === init call to function /stash/script-safe/samples/dynamic-eval.php|dynamic_eval
+	>   === [ZEND_SEND_VAL_EX]
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> Error! Expected index 0 on context entry, but found 1
+	>   === entering `eval` context #5
+	> > Push eval 0x5
+	> [emit ZEND_PRINT for {<eval>|<eval>, 0x0|0x5}]
+	> [emit ZEND_FREE for {<eval>|<eval>, 0x0|0x5}]
+	> [emit ZEND_RETURN for {<eval>|<eval>, 0x0|0x5}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+dynamic eval!
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.2
+	>   === return
+	>   === [ZEND_INIT_FCALL_BY_NAME]
+	> Verified return from <root> to <root>.16
+	>   === init call to function /stash/script-safe/samples/dynamic-eval.php|dynamic_eval
+	>   === [ZEND_SEND_VAL_EX]
+	>   === [ZEND_DO_FCALL]
+	>   === [ZEND_INCLUDE_OR_EVAL]
+	> Error! Expected index 0 on context entry, but found 1
+	>   === entering `eval` context #6
+	> > Push eval 0x6
+	> [emit ZEND_PRINT for {<eval>|<eval>, 0x0|0x6}]
+	> [emit ZEND_FREE for {<eval>|<eval>, 0x0|0x6}]
+	> [emit ZEND_RETURN for {<eval>|<eval>, 0x0|0x6}]
+	> > Pop compilation unit
+	> > Pop compilation function
+	>   === [ZEND_PRINT]
+dynamic eval!!
+	>   === [ZEND_FREE]
+	>   === [ZEND_RETURN]
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.2
+	>   === return
+	>   === [ZEND_RETURN]
+	> Verified return from <root> to <root>.19
+	>   === return
