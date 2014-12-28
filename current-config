@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ./configure \
-    --prefix=/stash/script-safe/php \
+    --prefix=$PHP_HOME \
     --enable-debug \
     --enable-zend-monitor \
-    --with-config-file-path=/stash/script-safe/php/conf.d \
-    --with-config-file-scan-dir=/stash/script-safe/php/conf.d/ext
+    --with-config-file-path=$PHP_HOME/conf.d \
+    --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
 
