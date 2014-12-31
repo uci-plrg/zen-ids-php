@@ -2,7 +2,7 @@
 
 function static_eval()
 {
-  eval('print "eval in a function\n";');
+  eval('$i=3; $i++; print "eval in a function where i=".$i."\n";');
 }
 
 function define_foo()
