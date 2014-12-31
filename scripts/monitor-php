@@ -1,0 +1,19 @@
+#!/bin/bash
+
+script=$1
+
+$PHP_HOME/bin/php $script &> script.log
+
+script_basename=$(basename $script)
+script_basename=${script_basename%.*}
+
+run_output_dir=$PHP_DATASET_DIR/runs/$script_basename
+run_data_dir=$(ls -td $run_output_dir/* | head -1)
+run_log="$run_data_dir/$script_basename.log"
+
+mv script.log $run_log
+echo "    Output: $run_log"
+
+run_catalog=$PHP_DATASET_DIR/runs.tab
+echo "$run_log" >> $run_catalog
+
