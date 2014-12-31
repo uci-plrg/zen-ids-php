@@ -3987,6 +3987,11 @@ void zend_begin_method_decl(zend_op_array *op_array, zend_string *name, zend_boo
 	zend_str_tolower_copy(lcname->val, name->val, name->len);
 	lcname = zend_new_interned_string(lcname TSRMLS_CC);
 
+#ifdef ZEND_MONITOR 
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_function_compile_start(lcname->val);
+#endif
+    
 	if (zend_hash_add_ptr(&ce->function_table, lcname, op_array) == NULL) {
 		zend_error_noreturn(E_COMPILE_ERROR, "Cannot redeclare %s::%s()",
 			ce->name->val, name->val);
