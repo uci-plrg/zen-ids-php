@@ -1,10 +1,16 @@
 #!/bin/bash
 
-while getopts "dl" option
+function usage() {
+  echo -n "select-run [ -d <target: directory> | -l <target: log> ] "
+  echo "<index> [ <grep-token> ]"
+}
+
+while getopts ":dl" option
 do
   case $option in
     d) directory=true;;
     l) log=true;;
+    *) usage && exit;;
   esac
 done
 
