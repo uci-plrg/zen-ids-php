@@ -460,7 +460,7 @@ static void zend_assign_opcode(zend_op *opline, zend_uchar opcode)
   
 #ifdef ZEND_MONITOR 
   if (opcode_monitor != NULL)
-    opcode_monitor->notify_opcode_compile(opline);
+    opcode_monitor->notify_opcode_compile(opline, (uint)(opline - CG(active_op_array)->opcodes));
 #endif
 }
   
