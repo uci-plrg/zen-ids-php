@@ -1839,7 +1839,7 @@ static inline zend_op *zend_delayed_emit_op(znode *result, zend_uchar opcode, zn
 {
 	zend_op tmp_opline;
 	init_op(&tmp_opline TSRMLS_CC);
-  zend_assign_opcode(&tmp_opline, opcode);
+  tmp_opline.opcode = opcode;
 	SET_NODE(tmp_opline.op1, op1);
 	SET_NODE(tmp_opline.op2, op2);
 	if (result) {
@@ -1866,6 +1866,12 @@ static zend_op *zend_delayed_compile_end(uint32_t offset TSRMLS_DC) /* {{{ */
 	for (i = offset; i < count; ++i) {
 		opline = get_next_op(CG(active_op_array) TSRMLS_CC);
 		memcpy(opline, &oplines[i], sizeof(zend_op));
+    
+#ifdef ZEND_MONITOR 
+    // fprintf(stderr, "Delayed op index %d\n", (uint)(opline - CG(active_op_array)->opcodes));
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_opcode_compile(opline, (uint)(opline - CG(active_op_array)->opcodes));
+#endif
 	}
 	CG(delayed_oplines_stack).top = offset;
 	return opline;

@@ -2,13 +2,15 @@
 
 script=$1
 
+[ ! -f "$script" ] && echo "Script '$script' does not exist! Exiting now." && exit
+
 $PHP_HOME/bin/php $script &> script.log
 
 script_basename=$(basename $script)
 script_basename=${script_basename%.*}
 
 run_output_dir=$PHP_DATASET_DIR/runs/$script_basename
-run_data_dir=$(ls -td $run_output_dir/* | head -1)
+run_data_dir=$(ls -td $run_output_dir/* 2> /dev/null | head -1)
 run_log="$run_data_dir/$script_basename.log"
 
 mv script.log $run_log
