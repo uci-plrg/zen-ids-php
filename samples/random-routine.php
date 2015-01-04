@@ -27,6 +27,13 @@ function pick_function($i)
   }
 }
 
+require_once "routine.php";
+eval("print 'foo';");
+include "routine.php";
+include_once "routine.php";
+require "routine.php";
+require_once "routine.php";
+
 $i = rand(0, 10);
 
 $f = pick_function($i);
@@ -52,6 +59,32 @@ if ($i < 5) {
     default:
       $f("Many");
       break;
+    }
+  }
+} else {
+  for ($j = 11; $j > $i; $j--) {
+    $f = pick_function($j);
+    for ($k = 1; $k < $j; $k++) {
+      switch ($j) {
+      case 9:
+        $f("Nine");
+        continue 2;
+      case 8:
+        $f("Eight");
+      case 7:
+        $f("Seven");
+        break 2;
+      case 6:
+        $f(Six);
+        if ($k % 2 == 0)
+          break;
+      case 5:
+        $f(Five);
+        if ($k %2 == 1)
+          continue;
+      default:
+        $f("k = ".$k);
+      }
     }
   }
 }
