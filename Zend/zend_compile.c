@@ -1779,7 +1779,7 @@ static inline uint32_t zend_emit_jump(uint32_t opnum_target TSRMLS_DC) /* {{{ */
 	zend_op *opline = zend_emit_op(NULL, ZEND_JMP, NULL, NULL TSRMLS_CC);
 	opline->op1.opline_num = opnum_target;
 #ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL && opnum_target != NULL)
+  if (opcode_monitor != NULL && opnum_target != 0)
     opcode_monitor->notify_edge_compile(opnum, opnum_target);
 #endif
 	return opnum;
@@ -1792,7 +1792,7 @@ static inline uint32_t zend_emit_cond_jump(zend_uchar opcode, znode *cond, uint3
 	zend_op *opline = zend_emit_op(NULL, opcode, cond, NULL TSRMLS_CC);
 	opline->op2.opline_num = opnum_target;
 #ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL && opnum_target != NULL)
+  if (opcode_monitor != NULL && opnum_target != 0)
     opcode_monitor->notify_edge_compile(opnum, opnum_target);
 #endif
 	return opnum;
@@ -4009,7 +4009,7 @@ void zend_begin_method_decl(zend_op_array *op_array, zend_string *name, zend_boo
 
 #ifdef ZEND_MONITOR 
     if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_compile_start(lcname->val);
+      opcode_monitor->notify_function_compile_start(ce->name->val, lcname->val);
 #endif
     
 	if (zend_hash_add_ptr(&ce->function_table, lcname, op_array) == NULL) {
@@ -4177,7 +4177,7 @@ static void zend_begin_func_decl(znode *result, zend_op_array *op_array, zend_as
     
 #ifdef ZEND_MONITOR 
     if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_compile_start(lcname->val);
+      opcode_monitor->notify_function_compile_start("<default>", lcname->val);
 #endif
 	}
 
