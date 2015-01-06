@@ -32,7 +32,7 @@ for ($i = 0; $i < 100; $i++) {
 }
 
 for ($i = 0; $i < 10; $i++) {
-  $f = $functions[rand(0, 100)]($i, $i+1);
+  $f = $functions[rand(0, 99)]($i, $i+1);
 }
 
 ?>
