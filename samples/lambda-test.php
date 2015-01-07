@@ -2,9 +2,9 @@
 
 for ($i = 0; $i < 100; $i++) {
   $code = "\$c = 0;\n";
-  $instruction_count = rand(3, 5);
+  $instruction_count = 3; #rand(3, 5);
   for ($j = 0; $j < $instruction_count; $j++) {
-    if ($j % 2 == 0)
+    if (rand(0,1) == 0)
       $op = "+";
     else
       $op = "-";
