@@ -4174,12 +4174,11 @@ static void zend_begin_func_decl(znode *result, zend_op_array *op_array, zend_as
 		zend_assign_opcode(opline, ZEND_DECLARE_FUNCTION);
 		opline->op2_type = IS_CONST;
 		LITERAL_STR(opline->op2, zend_string_copy(lcname));
-    
-#ifdef ZEND_MONITOR 
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_compile_start("<default>", lcname->val);
-#endif
 	}
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_function_compile_start("<default>", lcname->val);
+#endif
 
 	{
 		zend_string *key = zend_build_runtime_definition_key(lcname, decl->lex_pos TSRMLS_CC);
@@ -4261,7 +4260,8 @@ void zend_compile_func_decl(znode *result, zend_ast *ast TSRMLS_DC) /* {{{ */
 	zend_release_labels(0 TSRMLS_CC);
 
 #ifdef ZEND_MONITOR 
-  if (!(op_array->fn_flags & ZEND_ACC_CLOSURE) && opcode_monitor != NULL)
+  //if (!(op_array->fn_flags & ZEND_ACC_CLOSURE) && opcode_monitor != NULL)
+  if (opcode_monitor != NULL)
     opcode_monitor->notify_function_compile_complete();
 #endif
   
