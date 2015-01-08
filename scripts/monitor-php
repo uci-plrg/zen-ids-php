@@ -1,10 +1,11 @@
 #!/bin/bash
 
 script=$1
+shift
 
 [ ! -f "$script" ] && echo "Script '$script' does not exist! Exiting now." && exit
 
-$PHP_HOME/bin/php $script &> script.log
+$PHP_HOME/bin/php $script $@ &> script.log
 
 script_basename=$(basename $script)
 script_basename=${script_basename%.*}
