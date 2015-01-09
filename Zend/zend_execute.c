@@ -133,10 +133,6 @@ static const zend_internal_function zend_pass_function = {
 #define ZEND_VM_STACK_PAGE_ALIGNED_SIZE(size) \
 	(((size) + (ZEND_VM_STACK_FREE_PAGE_SIZE - 1)) & ~ZEND_VM_STACK_PAGE_SIZE)
 
-#ifdef ZEND_MONITOR
-extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 static zend_always_inline zend_vm_stack zend_vm_stack_new_page(size_t size, zend_vm_stack prev) {
 	zend_vm_stack page = (zend_vm_stack)emalloc(size);
 
@@ -1526,11 +1522,6 @@ static zend_always_inline void i_init_func_execute_data(zend_execute_data *execu
 	EX(run_time_cache) = op_array->run_time_cache;
 
 	EG(current_execute_data) = execute_data;
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_routine_execute_start();
-#endif
 }
 /* }}} */
 
@@ -1558,11 +1549,6 @@ static zend_always_inline void i_init_code_execute_data(zend_execute_data *execu
 	EX(run_time_cache) = op_array->run_time_cache;
 
 	EG(current_execute_data) = execute_data;
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_routine_execute_start();
-#endif
 }
 /* }}} */
 
@@ -1640,17 +1626,6 @@ static zend_always_inline void i_init_execute_data(zend_execute_data *execute_da
 	EX(run_time_cache) = op_array->run_time_cache;
 
 	EG(current_execute_data) = execute_data;
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_routine_execute_start();
-#endif
-  /*
-  fprintf(stderr, "Setting up execution data for function %s with ops 0x%llx\n", 
-          execute_data->func->common.function_name == NULL ? "(null)" :
-            execute_data->func->common.function_name->val,
-          (unsigned long long)op_array->opcodes);
-  */
 }
 /* }}} */
 

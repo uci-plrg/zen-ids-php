@@ -55,10 +55,6 @@ static unsigned timeout_thread_id;
 static volatile long timeout_thread_initialized=0;
 #endif
 
-#ifdef ZEND_MONITOR
-extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 #if 0&&ZEND_DEBUG
 static void (*original_sigsegv_handler)(int);
 static void zend_handle_sigsegv(int dummy) /* {{{ */
@@ -1031,11 +1027,6 @@ ZEND_API zend_class_entry *zend_lookup_class_ex(zend_string *name, const zval *k
 	fcall_cache.calling_scope = NULL;
 	fcall_cache.called_scope = NULL;
 	fcall_cache.object = NULL;
-
-#ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_class_load();
-#endif
 
 	zend_exception_save(TSRMLS_C);
 	retval = zend_call_function(&fcall_info, &fcall_cache TSRMLS_CC);

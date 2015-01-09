@@ -457,21 +457,11 @@ static int zend_add_const_name_literal(zend_op_array *op_array, zend_string *nam
 static void zend_assign_opcode(zend_op *opline, zend_uchar opcode)
 {
   opline->opcode = opcode;
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_opcode_compile(opline, (uint)(opline - CG(active_op_array)->opcodes));
-#endif
 }
 
 static void zend_assign_extended_value(zend_op *opline, zend_ulong extended_value)
 {
   opline->extended_value = extended_value;
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_opcode_compile(opline, (uint)(opline - CG(active_op_array)->opcodes));
-#endif
 }
   
 #define MAKE_NOP(opline) do { \
@@ -1778,10 +1768,6 @@ static inline uint32_t zend_emit_jump(uint32_t opnum_target TSRMLS_DC) /* {{{ */
 	uint32_t opnum = get_next_op_number(CG(active_op_array));
 	zend_op *opline = zend_emit_op(NULL, ZEND_JMP, NULL, NULL TSRMLS_CC);
 	opline->op1.opline_num = opnum_target;
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL && opnum_target != 0)
-    opcode_monitor->notify_edge_compile(opnum, opnum_target);
-#endif
 	return opnum;
 }
 /* }}} */
@@ -1791,10 +1777,6 @@ static inline uint32_t zend_emit_cond_jump(zend_uchar opcode, znode *cond, uint3
 	uint32_t opnum = get_next_op_number(CG(active_op_array));
 	zend_op *opline = zend_emit_op(NULL, opcode, cond, NULL TSRMLS_CC);
 	opline->op2.opline_num = opnum_target;
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL && opnum_target != 0)
-    opcode_monitor->notify_edge_compile(opnum, opnum_target);
-#endif
 	return opnum;
 }
 /* }}} */
@@ -1805,20 +1787,12 @@ static inline void zend_update_jump_target(uint32_t opnum_jump, uint32_t opnum_t
 	switch (opline->opcode) {
 		case ZEND_JMP:
 			opline->op1.opline_num = opnum_target;
-#ifdef ZEND_MONITOR 
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_edge_compile(opnum_jump, opnum_target);
-#endif
 			break;
 		case ZEND_JMPZ:
 		case ZEND_JMPNZ:
 		case ZEND_JMPZ_EX:
 		case ZEND_JMPNZ_EX:
 			opline->op2.opline_num = opnum_target;
-#ifdef ZEND_MONITOR 
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_edge_compile(opnum_jump, opnum_target);
-#endif
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE()
 	}
@@ -1828,10 +1802,6 @@ static inline void zend_update_jump_target(uint32_t opnum_jump, uint32_t opnum_t
 static inline void zend_update_jump_target_to_next(uint32_t opnum_jump TSRMLS_DC) /* {{{ */ 
 {
 	zend_update_jump_target(opnum_jump, get_next_op_number(CG(active_op_array)) TSRMLS_CC);
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_edge_compile(opnum_jump, get_next_op_number(CG(active_op_array)));
-#endif
 }
 /* }}} */
 
@@ -1866,12 +1836,6 @@ static zend_op *zend_delayed_compile_end(uint32_t offset TSRMLS_DC) /* {{{ */
 	for (i = offset; i < count; ++i) {
 		opline = get_next_op(CG(active_op_array) TSRMLS_CC);
 		memcpy(opline, &oplines[i], sizeof(zend_op));
-    
-#ifdef ZEND_MONITOR 
-    // fprintf(stderr, "Delayed op index %d\n", (uint)(opline - CG(active_op_array)->opcodes));
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_opcode_compile(opline, (uint)(opline - CG(active_op_array)->opcodes));
-#endif
 	}
 	CG(delayed_oplines_stack).top = offset;
 	return opline;
@@ -4007,11 +3971,6 @@ void zend_begin_method_decl(zend_op_array *op_array, zend_string *name, zend_boo
 	zend_str_tolower_copy(lcname->val, name->val, name->len);
 	lcname = zend_new_interned_string(lcname TSRMLS_CC);
 
-#ifdef ZEND_MONITOR 
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_compile_start(ce->name->val, lcname->val);
-#endif
-    
 	if (zend_hash_add_ptr(&ce->function_table, lcname, op_array) == NULL) {
 		zend_error_noreturn(E_COMPILE_ERROR, "Cannot redeclare %s::%s()",
 			ce->name->val, name->val);
@@ -4175,10 +4134,6 @@ static void zend_begin_func_decl(znode *result, zend_op_array *op_array, zend_as
 		opline->op2_type = IS_CONST;
 		LITERAL_STR(opline->op2, zend_string_copy(lcname));
 	}
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_function_compile_start("<default>", lcname->val);
-#endif
 
 	{
 		zend_string *key = zend_build_runtime_definition_key(lcname, decl->lex_pos TSRMLS_CC);
@@ -4260,7 +4215,6 @@ void zend_compile_func_decl(znode *result, zend_ast *ast TSRMLS_DC) /* {{{ */
 	zend_release_labels(0 TSRMLS_CC);
 
 #ifdef ZEND_MONITOR 
-  //if (!(op_array->fn_flags & ZEND_ACC_CLOSURE) && opcode_monitor != NULL)
   if (opcode_monitor != NULL)
     opcode_monitor->notify_function_compile_complete();
 #endif
