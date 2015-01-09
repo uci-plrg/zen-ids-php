@@ -1526,6 +1526,11 @@ static zend_always_inline void i_init_func_execute_data(zend_execute_data *execu
 	EX(run_time_cache) = op_array->run_time_cache;
 
 	EG(current_execute_data) = execute_data;
+  
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_routine_execute_start();
+#endif
 }
 /* }}} */
 
@@ -1553,6 +1558,11 @@ static zend_always_inline void i_init_code_execute_data(zend_execute_data *execu
 	EX(run_time_cache) = op_array->run_time_cache;
 
 	EG(current_execute_data) = execute_data;
+  
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_routine_execute_start();
+#endif
 }
 /* }}} */
 
