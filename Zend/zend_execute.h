@@ -181,12 +181,6 @@ static zend_always_inline zend_execute_data *zend_vm_stack_push_call_frame(uint3
 	call->prev_execute_data = prev;
 	call->frame_info = frame_info;
 	call->num_args = 0;
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_routine_call(call);
-#endif
-  
 	return call;
 }
 
@@ -232,11 +226,6 @@ static zend_always_inline void zend_vm_stack_free_call_frame(zend_execute_data *
 	} else {
 		EG(vm_stack_top) = (zval*)call;
 	}
-  
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_routine_return();
-#endif
 }
 
 /* services */
