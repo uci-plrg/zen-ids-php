@@ -4,6 +4,7 @@
     --prefix=$PHP_HOME \
     --enable-debug \
     --enable-zend-monitor \
+    --enable-mbstring \
     --with-config-file-path=$PHP_HOME/conf.d \
     --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
 
