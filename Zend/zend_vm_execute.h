@@ -338,7 +338,7 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 
 #ifdef ZEND_MONITOR  
   extern zend_opcode_monitor_t *opcode_monitor;
-  zend_bool is_return;
+  zend_bool is_return = false;
 
   if (opcode_monitor != NULL)
     opcode_monitor->notify_routine_call(execute_data);
@@ -361,34 +361,26 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
     }
 #endif
     
-		if (UNEXPECTED((ret = OPLINE->handler(execute_data TSRMLS_CC)) != 0)) {
-			if (EXPECTED(ret > 0)) {
+    ret = OPLINE->handler(execute_data TSRMLS_CC);
+    
 #ifdef ZEND_MONITOR 
-        if (opcode_monitor != NULL) {
-          if (is_return)
-            opcode_monitor->notify_routine_return();
-          else if (execute_data != EG(current_execute_data)) {
-            opcode_monitor->notify_routine_call(EG(current_execute_data));
-          }
-        }
-#endif
-				execute_data = EG(current_execute_data);
-        continue;
-			} else {
-#ifdef ZEND_MONITOR 
-        if (opcode_monitor != NULL)
+    if (opcode_monitor != NULL) {
+      if (execute_data != EG(current_execute_data)) {
+        if (is_return)
           opcode_monitor->notify_routine_return();
+        else 
+          opcode_monitor->notify_routine_call(EG(current_execute_data));
+      }
+    }
 #endif
+    
+		if (UNEXPECTED(ret != 0)) {
+			if (EXPECTED(ret > 0)) {
+				execute_data = EG(current_execute_data);
+			} else {
 				return;
 			}
 		}
-
-#ifdef ZEND_MONITOR 
-    if (opcode_monitor != NULL) {
-      if (is_return)
-        opcode_monitor->notify_routine_return();
-    }
-#endif
 	}
 	zend_error_noreturn(E_ERROR, "Arrived at end of main loop which shouldn't happen");
 }
