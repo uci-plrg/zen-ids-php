@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[ -z "$PHP_DATASET_DIR" ] && echo "This script requires the environment variable PHP_DATASET_DIR. Exiting now." && exit
+
 script=$1
 shift
 

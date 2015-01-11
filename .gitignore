@@ -289,3 +289,4 @@ win32/php.dsw
 conf.d/ext/
 etc/
 bin/
+temp/
