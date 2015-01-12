@@ -699,8 +699,6 @@ typedef struct _zend_opcode_monitor_t {
   void (*set_top_level_script)(const char *script_path);
   void (*notify_opcode_interp)(const zend_op *op);
   void (*notify_function_compile_complete)();
-  void (*notify_routine_call)(zend_execute_data *call);
-  void (*notify_routine_return)();
 } zend_opcode_monitor_t;
 
 ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);

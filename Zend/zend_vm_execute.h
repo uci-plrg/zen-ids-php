@@ -338,10 +338,6 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 
 #ifdef ZEND_MONITOR  
   extern zend_opcode_monitor_t *opcode_monitor;
-  zend_bool is_return = false;
-
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_routine_call(execute_data);
 #endif
 
 	LOAD_OPLINE();
@@ -356,24 +352,11 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 
 #ifdef ZEND_MONITOR 
     if (opcode_monitor != NULL) {
-      is_return = OPLINE->opcode == ZEND_RETURN;
       opcode_monitor->notify_opcode_interp(OPLINE);
     }
 #endif
     
     ret = OPLINE->handler(execute_data TSRMLS_CC);
-    
-#ifdef ZEND_MONITOR 
-    if (opcode_monitor != NULL) {
-      if (execute_data != EG(current_execute_data)) {
-        if (is_return)
-          opcode_monitor->notify_routine_return();
-        else 
-          opcode_monitor->notify_routine_call(EG(current_execute_data));
-      }
-    }
-#endif
-    
 		if (UNEXPECTED(ret != 0)) {
 			if (EXPECTED(ret > 0)) {
 				execute_data = EG(current_execute_data);
