@@ -52,10 +52,10 @@ END_EXTERN_C()
 
 #define SYMTABLE_CACHE_SIZE 32
 
-enum {
-  false,
-  true
-};
+//enum {
+//  false,
+//  true
+//};
 
 #include "zend_compile.h"
 

@@ -5,6 +5,7 @@
     --enable-debug \
     --enable-zend-monitor \
     --enable-mbstring \
+    --enable-intl \
     --with-config-file-path=$PHP_HOME/conf.d \
     --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
 
