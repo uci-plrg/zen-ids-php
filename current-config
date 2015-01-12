@@ -2,10 +2,17 @@
 
 ./configure \
     --prefix=$PHP_HOME \
-    --enable-debug \
     --enable-zend-monitor \
+    --enable-debug \
     --enable-mbstring \
     --enable-intl \
+    --enable-mysqlnd \
+    --enable-pdo \
+    --with-pdo-mysql \
+    --with-openssl \
+    --with-xsl \
+    --with-curl \
+    --with-mcrypt \
     --with-config-file-path=$PHP_HOME/conf.d \
     --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
 
