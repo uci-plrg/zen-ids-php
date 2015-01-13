@@ -1,0 +1,3 @@
+#!/bin/bash
+
+monitor-php $HHVM_FRAMEWORKS/drupal/core/vendor/phpunit/phpunit/phpunit $@
