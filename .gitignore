@@ -290,3 +290,4 @@ conf.d/ext/
 etc/
 bin/
 temp/
+logs/
