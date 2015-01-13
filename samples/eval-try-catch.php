@@ -22,7 +22,7 @@ try {
           print "zot\n";
         case 4: 
           eval('try { print "nonsense: " . divide(4, 0) . "\n"; } catch (Exception $e) { print "Exception in eval: " . $e . "\n"; }'); 
-          break;
+          return;
         }
       } else {
         switch ($num) {

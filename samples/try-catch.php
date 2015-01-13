@@ -7,8 +7,8 @@ function divide($a, $b) {
 }
 
 try {
-  $num = rand(0, 6);
   while (true) {
+    $num = rand(0, 6);
     if ($num < 0) {
       print "Num is a foobar!\n";
     } else {

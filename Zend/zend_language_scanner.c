@@ -598,18 +598,16 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type TSR
 		zend_do_end_compilation(TSRMLS_C);
 		zend_emit_final_return(&retval_zv TSRMLS_CC);
 		CG(in_compilation) = original_in_compilation;
-    
-#ifdef ZEND_MONITOR 
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_function_compile_complete();
-#endif
-    
 		compilation_successful=1;
 	}
 
 	CG(active_op_array) = original_active_op_array;
 	if (compilation_successful) {
 		pass_two(op_array TSRMLS_CC);
+#ifdef ZEND_MONITOR 
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_function_compile_complete(op_array);
+#endif
 		zend_release_labels(0 TSRMLS_CC);
 	} else {
 		efree_size(op_array, sizeof(zend_op_array));
@@ -767,7 +765,7 @@ zend_op_array *compile_string(zval *source_string, char *filename TSRMLS_DC)
 
 #ifdef ZEND_MONITOR 
       if (opcode_monitor != NULL)
-        opcode_monitor->notify_function_compile_complete();
+        opcode_monitor->notify_function_compile_complete(op_array);
 #endif
 
 			CG(active_op_array) = original_active_op_array;

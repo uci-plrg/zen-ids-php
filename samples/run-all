@@ -1,0 +1,17 @@
+#!/bin/bash
+
+cd $PHP_HOME
+
+log_dir=/stash/script-safe/php-logs
+error_log=$log_dir/sample-errors.log
+
+mkdir -p $log_dir
+rm -f $error_log
+
+for s in $(cat samples/samples.tab)
+do
+  monitor-php samples/$s.php
+  echo "$s:" >> $error_log
+  grep "#error#" $(select-run -l 1) >> $error_log
+done
+
