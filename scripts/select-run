@@ -25,7 +25,7 @@ if [ -z "$filter" ]
 then
   file=$(tail -$index $run_catalog | head -1)
 else
-  file=$(grep "$filter" $run_catalog | tail -$index | head -1)
+  file=$(egrep "$filter" $run_catalog | tail -$index | head -1)
 fi
 
 [ -z "$file" ] && exit

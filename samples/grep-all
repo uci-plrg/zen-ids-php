@@ -1,0 +1,13 @@
+#!/bin/bash
+
+term="$1"
+samples=$PHP_HOME/samples
+
+[ -z "$term" ] && "Please enter a grep term!" && exit
+
+for s in $(cat $samples/samples.tab)
+do
+  echo "$s.php:" 
+  grep "$term" $(select-run -l 1 "/$s\.log$")
+done
+

@@ -22,7 +22,8 @@ log=$(mktemp $logdir/monitor-XXXXX.log)
 
 [ ! -f "$script" ] && echo "Script '$script' does not exist! Exiting now." && exit
 
-$PHP_HOME/bin/php $script $@ &> $log
+echo "Monitor PHP on script ["$(basename "$script")"]" > $log
+$PHP_HOME/bin/php $script $@ &>> $log
 
 script_basename=$(basename $script)
 script_basename=${script_basename%.*}
