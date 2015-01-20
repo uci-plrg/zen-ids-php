@@ -8,14 +8,19 @@ while ($num != 0) {
   } else {
     if ($num < 4) {
       switch ($num) {
-      case 1: print "foo\n";
-      case 2: print "bar\n";
-      case 3: print "zot\n";
+      case 1: 
+        print "foo\n";
+      case 2: 
+        print "bar\n";
+      case 3: 
+        print "zot\n";
       }
     } else {
       switch ($num) {
-      case 4: print "zee\n";
-      case 5: print "zoo\n";
+      case 4: 
+        print "zee\n";
+      case 5: 
+        print "zoo\n";
       }
     }
   }
