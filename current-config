@@ -9,6 +9,8 @@
     --enable-mysqlnd \
     --enable-pdo \
     --enable-exif \
+    --with-apxs2=/usr/bin/apxs \
+    --with-mysql \
     --with-pdo-mysql \
     --with-openssl \
     --with-xsl \
@@ -19,4 +21,5 @@
     --with-zlib \
     --with-config-file-path=$PHP_HOME/conf.d \
     --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
+
 

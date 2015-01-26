@@ -69,6 +69,10 @@
 #define PHP_SOURCE_MAGIC_TYPE "application/x-httpd-php-source"
 #define PHP_SCRIPT "php7-script"
 
+#ifdef ZEND_MONITOR
+  extern zend_opcode_monitor_t *opcode_monitor;
+#endif
+
 /* A way to specify the location of the php.ini dir in an apache directive */
 char *apache2_php_ini_path_override = NULL;
 
@@ -696,6 +700,11 @@ zend_first_try {
 
 static void php_apache_child_init(apr_pool_t *pchild, server_rec *s)
 {
+#ifdef ZEND_MONITOR 
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_worker_startup();
+#endif
+
 	apr_pool_cleanup_register(pchild, NULL, php_apache_child_shutdown, apr_pool_cleanup_null);
 }
 
