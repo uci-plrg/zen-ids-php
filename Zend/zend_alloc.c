@@ -59,6 +59,9 @@
 #include "zend_operators.h"
 #include "zend_multiply.h"
 
+#include <execinfo.h>
+#include <unistd.h>
+
 #ifdef HAVE_SIGNAL_H
 # include <signal.h>
 #endif
@@ -970,6 +973,10 @@ not_found:
 				if (heap->real_size + ZEND_MM_CHUNK_SIZE > heap->limit) {
 					if (heap->overflow == 0) {
 #if ZEND_DEBUG
+            void *array[10];
+            size_t size;
+            size = backtrace(array, 10);
+            backtrace_symbols_fd(array, size, fileno(stderr));
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted (tried to allocate %zu bytes)", heap->limit, ZEND_MM_PAGE_SIZE * pages_count);
@@ -1423,6 +1430,11 @@ static void *zend_mm_realloc_heap(zend_mm_heap *heap, void *ptr, size_t size ZEN
 				if (heap->real_size + (new_size - old_size) > heap->limit) {
 					if (heap->overflow == 0) {
 #if ZEND_DEBUG
+            void *array[40];
+            size_t size;
+            size = backtrace(array, 40);
+            backtrace_symbols_fd(array, size, fileno(stderr));
+            fprintf(stderr, "Memory corrupt on pid 0x%x\n", getpid());
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted (tried to allocate %zu bytes)", heap->limit, size);
@@ -1649,6 +1661,10 @@ static void *zend_mm_alloc_huge(zend_mm_heap *heap, size_t size ZEND_FILE_LINE_D
 	if (heap->real_size + new_size > heap->limit) {
 		if (heap->overflow == 0) {
 #if ZEND_DEBUG
+      void *array[10];
+      size_t size;
+      size = backtrace(array, 10);
+      backtrace_symbols_fd(array, size, fileno(stderr));
 			zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
 			zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted (tried to allocate %zu bytes)", heap->limit, size);

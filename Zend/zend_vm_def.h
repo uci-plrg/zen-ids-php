@@ -18,6 +18,9 @@
    +----------------------------------------------------------------------+
 */
 
+#include <execinfo.h>
+#include <unistd.h>
+
 /* $Id$ */
 
 /* If you change this file, please regenerate the zend_vm_execute.h and
@@ -2761,6 +2764,10 @@ ZEND_VM_HANDLER(60, ZEND_DO_FCALL, ANY, ANY)
 			object->handlers->call_method(fbc->common.function_name, object, call, EX_VAR(opline->result.var) TSRMLS_CC);
 			EG(current_execute_data) = call->prev_execute_data;
 		} else {
+      void *array[10];
+      size_t size;
+      size = backtrace(array, 10);
+      backtrace_symbols_fd(array, size, fileno(stderr));
 			zend_error_noreturn(E_ERROR, "Cannot call overloaded function for non-object");
 		}
 

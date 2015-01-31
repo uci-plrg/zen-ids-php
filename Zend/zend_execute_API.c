@@ -38,6 +38,9 @@
 #include <sys/time.h>
 #endif
 
+#include <execinfo.h>
+#include <unistd.h>
+
 ZEND_API void (*zend_execute_ex)(zend_execute_data *execute_data TSRMLS_DC);
 ZEND_API void (*zend_execute_internal)(zend_execute_data *execute_data, zval *return_value TSRMLS_DC);
 
@@ -894,6 +897,10 @@ int zend_call_function(zend_fcall_info *fci, zend_fcall_info_cache *fci_cache TS
 			fci->object->handlers->call_method(func->common.function_name, fci->object, call, fci->retval TSRMLS_CC);
 			EG(current_execute_data) = call->prev_execute_data;
 		} else {
+      void *array[10];
+      size_t size;
+      size = backtrace(array, 10);
+      backtrace_symbols_fd(array, size, fileno(stderr));
 			zend_error_noreturn(E_ERROR, "Cannot call overloaded function for non-object");
 		}
 
