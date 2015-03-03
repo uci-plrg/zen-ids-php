@@ -2276,6 +2276,10 @@ int php_module_startup(sapi_module_struct *sf, zend_module_entry *additional_mod
 	/* start additional PHP extensions */
 	php_register_extensions_bc(additional_modules, num_additional_modules TSRMLS_CC);
 
+#ifdef ZEND_MONITOR
+  EG(sapi_type) = sf->name;
+#endif
+
 	/* load and startup extensions compiled as shared objects (aka DLLs)
 	   as requested by php.ini entries
 	   these are loaded after initialization of internal extensions

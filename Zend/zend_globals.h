@@ -237,6 +237,10 @@ struct _zend_executor_globals {
   zend_bool print_ir;
 
 	void *reserved[ZEND_MAX_RESERVED_RESOURCES];
+
+#ifdef ZEND_MONITOR
+  const char *sapi_type;
+#endif
 };
 
 struct _zend_ini_scanner_globals {

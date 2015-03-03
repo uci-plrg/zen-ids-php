@@ -1,0 +1,3 @@
+grep "<session>" /var/log/apache2/error.log | grep -v "No user session" | sed "s/Routine call.*$//" | uniq -c
+
+
