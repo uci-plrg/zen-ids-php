@@ -667,8 +667,14 @@ zend_first_try {
 		zfd.opened_path = NULL;
 
 		if (!parent_req) {
+#ifdef ZEND_MONITOR
+      fprintf(stderr, "Request for filename %s -> php_execute_script\n", r->filename);
+#endif
 			php_execute_script(&zfd TSRMLS_CC);
 		} else {
+#ifdef ZEND_MONITOR
+      fprintf(stderr, "Request for filename %s -> zend_execute_scripts\n", r->filename);
+#endif
 			zend_execute_scripts(ZEND_INCLUDE TSRMLS_CC, NULL, 1, &zfd);
 		}
 
@@ -700,7 +706,7 @@ zend_first_try {
 
 static void php_apache_child_init(apr_pool_t *pchild, server_rec *s)
 {
-#ifdef ZEND_MONITOR 
+#ifdef ZEND_MONITOR
   if (opcode_monitor != NULL)
     opcode_monitor->notify_worker_startup();
 #endif
