@@ -544,6 +544,9 @@ static int php_handler(request_rec *r)
 	apr_bucket *bucket;
 	apr_status_t rv;
 	request_rec * volatile parent_req = NULL;
+  static uint request_index = 1;
+  uint request_id = 0;
+  extern zend_opcode_monitor_t *opcode_monitor;
 	TSRMLS_FETCH();
 
 #define PHPAP_INI_OFF php_apache_ini_dtor(r, parent_req TSRMLS_CC);
@@ -666,14 +669,21 @@ zend_first_try {
 		zfd.free_filename = 0;
 		zfd.opened_path = NULL;
 
+    request_id = request_index++;
 		if (!parent_req) {
 #ifdef ZEND_MONITOR
-      fprintf(stderr, "Request for filename %s -> php_execute_script\n", r->filename);
+      if (opcode_monitor != NULL) {
+        fprintf(stderr, "Request %d processed by php_execute_script: %s\n", request_id, r->filename);
+        opcode_monitor->notify_request(1, request_id);
+      }
 #endif
 			php_execute_script(&zfd TSRMLS_CC);
 		} else {
 #ifdef ZEND_MONITOR
-      fprintf(stderr, "Request for filename %s -> zend_execute_scripts\n", r->filename);
+      if (opcode_monitor != NULL) {
+        fprintf(stderr, "Request %d processed by zend_execute_script: %s\n", request_id, r->filename);
+        opcode_monitor->notify_request(1, request_id);
+      }
 #endif
 			zend_execute_scripts(ZEND_INCLUDE TSRMLS_CC, NULL, 1, &zfd);
 		}
@@ -701,6 +711,13 @@ zend_first_try {
 		ctx->r = parent_req;
 	}
 
+#ifdef ZEND_MONITOR
+  if (request_id > 0) {
+    fprintf(stderr, "Request %d completed: %s\n", request_id, r->filename);
+    opcode_monitor->notify_request(0, request_id);
+    fflush(stderr);
+  }
+#endif
 	return OK;
 }
 
