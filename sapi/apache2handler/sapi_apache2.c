@@ -674,7 +674,7 @@ zend_first_try {
 #ifdef ZEND_MONITOR
       if (opcode_monitor != NULL) {
         fprintf(stderr, "Request %d processed by php_execute_script: %s\n", request_id, r->filename);
-        opcode_monitor->notify_request(1, request_id);
+        opcode_monitor->notify_request(1);
       }
 #endif
 			php_execute_script(&zfd TSRMLS_CC);
@@ -682,7 +682,7 @@ zend_first_try {
 #ifdef ZEND_MONITOR
       if (opcode_monitor != NULL) {
         fprintf(stderr, "Request %d processed by zend_execute_script: %s\n", request_id, r->filename);
-        opcode_monitor->notify_request(1, request_id);
+        opcode_monitor->notify_request(1);
       }
 #endif
 			zend_execute_scripts(ZEND_INCLUDE TSRMLS_CC, NULL, 1, &zfd);
@@ -714,7 +714,7 @@ zend_first_try {
 #ifdef ZEND_MONITOR
   if (request_id > 0) {
     fprintf(stderr, "Request %d completed: %s\n", request_id, r->filename);
-    opcode_monitor->notify_request(0, request_id);
+    opcode_monitor->notify_request(0);
     fflush(stderr);
   }
 #endif
