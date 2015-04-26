@@ -31,6 +31,10 @@
 
 #include "zend_llist.h"
 
+#ifdef ZEND_MONITOR
+# include "httpd.h"
+#endif
+
 #define DEBUG_ZEND 0
 
 #define SET_UNUSED(op)  op ## _type = IS_UNUSED
@@ -699,7 +703,7 @@ typedef struct _zend_opcode_monitor_t {
   void (*set_top_level_script)(const char *script_path);
   void (*notify_opcode_interp)(const zend_op *op);
   void (*notify_function_compile_complete)(zend_op_array *op_array);
-  void (*notify_request)(zend_bool start);
+  void (*notify_request)(request_rec *r);
   void (*notify_worker_startup)();
 } zend_opcode_monitor_t;
 
