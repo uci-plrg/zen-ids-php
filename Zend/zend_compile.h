@@ -701,6 +701,7 @@ typedef struct _zend_opcode_monitor_t {
   void (*notify_function_compile_complete)(zend_op_array *op_array);
   void (*notify_request)(zend_bool start);
   void (*notify_worker_startup)();
+  void (*opmon_tokenize)();
 } zend_opcode_monitor_t;
 
 ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);
