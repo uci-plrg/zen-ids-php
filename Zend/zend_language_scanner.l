@@ -538,7 +538,7 @@ ZEND_API int open_file_for_scanning(zend_file_handle *file_handle TSRMLS_DC)
 	} else {
 		file_path = file_handle->filename;
 	}
-  
+
 	compiled_filename = zend_string_init(file_path, strlen(file_path), 0);
 	zend_set_compiled_filename(compiled_filename TSRMLS_CC);
 	zend_string_release(compiled_filename);
@@ -602,7 +602,7 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type TSR
 	CG(active_op_array) = original_active_op_array;
 	if (compilation_successful) {
 		pass_two(op_array TSRMLS_CC);
-#ifdef ZEND_MONITOR 
+#ifdef ZEND_MONITOR
     if (opcode_monitor != NULL)
       opcode_monitor->notify_function_compile_complete(op_array);
 #endif
@@ -739,7 +739,7 @@ zend_op_array *compile_string(zval *source_string, char *filename TSRMLS_DC)
 	ZVAL_DUP(&tmp, source_string);
 	convert_to_string(&tmp);
 	source_string = &tmp;
-	
+
 	CG(in_compilation) = 1;
 	zend_save_lexical_state(&original_lex_state TSRMLS_CC);
 	if (zend_prepare_string_for_scanning(source_string, filename TSRMLS_CC) == SUCCESS) {
@@ -761,7 +761,7 @@ zend_op_array *compile_string(zval *source_string, char *filename TSRMLS_DC)
 			pass_two(op_array TSRMLS_CC);
 			zend_release_labels(0 TSRMLS_CC);
 
-#ifdef ZEND_MONITOR 
+#ifdef ZEND_MONITOR
       if (opcode_monitor != NULL)
         opcode_monitor->notify_function_compile_complete(op_array);
 #endif
@@ -776,7 +776,7 @@ zend_op_array *compile_string(zval *source_string, char *filename TSRMLS_DC)
 	zend_restore_lexical_state(&original_lex_state TSRMLS_CC);
 	zval_dtor(&tmp);
 	CG(in_compilation) = original_in_compilation;
-  
+
 	return op_array;
 }
 
