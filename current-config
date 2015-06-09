@@ -9,7 +9,13 @@
     --enable-mysqlnd \
     --enable-pdo \
     --enable-exif \
+    --enable-mbregex \
+    --enable-ftp \
+    --with-gd \
+    --with-png-dir=/stash/www \
+    --with-jpeg-dir=/stash/www \
     --with-apxs2=/usr/bin/apxs \
+    --with-gettext \
     --with-mysql \
     --with-pdo-mysql \
     --with-openssl \
