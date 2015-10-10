@@ -16,7 +16,7 @@
     --with-jpeg-dir=/stash/www \
     --with-apxs2=/usr/bin/apxs \
     --with-gettext \
-    --with-mysql \
+    --with-mysqli \
     --with-pdo-mysql \
     --with-openssl \
     --with-xsl \
