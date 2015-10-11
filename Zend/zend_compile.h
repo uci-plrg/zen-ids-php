@@ -700,6 +700,7 @@ typedef struct _zend_opcode_monitor_t {
   void (*notify_opcode_interp)(const zend_op *op);
   void (*notify_function_compile_complete)(zend_op_array *op_array);
   void (*notify_request)(zend_bool start);
+  void (*notify_database_query)(const char *query);
   void (*notify_worker_startup)();
   void (*opmon_tokenize)();
 } zend_opcode_monitor_t;
