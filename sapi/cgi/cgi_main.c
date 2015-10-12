@@ -476,7 +476,7 @@ static int sapi_cgi_send_headers(sapi_headers_struct *sapi_headers TSRMLS_DC)
 	while (h) {
 		/* prevent CRLFCRLF */
 		if (h->header_len) {
-			if (h->header_len > sizeof("Status:")-1 && 
+			if (h->header_len > sizeof("Status:")-1 &&
 				strncasecmp(h->header, "Status:", sizeof("Status:")-1) == 0
 			) {
 				if (!ignore_status) {
@@ -625,7 +625,7 @@ static char *sapi_fcgi_read_cookies(TSRMLS_D)
 
 static void cgi_php_load_env_var(char *var, unsigned int var_len, char *val, unsigned int val_len, void *arg TSRMLS_DC)
 {
-	zval *array_ptr = (zval*)arg;	
+	zval *array_ptr = (zval*)arg;
 	int filter_arg = (Z_ARR_P(array_ptr) == Z_ARR(PG(http_globals)[TRACK_VARS_ENV]))?PARSE_ENV:PARSE_SERVER;
 	size_t new_val_len;
 
@@ -798,12 +798,12 @@ static void php_cgi_ini_activate_user_config(char *path, int path_len, const cha
 		}
 
 		/* we have to test if path is part of DOCUMENT_ROOT.
-		  if it is inside the docroot, we scan the tree up to the docroot 
+		  if it is inside the docroot, we scan the tree up to the docroot
 			to find more user.ini, if not we only scan the current path.
 		  */
 #ifdef PHP_WIN32
 		if (strnicmp(s1, s2, s_len) == 0) {
-#else 
+#else
 		if (strncmp(s1, s2, s_len) == 0) {
 #endif
 			ptr = s2 + start;  /* start is the point where doc_root ends! */
@@ -899,7 +899,7 @@ static int sapi_cgi_activate(TSRMLS_D)
 				zend_str_tolower(doc_root, doc_root_len);
 #endif
 				php_cgi_ini_activate_user_config(path, path_len, doc_root, doc_root_len, doc_root_len - 1 TSRMLS_CC);
-				
+
 #ifdef PHP_WIN32
 				efree(doc_root);
 #endif
@@ -1049,7 +1049,7 @@ static int is_valid_path(const char *path)
 					p++;
 					if (UNEXPECTED(!*p) || UNEXPECTED(IS_SLASH(*p))) {
 						return 0;
-					}											
+					}
 				}
 			}
 		}
@@ -1140,6 +1140,9 @@ static void init_request_info(fcgi_request *request TSRMLS_DC)
 	char *env_script_filename = CGI_GETENV("SCRIPT_FILENAME");
 	char *env_path_translated = CGI_GETENV("PATH_TRANSLATED");
 	char *script_path_translated = env_script_filename;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 
 	/* some broken servers do not have script_filename or argv0
 	 * an example, IIS configured in some ways.  then they do more
@@ -1416,6 +1419,11 @@ static void init_request_info(fcgi_request *request TSRMLS_DC)
 		if (is_valid_path(script_path_translated)) {
 			SG(request_info).path_translated = estrdup(script_path_translated);
 		}
+
+#ifdef ZEND_MONITOR
+        if (opcode_monitor != NULL)
+          opcode_monitor->set_top_level_script(SG(request_info).path_translated);
+#endif
 
 		SG(request_info).request_method = CGI_GETENV("REQUEST_METHOD");
 		/* FIXME - Work out proto_num here */
@@ -2532,7 +2540,7 @@ fastcgi_request_done:
 #ifdef HAVE_GETTIMEOFDAY
 							gettimeofday(&start, NULL);
 #else
-							time(&start);						
+							time(&start);
 #endif
 						}
 						continue;
