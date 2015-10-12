@@ -1,12 +1,17 @@
 <?php
 
 class Something {
+  private $zed;
+  private $zot;
+
   static function whatever($that) {
     echo "That: " . $that . " \n";
   }
 
-  function doSomething($what) {
+  function doSomething($what, $ever) {
     echo "Do what? " . $what . "\n";
+    $this->zed = $what;
+    $this->zot = $ever;
   }
 
   function anything() {
@@ -15,8 +20,10 @@ class Something {
 }
 
 class SomethingElse extends Something {
-  function doSomething($what,$ever) {
+  function doSomething($what, $ever) {
     echo "Do this? " . $what . "\n";
+    $this->zot = $what;
+    $this->zed = $ever;
   }
 }
 
@@ -31,13 +38,13 @@ Something::whatever("this");
 $call = "doSomething";
 
 $something = new Something();
-$something->doSomething("anything");
+$something->doSomething("anything", "else");
 #$something->$call("anything");
 
 $something = new SomethingElse();
-$something->doSomething("anything");
+$something->doSomething("anything", "else");
 
 $something = new AnotherThing();
-$something->doSomething("anything");
+$something->doSomething("anything", "else");
 
 ?>
