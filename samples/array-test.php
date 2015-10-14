@@ -9,4 +9,7 @@ for ($i = 2; $i < 10; $i++) {
 }
 echo $fib . "\n";
 
+$z = array(array("a","b"), array("x","y"));
+echo "z(1,1) = " . $z[1][1] . "\n";
+
 ?>
