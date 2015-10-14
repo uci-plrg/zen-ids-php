@@ -21,5 +21,6 @@ $zonk->setZot("foo");
 $zonk->zed = "bar";
 print("Zonk Z (7): " . $zonk->getZ(7) . "\n");
 print("Zonk Z (11): " . $zonk->getZ(11) . "\n");
+print("Zonk.zed: $zonk->zed\n");
 
 ?>

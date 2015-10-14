@@ -129,6 +129,7 @@ static pid_t pgroup;
 #define PHP_MODE_INDENT		3
 #define PHP_MODE_LINT		4
 #define PHP_MODE_STRIP		5
+#define PHP_MODE_FORK		6
 
 static char *php_optarg = NULL;
 static int php_optind = 1;
@@ -144,6 +145,7 @@ static const opt_struct OPTIONS[] = {
 	{'f', 1, "file"},
 	{'h', 0, "help"},
 	{'i', 0, "info"},
+	{'k', 1, "fork"},
 	{'l', 0, "syntax-check"},
 	{'m', 0, "modules"},
 	{'n', 0, "no-php-ini"},
@@ -2196,6 +2198,10 @@ consult the installation file that came with this distribution, or visit \n\
 							exit_status = 0;
 							goto out;
 
+            case 'k':
+              behavior = PHP_MODE_FORK;
+              break;
+
 						case 'l': /* syntax check mode */
 							no_headers = 1;
 							behavior = PHP_MODE_LINT;
@@ -2469,8 +2475,38 @@ consult the installation file that came with this distribution, or visit \n\
 
 			switch (behavior) {
 				case PHP_MODE_STANDARD:
-					php_execute_script(&file_handle TSRMLS_CC);
-					break;
+          php_execute_script(&file_handle TSRMLS_CC);
+          break;
+        case PHP_MODE_FORK: {
+          uint i, fork_count = atoi(php_optarg);
+          pid_t parent_pid = getpid(), child_pid;
+
+          for (i = 0; i < fork_count; i++) {
+            child_pid = fork();
+            if (child_pid == 0) {
+              fprintf(stderr, "Fork #%d\n", i);
+              php_execute_script(&file_handle TSRMLS_CC);
+              break;
+            }
+          }
+          if (parent_pid == getpid())
+            php_execute_script(&file_handle TSRMLS_CC);
+
+          /* seems not to reset the state
+          php_execute_script(&file_handle TSRMLS_CC);
+          for (i = 2; i < 4; i++) {
+            php_request_shutdown((void *) 0);
+            if (php_request_startup(TSRMLS_C) == FAILURE) {
+              fprintf(stderr, "Failed to startup the request on iteration %d\n", i);
+              break;
+            }
+            init_request_info(NULL TSRMLS_CC);
+            fprintf(stderr, "Executing iteration %d of %s on pid %d\n",
+                    i, file_handle.filename, getpid());
+            php_execute_script(&file_handle TSRMLS_CC);
+          }
+          */
+				} break;
 				case PHP_MODE_LINT:
 					PG(during_request_startup) = 0;
 					exit_status = php_lint_script(&file_handle TSRMLS_CC);
