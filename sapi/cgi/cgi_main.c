@@ -2523,9 +2523,7 @@ consult the installation file that came with this distribution, or visit \n\
           extern zend_opcode_monitor_t *opcode_monitor;
 
 					PG(during_request_startup) = 0;
-          opcode_monitor->opmon_dataflow(&file_handle);
-          zend_destroy_file_handle(&file_handle TSRMLS_CC);
-          exit_status = SUCCESS;
+          exit_status = opcode_monitor->opmon_dataflow(&file_handle);
         } break;
 #endif
 				case PHP_MODE_LINT:

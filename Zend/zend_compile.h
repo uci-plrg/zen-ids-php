@@ -703,7 +703,7 @@ typedef struct _zend_opcode_monitor_t {
   void (*notify_database_query)(const char *query);
   void (*notify_worker_startup)();
   void (*opmon_tokenize)();
-  void (*opmon_dataflow)();
+  int (*opmon_dataflow)();
 } zend_opcode_monitor_t;
 
 ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);
