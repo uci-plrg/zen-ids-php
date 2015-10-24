@@ -1,6 +1,5 @@
 <?php
 global $foo;
-$a = "foo";
 
 function bar() {
   $foo = "barfoo";
@@ -18,4 +17,10 @@ bar();
 global $zot;
 print("global \$zot is '$zot'\n");
 print("global \$GLOBALS['foo'] is " . $GLOBALS['foo'] . "\n");
+
+global $number;
+$number = 1;
+$number++;
+echo "Number is $number\n";
+
 ?>

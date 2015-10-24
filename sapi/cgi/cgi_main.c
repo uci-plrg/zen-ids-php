@@ -130,6 +130,7 @@ static pid_t pgroup;
 #define PHP_MODE_LINT		4
 #define PHP_MODE_STRIP		5
 #define PHP_MODE_FORK		6
+#define PHP_MODE_DATAFLOW		7
 
 static char *php_optarg = NULL;
 static int php_optind = 1;
@@ -141,6 +142,7 @@ static const opt_struct OPTIONS[] = {
 	{'C', 0, "no-chdir"},
 	{'c', 1, "php-ini"},
 	{'d', 1, "define"},
+    {'D', 0, "dataflow"},
 	{'e', 0, "profile-info"},
 	{'f', 1, "file"},
 	{'h', 0, "help"},
@@ -2167,6 +2169,12 @@ consult the installation file that came with this distribution, or visit \n\
 							SG(options) |= SAPI_OPTION_NO_CHDIR;
 							break;
 
+#ifdef ZEND_MONITOR
+            case 'D': /* opmon static dataflow analysis */
+              behavior = PHP_MODE_DATAFLOW;
+              break;
+#endif
+
 						case 'e': /* enable extended info output */
 							CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
 							break;
@@ -2198,9 +2206,11 @@ consult the installation file that came with this distribution, or visit \n\
 							exit_status = 0;
 							goto out;
 
+#ifdef ZEND_MONITOR
             case 'k':
               behavior = PHP_MODE_FORK;
               break;
+#endif
 
 						case 'l': /* syntax check mode */
 							no_headers = 1;
@@ -2477,6 +2487,7 @@ consult the installation file that came with this distribution, or visit \n\
 				case PHP_MODE_STANDARD:
           php_execute_script(&file_handle TSRMLS_CC);
           break;
+#ifdef ZEND_MONITOR
         case PHP_MODE_FORK: {
           uint i, fork_count = atoi(php_optarg);
           pid_t parent_pid = getpid(), child_pid;
@@ -2492,6 +2503,7 @@ consult the installation file that came with this distribution, or visit \n\
           if (parent_pid == getpid())
             php_execute_script(&file_handle TSRMLS_CC);
 
+          zend_destroy_file_handle(&file_handle TSRMLS_CC);
           /* seems not to reset the state
           php_execute_script(&file_handle TSRMLS_CC);
           for (i = 2; i < 4; i++) {
@@ -2507,6 +2519,15 @@ consult the installation file that came with this distribution, or visit \n\
           }
           */
 				} break;
+        case PHP_MODE_DATAFLOW: {
+          extern zend_opcode_monitor_t *opcode_monitor;
+
+					PG(during_request_startup) = 0;
+          opcode_monitor->opmon_dataflow(&file_handle);
+          zend_destroy_file_handle(&file_handle TSRMLS_CC);
+          exit_status = SUCCESS;
+        } break;
+#endif
 				case PHP_MODE_LINT:
 					PG(during_request_startup) = 0;
 					exit_status = php_lint_script(&file_handle TSRMLS_CC);

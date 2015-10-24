@@ -1,9 +1,11 @@
 <?php
+
 $foo = "foo";
 $bar = "bar";
 
-function zot($str)
+function foobar($str)
 {
-  return "zot-$str";
+  return "foobar-$str";
 }
+
 ?>
