@@ -142,7 +142,7 @@ static const opt_struct OPTIONS[] = {
 	{'C', 0, "no-chdir"},
 	{'c', 1, "php-ini"},
 	{'d', 1, "define"},
-    {'D', 0, "dataflow"},
+  {'D', 0, "dataflow"},
 	{'e', 0, "profile-info"},
 	{'f', 1, "file"},
 	{'h', 0, "help"},
