@@ -568,7 +568,7 @@ PHP_FUNCTION(mysqli_query)
       opcode_monitor->notify_database_query(query);
     else
       fprintf(stderr, "mysqli doesn't see opmon :-(\n");
-    fprintf(stderr, "Is this the arg? 0x%llx\n", query_arg);
+    // fprintf(stderr, "Is this the arg? 0x%llx\n", query_arg);
   }
 #endif
 
