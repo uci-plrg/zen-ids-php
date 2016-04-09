@@ -170,7 +170,7 @@ ZEND_API void* zend_vm_stack_extend(size_t size TSRMLS_DC)
     stack->top = EG(vm_stack_top);
 	EG(vm_stack) = stack = zend_vm_stack_new_page(
 		EXPECTED(size < ZEND_VM_STACK_FREE_PAGE_SIZE) ?
-			ZEND_VM_STACK_PAGE_SIZE : ZEND_VM_STACK_PAGE_ALIGNED_SIZE(size), 
+			ZEND_VM_STACK_PAGE_SIZE : ZEND_VM_STACK_PAGE_ALIGNED_SIZE(size),
 		stack);
 	ptr = stack->top;
 	EG(vm_stack_top) = (void*)(((char*)ptr) + size);
@@ -823,7 +823,7 @@ static void zend_assign_to_string_offset(zval *str, zend_long offset, zval *valu
 static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval *value, zend_uchar value_type TSRMLS_DC)
 {
 	do {
-		if (UNEXPECTED(Z_REFCOUNTED_P(variable_ptr))) {	
+		if (UNEXPECTED(Z_REFCOUNTED_P(variable_ptr))) {
 			zend_refcounted *garbage;
 
 			if (Z_ISREF_P(variable_ptr)) {
@@ -908,7 +908,7 @@ static zend_always_inline HashTable *zend_get_target_symbol_table(zend_execute_d
 {
 	HashTable *ht;
 
-	if (EXPECTED(fetch_type == ZEND_FETCH_GLOBAL_LOCK) || 
+	if (EXPECTED(fetch_type == ZEND_FETCH_GLOBAL_LOCK) ||
 	    EXPECTED(fetch_type == ZEND_FETCH_GLOBAL)) {
 		ht = &EG(symbol_table).ht;
 	} else if (EXPECTED(fetch_type == ZEND_FETCH_STATIC)) {
@@ -982,7 +982,7 @@ str_index:
 					}
 				}
 			}
-		} else { 
+		} else {
 			switch (type) {
 				case BP_VAR_R:
 					zend_error(E_NOTICE, "Undefined index: %s", offset_key->val);
@@ -1104,7 +1104,7 @@ convert_to_array:
 		}
 
 		zend_check_string_offset(container, dim, type TSRMLS_CC);
-		
+
 		ZVAL_INDIRECT(result, NULL); /* wrong string offset */
 	} else if (EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (!Z_OBJ_HT_P(container)->read_dimension) {
@@ -1420,10 +1420,18 @@ ZEND_API void zend_clean_and_cache_symbol_table(zend_array *symbol_table TSRMLS_
 
 static zend_always_inline void i_free_compiled_variables(zend_execute_data *execute_data TSRMLS_DC) /* {{{ */
 {
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+#endif
+
 	if (EXPECTED(EX(func)->op_array.last_var > 0)) {
 		zval *cv = EX_VAR_NUM(0);
 		zval *end = cv + EX(func)->op_array.last_var;
 		do {
+#ifdef ZEND_MONITOR
+      if (opcode_monitor != NULL)
+        opcode_monitor->notify_zval_free(cv);
+#endif
 			zval_ptr_dtor(cv);
 			cv++;
 	 	} while (cv != end);
@@ -1567,7 +1575,7 @@ static zend_always_inline void i_init_execute_data(zend_execute_data *execute_da
 		zend_attach_symbol_table(execute_data);
 	} else {
 		uint32_t first_extra_arg, num_args;
-		
+
 		/* Handle arguments */
 		first_extra_arg = op_array->num_args;
 		if (UNEXPECTED((op_array->fn_flags & ZEND_ACC_VARIADIC) != 0)) {
@@ -1699,7 +1707,7 @@ static zend_execute_data *zend_vm_stack_copy_call_frame(zend_execute_data *call,
 {
 	zend_execute_data *new_call;
 	int used_stack = (EG(vm_stack_top) - (zval*)call) + additional_args;
-		
+
 	/* copy call frame into new stack segment */
 	new_call = zend_vm_stack_extend(used_stack * sizeof(zval) TSRMLS_CC);
 	*new_call = *call;

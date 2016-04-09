@@ -170,7 +170,7 @@ static zend_always_inline zend_execute_data *zend_vm_stack_push_call_frame(uint3
 {
 	uint32_t used_stack = ZEND_CALL_FRAME_SLOT + num_args;
 	zend_execute_data *call;
-	
+
 	if (ZEND_USER_CODE(func->type)) {
 		used_stack += func->op_array.last_var + func->op_array.T - MIN(func->op_array.num_args, num_args);
 	}
@@ -187,12 +187,19 @@ static zend_always_inline zend_execute_data *zend_vm_stack_push_call_frame(uint3
 static zend_always_inline void zend_vm_stack_free_extra_args(zend_execute_data *call TSRMLS_DC)
 {
 	uint32_t first_extra_arg = call->func->op_array.num_args - ((call->func->common.fn_flags & ZEND_ACC_VARIADIC) != 0);
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 
  	if (UNEXPECTED(call->num_args > first_extra_arg)) {
  		zval *end = EX_VAR_NUM_2(call, call->func->op_array.last_var + call->func->op_array.T);
  		zval *p = end + (call->num_args - first_extra_arg);
 		do {
 			p--;
+#ifdef ZEND_MONITOR
+            if (opcode_monitor != NULL)
+              opcode_monitor->notify_zval_free(p);
+#endif
 			zval_ptr_dtor_nogc(p);
 		} while (p != end);
  	}
@@ -200,7 +207,10 @@ static zend_always_inline void zend_vm_stack_free_extra_args(zend_execute_data *
 
 static zend_always_inline void zend_vm_stack_free_args(zend_execute_data *call TSRMLS_DC)
 {
-	uint32_t num_args = call->num_args;	
+	uint32_t num_args = call->num_args;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 
 	if (num_args > 0) {
 		zval *end = ZEND_CALL_ARG(call, 1);
@@ -208,6 +218,10 @@ static zend_always_inline void zend_vm_stack_free_args(zend_execute_data *call T
 
 		do {
 			p--;
+#ifdef ZEND_MONITOR
+            if (opcode_monitor != NULL)
+              opcode_monitor->notify_zval_free(p);
+#endif
 			zval_ptr_dtor_nogc(p);
 		} while (p != end);
 	}

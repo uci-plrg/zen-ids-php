@@ -1,11 +1,15 @@
 <?php
 
 function foo($a) {
-  echo ("a: $a\n");
+  echo ("foo: $a\n");
 }
 
 function bar($a) {
-  echo ("a: $a\n");
+  echo ("bar: $a\n");
+}
+
+function zot(&$a) {
+  echo ("zot: $a\n");
 }
 
 $stuff = array( "a" => "c", "b" => "d" );
@@ -21,5 +25,11 @@ foo($stuff["a"]);
 
 bar($b_stuff);
 bar($stuff["b"]);
+
+$a_stuff = strlen($a_stuff); # retains taint
+$a_stuff = strstr($a_stuff, "a"); # may drop taint
+
+zot($a_stuff);
+zot($stuff["a"]);
 
 ?>

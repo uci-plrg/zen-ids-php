@@ -5,7 +5,7 @@
    | Copyright (c) 1998-2014 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
-   | that is bundled with this package in the file LICENSE, and is        | 
+   | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
    | http://www.zend.com/license/2_00.txt.                                |
    | If you did not receive a copy of the Zend license and are unable to  |
@@ -52,7 +52,7 @@ ZEND_API void _zval_dtor_func(zend_refcounted *p ZEND_FILE_LINE_DC)
 			}
 		case IS_CONSTANT_AST: {
 				zend_ast_ref *ast = (zend_ast_ref*)p;
-		
+
 				zend_ast_destroy_and_free(ast->ast);
 				efree_size(ast, sizeof(zend_ast_ref));
 				break;
@@ -85,6 +85,14 @@ ZEND_API void _zval_dtor_func(zend_refcounted *p ZEND_FILE_LINE_DC)
 		default:
 			break;
 	}
+
+#ifdef ZEND_MONITOR
+  {
+    extern zend_opcode_monitor_t *opcode_monitor;
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_zval_free((zval *) p);
+  }
+#endif
 }
 
 ZEND_API void _zval_dtor_func_for_ptr(zend_refcounted *p ZEND_FILE_LINE_DC)
@@ -142,6 +150,14 @@ ZEND_API void _zval_dtor_func_for_ptr(zend_refcounted *p ZEND_FILE_LINE_DC)
 		default:
 			break;
 	}
+
+#ifdef ZEND_MONITOR
+  {
+    extern zend_opcode_monitor_t *opcode_monitor;
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_zval_free((zval *) p);
+  }
+#endif
 }
 
 ZEND_API void _zval_internal_dtor(zval *zvalue ZEND_FILE_LINE_DC)
@@ -173,6 +189,14 @@ ZEND_API void _zval_internal_dtor(zval *zvalue ZEND_FILE_LINE_DC)
 		default:
 			break;
 	}
+
+#ifdef ZEND_MONITOR
+  {
+    extern zend_opcode_monitor_t *opcode_monitor;
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_zval_free(zvalue);
+  }
+#endif
 }
 
 ZEND_API void _zval_internal_dtor_for_ptr(zval *zvalue ZEND_FILE_LINE_DC)
@@ -204,6 +228,14 @@ ZEND_API void _zval_internal_dtor_for_ptr(zval *zvalue ZEND_FILE_LINE_DC)
 		default:
 			break;
 	}
+
+#ifdef ZEND_MONITOR
+  {
+    extern zend_opcode_monitor_t *opcode_monitor;
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_zval_free(zvalue);
+  }
+#endif
 }
 
 ZEND_API void zval_add_ref(zval *p)
@@ -266,7 +298,7 @@ ZEND_API void _zval_copy_ctor_func(zval *zvalue ZEND_FILE_LINE_DC)
 }
 
 
-ZEND_API size_t zend_print_variable(zval *var TSRMLS_DC) 
+ZEND_API size_t zend_print_variable(zval *var TSRMLS_DC)
 {
 	return zend_print_zval(var, 0 TSRMLS_CC);
 }
@@ -309,10 +341,10 @@ ZEND_API int zval_copy_static_var(zval *p TSRMLS_DC, int num_args, va_list args,
 	HashTable *target = va_arg(args, HashTable*);
 	zend_bool is_ref;
 	zval tmp;
-  
+
 	if (Z_CONST_FLAGS_P(p) & (IS_LEXICAL_VAR|IS_LEXICAL_REF)) {
 		is_ref = Z_CONST_FLAGS_P(p) & IS_LEXICAL_REF;
-    
+
 		symbol_table = zend_rebuild_symbol_table(TSRMLS_C);
 		p = zend_hash_find(&symbol_table->ht, key->key);
 		if (!p) {
@@ -350,7 +382,7 @@ ZEND_API int zval_copy_static_var(zval *p TSRMLS_DC, int num_args, va_list args,
 		}
 	} else if (Z_REFCOUNTED_P(p)) {
 		Z_ADDREF_P(p);
-	} 
+	}
 	zend_hash_add(target, key->key, p);
 	return ZEND_HASH_APPLY_KEEP;
 }
