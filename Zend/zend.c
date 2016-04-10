@@ -725,6 +725,10 @@ void zend_post_startup(TSRMLS_D) /* {{{ */
 
 void zend_shutdown(TSRMLS_D) /* {{{ */
 {
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+#endif
+
 #ifdef ZEND_SIGNALS
 	zend_signal_shutdown(TSRMLS_C);
 #endif
@@ -758,6 +762,9 @@ void zend_shutdown(TSRMLS_D) /* {{{ */
 		zend_hash_reverse_apply(GLOBAL_CLASS_TABLE, (apply_func_t) clean_non_persistent_class_full TSRMLS_CC);
 	}
 	zend_destroy_modules();
+#ifdef ZEND_MONITOR
+      opcode_monitor = NULL;
+#endif
 
 	virtual_cwd_deactivate(TSRMLS_C);
 	virtual_cwd_shutdown();
@@ -1256,7 +1263,7 @@ ZEND_API int zend_execute_scripts(int type TSRMLS_DC, zval *retval, int file_cou
 		if (!file_handle) {
 			continue;
 		}
-       
+
 		op_array = zend_compile_file(file_handle, type TSRMLS_CC);
 		if (file_handle->opened_path) {
 			zend_hash_str_add_empty_element(&EG(included_files), file_handle->opened_path, strlen(file_handle->opened_path));

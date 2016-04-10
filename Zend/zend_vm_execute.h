@@ -339,7 +339,7 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 {
 	DCL_OPLINE
 
-#ifdef ZEND_MONITOR  
+#ifdef ZEND_MONITOR
   extern zend_opcode_monitor_t *opcode_monitor;
 #endif
 
@@ -353,12 +353,12 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 		}
 #endif
 
-#ifdef ZEND_MONITOR 
+#ifdef ZEND_MONITOR
     if (opcode_monitor != NULL) {
       opcode_monitor->notify_opcode_interp(OPLINE);
     }
 #endif
-    
+
     ret = OPLINE->handler(execute_data TSRMLS_CC);
 		if (UNEXPECTED(ret != 0)) {
 			if (EXPECTED(ret > 0)) {
@@ -394,6 +394,23 @@ ZEND_API void zend_execute(zend_op_array *op_array, zval *return_value TSRMLS_DC
 static int ZEND_FASTCALL zend_leave_helper_SPEC(ZEND_OPCODE_HANDLER_ARGS)
 {
 	vm_frame_kind frame_kind = VM_FRAME_KIND(EX(frame_info));
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    if (opcode_monitor != NULL && execute_data->func != NULL) {
+        zend_op_array *op_array = &execute_data->func->op_array;
+        zval *var = EX_VAR_NUM(0);
+        zval *end = EX_VAR_NUM(op_array->last_var + op_array->T);
+        zend_string *name = execute_data->func->common.function_name;
+
+        fprintf(stderr, "zend leave from %s:%s\n", op_array->filename->val,
+                name == NULL ? "(none)" : name->val);
+
+        do {
+            opcode_monitor->notify_zval_free((zval *) var);
+            var++;
+        } while (var <= end);
+    }
+#endif
 
 	if (frame_kind == VM_FRAME_NESTED_FUNCTION) {
 		zend_object *object;
