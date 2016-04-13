@@ -559,19 +559,6 @@ PHP_FUNCTION(mysqli_query)
 		return;
 	}
 
-#ifdef ZEND_MONITOR
-  {
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *query_arg = ZEND_CALL_ARG(execute_data, 2);
-
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_database_query(query);
-    else
-      fprintf(stderr, "mysqli doesn't see opmon :-(\n");
-    // fprintf(stderr, "Is this the arg? 0x%llx\n", query_arg);
-  }
-#endif
-
 	if (!query_len) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Empty query");
 		RETURN_FALSE;
@@ -636,6 +623,25 @@ PHP_FUNCTION(mysqli_query)
 										"%s", mysql_error(mysql->mysql));
 		RETURN_FALSE;
 	}
+
+/*
+#ifdef ZEND_MONITOR
+  {
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *query_arg = ZEND_CALL_ARG(execute_data, 2);
+
+    if (opcode_monitor != NULL) {
+      int field_count = mysql_num_fields(result);
+      MYSQL_FIELD *fields = mysql_fetch_fields(result);
+
+      opcode_monitor->notify_database_query(query, field_count, fields);
+    } else {
+      fprintf(stderr, "mysqli doesn't see opmon :-(\n");
+    // fprintf(stderr, "Is this the arg? 0x%llx\n", query_arg);
+    }
+  }
+#endif
+*/
 
 	if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {
 		php_mysqli_report_index(query, mysqli_server_status(mysql->mysql) TSRMLS_CC);
