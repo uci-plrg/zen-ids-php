@@ -1090,13 +1090,6 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 			}
 			set->initialized_rows++;
 			for (i = 0; i < field_count; i++) {
-#ifdef ZEND_MONITOR
-        if (opcode_monitor != NULL) {
-          opcode_monitor->notify_site_modification_fetch(&current_row[i],
-                                                         meta->fields[i].org_name,
-                                                         meta->fields[i].org_table);
-        }
-#endif
 				/*
 				  NULL fields are 0 length, 0 is not more than 0
 				  String of zero size, definitely can't be the next max_length.
@@ -1113,11 +1106,17 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 
 		for (i = 0; i < field_count; i++) {
 			zval * data = &current_row[i];
+#ifdef ZEND_MONITOR
+      zval *row_value;
+#endif
 
 			set->lengths[i] = (Z_TYPE_P(data) == IS_STRING)? Z_STRLEN_P(data) : 0;
 
 			if (flags & MYSQLND_FETCH_NUM) {
 				Z_TRY_ADDREF_P(data);
+#ifdef ZEND_MONITOR
+        row_value =
+#endif
 				zend_hash_next_index_insert(Z_ARRVAL_P(row), data);
 			}
 			if (flags & MYSQLND_FETCH_ASSOC) {
@@ -1130,11 +1129,24 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 				*/
 				Z_TRY_ADDREF_P(data);
 				if (meta->zend_hash_keys[i].is_numeric == FALSE) {
+#ifdef ZEND_MONITOR
+          row_value =
+#endif
 					zend_hash_update(Z_ARRVAL_P(row), meta->fields[i].sname, data);
 				} else {
+#ifdef ZEND_MONITOR
+          row_value =
+#endif
 					zend_hash_index_update(Z_ARRVAL_P(row), meta->zend_hash_keys[i].key, data);
 				}
 			}
+#ifdef ZEND_MONITOR
+      if (opcode_monitor != NULL && strlen(meta->fields[i].org_table) > 0) {
+        opcode_monitor->notify_site_modification_fetch(row_value,
+                                                       meta->fields[i].org_table,
+                                                       meta->fields[i].org_name);
+      }
+#endif
 		}
 		set->data_cursor += field_count;
 		MYSQLND_INC_GLOBAL_STATISTIC(STAT_ROWS_FETCHED_FROM_CLIENT_NORMAL_BUF);
