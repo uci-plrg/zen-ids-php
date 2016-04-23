@@ -400,10 +400,10 @@ static int ZEND_FASTCALL zend_leave_helper_SPEC(ZEND_OPCODE_HANDLER_ARGS)
         zend_op_array *op_array = &execute_data->func->op_array;
         zval *var = EX_VAR_NUM(0);
         zval *end = EX_VAR_NUM(op_array->last_var + op_array->T);
-        zend_string *name = execute_data->func->common.function_name;
+        // zend_string *name = execute_data->func->common.function_name;
 
-        fprintf(stderr, "zend leave from %s:%s\n", op_array->filename->val,
-                name == NULL ? "(none)" : name->val);
+        // fprintf(stderr, "zend leave from %s:%s\n", op_array->filename->val,
+        //        name == NULL ? "(none)" : name->val);
 
         do {
             opcode_monitor->notify_zval_free((zval *) var);
