@@ -823,6 +823,10 @@ static void zend_assign_to_string_offset(zval *str, zend_long offset, zval *valu
 
 static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval *value, zend_uchar value_type TSRMLS_DC)
 {
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+#endif
+
 	do {
 		if (UNEXPECTED(Z_REFCOUNTED_P(variable_ptr))) {
 			zend_refcounted *garbage;
@@ -836,9 +840,14 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 			if (Z_TYPE_P(variable_ptr) == IS_OBJECT &&
 	    		UNEXPECTED(Z_OBJ_HANDLER_P(variable_ptr, set) != NULL)) {
 				Z_OBJ_HANDLER_P(variable_ptr, set)(variable_ptr, value TSRMLS_CC);
+        // ignore: setter will propagate
 				return variable_ptr;
 			}
 			if ((value_type & (IS_VAR|IS_CV)) && variable_ptr == value) {
+#ifdef ZEND_MONITOR
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
+#endif
 				return variable_ptr;
 			}
 			garbage = Z_COUNTED_P(variable_ptr);
@@ -855,6 +864,10 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 					}
 				}
 				_zval_dtor_func_for_ptr(garbage ZEND_FILE_LINE_CC);
+#ifdef ZEND_MONITOR
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
+#endif
 				return variable_ptr;
 			} else { /* we need to split */
 				/* optimized version of GC_ZVAL_CHECK_POSSIBLE_ROOT(variable_ptr) */
@@ -877,6 +890,10 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 			Z_ADDREF_P(variable_ptr);
 		}
 	}
+#ifdef ZEND_MONITOR
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
+#endif
 	return variable_ptr;
 }
 
