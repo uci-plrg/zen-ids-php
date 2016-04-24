@@ -95,7 +95,7 @@ ZEND_API void rebuild_object_properties(zend_object *zobj) /* {{{ */
 					    (prop_info->flags & ZEND_ACC_PRIVATE) != 0 &&
 						Z_TYPE_P(OBJ_PROP(zobj, prop_info->offset)) != IS_UNDEF) {
 						zval zv;
-						
+
 						ZVAL_INDIRECT(&zv, OBJ_PROP(zobj, prop_info->offset));
 						zend_hash_add(zobj->properties, prop_info->name, &zv);
 					}
@@ -338,7 +338,7 @@ static zend_always_inline zend_property_info *zend_get_property_info_quick(zend_
 			}
 		}
 	}
-	
+
 	if (EG(scope) != ce
 		&& EG(scope)
 		&& is_derived_class(ce, EG(scope))
@@ -524,6 +524,9 @@ ZEND_API void zend_std_write_property(zval *object, zval *member, zval *value, v
 	zval tmp_member;
 	zval *variable_ptr;
 	zend_property_info *property_info;
+#ifdef ZEND_MONITOR
+  extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 
 	zobj = Z_OBJ_P(object);
 
@@ -590,6 +593,10 @@ found:
 						zval_ptr_dtor(&garbage);
 					}
 				}
+#ifdef ZEND_MONITOR
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "A[i]");
+#endif
 				goto exit;
 			}
 		}
@@ -597,6 +604,7 @@ found:
 
 	/* magic set */
 	if (zobj->ce->__set) {
+    // ignore taint here: setter will propagate
 		zend_long *guard = zend_get_property_guard(zobj, Z_STR_P(member));
 
 	    if (!((*guard) & IN_SET)) {
@@ -635,12 +643,18 @@ write_std_property:
 		}
 		if (EXPECTED(property_info != NULL) &&
 		    EXPECTED((property_info->flags & ZEND_ACC_STATIC) == 0)) {
+      zval *property = OBJ_PROP(zobj, property_info->offset);
 
-			ZVAL_COPY_VALUE(OBJ_PROP(zobj, property_info->offset), value);
+			ZVAL_COPY_VALUE(property, value);
+#ifdef ZEND_MONITOR
+      if (opcode_monitor != NULL)
+        opcode_monitor->notify_dataflow(value, "*", property, "A[i]");
+#endif
 		} else {
 			if (!zobj->properties) {
 				rebuild_object_properties(zobj);
 			}
+      // ignore here: adder will propagate
 			zend_hash_add_new(zobj->properties, Z_STR_P(member), value);
 		}
 	}
@@ -695,6 +709,7 @@ static void zend_std_write_dimension(zval *object, zval *offset, zval *value TSR
 		} else {
 			SEPARATE_ARG_IF_REF(offset);
 		}
+    // propagate taint into array
 		zend_call_method_with_2_params(object, ce, NULL, "offsetset", NULL, offset, value);
 		zval_ptr_dtor(offset);
 	} else {
@@ -828,7 +843,7 @@ static void zend_std_unset_property(zval *object, zval *member, void **cache_slo
 			goto exit;
 		}
 	}
-	
+
 	/* magic unset */
 	if (zobj->ce->__unset) {
 		zend_long *guard = zend_get_property_guard(zobj, Z_STR_P(member));
@@ -1282,7 +1297,7 @@ ZEND_API zval *zend_std_get_static_property(zend_class_entry *ce, zend_string *p
 		}
 		return NULL;
 	}
-	
+
 	return &CE_STATIC_MEMBERS(ce)[property_info->offset];
 }
 /* }}} */

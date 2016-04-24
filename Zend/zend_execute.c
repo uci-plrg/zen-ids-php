@@ -762,6 +762,7 @@ static zend_always_inline void zend_assign_to_object(zval *retval, zval *object,
 	}
 
 	if (retval && !EG(exception)) {
+    // propagate to retval
 		ZVAL_COPY(retval, value);
 	}
 	zval_ptr_dtor(value);

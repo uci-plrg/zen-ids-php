@@ -699,6 +699,8 @@ typedef struct _zend_opcode_monitor_t {
   void (*set_top_level_script)(const char *script_path);
   void (*notify_opcode_interp)(const zend_op *op);
   void (*notify_function_compile_complete)(zend_op_array *op_array);
+  void (*notify_dataflow)(const zval *src, const char *src_name,
+                          const zval *dst, const char *dst_name);
   void (*notify_zval_free)(const zval *zv);
   void (*notify_request)(zend_bool start);
   void (*notify_site_modification_fetch)(const zval *value, const char *table_name,
