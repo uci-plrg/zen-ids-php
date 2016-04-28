@@ -696,18 +696,17 @@ static zend_always_inline int zend_check_arg_send_type(const zend_function *zf, 
 
 #ifdef ZEND_MONITOR
 typedef struct _zend_opcode_monitor_t {
-  void (*set_top_level_script)(const char *script_path);
-  void (*notify_opcode_interp)(const zend_op *op);
-  void (*notify_function_compile_complete)(zend_op_array *op_array);
-  void (*notify_dataflow)(const zval *src, const char *src_name,
-                          const zval *dst, const char *dst_name);
-  void (*notify_zval_free)(const zval *zv);
-  void (*notify_request)(zend_bool start);
-  void (*notify_site_modification_fetch)(const zval *value, const char *table_name,
-                                         const char *column_name);
-  void (*notify_worker_startup)();
-  void (*opmon_tokenize)();
-  int (*opmon_dataflow)();
+    zend_dataflow_monitor_t dataflow;
+    void (*set_top_level_script)(const char *script_path);
+    void (*notify_opcode_interp)(const zend_op *op);
+    void (*notify_function_compile_complete)(zend_op_array *op_array);
+    void (*notify_zval_free)(const zval *zv);
+    void (*notify_request)(zend_bool start);
+    void (*notify_site_modification_fetch)(const zval *value, const char *table_name,
+                                     const char *column_name);
+    void (*notify_worker_startup)();
+    void (*opmon_tokenize)();
+    int (*opmon_dataflow)();
 } zend_opcode_monitor_t;
 
 ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);

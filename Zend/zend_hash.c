@@ -297,10 +297,10 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			}
 			ZVAL_COPY_VALUE(data, pData);
 			HANDLE_UNBLOCK_INTERRUPTIONS();
-#ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_dataflow(pData, "*", data, "A[i]");
-#endif
+//#ifdef ZEND_MONITOR
+//      if (opcode_monitor != NULL)
+//        opcode_monitor->notify_dataflow(pData, "*", data, "A[i]");
+//#endif
 			return data;
 		}
 	}
@@ -324,10 +324,10 @@ add_to_hash:
 	ht->arHash[nIndex] = idx;
 	HANDLE_UNBLOCK_INTERRUPTIONS();
 
-#ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_dataflow(pData, "*", &p->val, "A[i]");
-#endif
+//#ifdef ZEND_MONITOR
+//    if (opcode_monitor != NULL)
+//      opcode_monitor->notify_dataflow(pData, "*", &p->val, "A[i]");
+//#endif
 	return &p->val;
 }
 

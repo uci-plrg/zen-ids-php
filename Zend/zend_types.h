@@ -150,7 +150,7 @@ typedef struct _Bucket {
 	zend_string      *key;              /* string key or NULL for numerics */
 } Bucket;
 
-typedef struct _HashTable {	
+typedef struct _HashTable {
 	uint32_t          nTableSize;
 	uint32_t          nTableMask;
 	uint32_t          nNumUsed;
@@ -159,7 +159,7 @@ typedef struct _HashTable {
 	Bucket           *arData;
 	uint32_t         *arHash;
 	dtor_func_t       pDestructor;
-	uint32_t          nInternalPointer; 
+	uint32_t          nInternalPointer;
 	union {
 		struct {
 			ZEND_ENDIAN_LOHI_3(
@@ -231,6 +231,25 @@ struct _zend_ast_ref {
 static zend_always_inline zend_uchar zval_get_type(const zval* pz) {
 	return pz->u1.v.type;
 }
+
+#ifdef ZEND_MONITOR
+typedef struct _zend_dataflow_monitor_t {
+    void (*notify_dataflow)(const zval *src, const char *src_name,
+                            const zval *dst, const char *dst_name);
+} zend_dataflow_monitor_t;
+
+static zend_always_inline void notify_dataflow(const zval *src, const char *src_name,
+                                               const zval *dst, const char *dst_name)
+{
+    extern zend_dataflow_monitor_t *dataflow_monitor;
+    if (dataflow_monitor != NULL)
+        dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name);
+}
+# define ZEND_DATAFLOW(src, src_name, dst, dst_name) \
+    notify_dataflow(src, src_name, dst, dst_name)
+#else
+# define ZEND_DATAFLOW(src, src_name, dst, dst_name)
+#endif
 
 /* we should never set just Z_TYPE, we should set Z_TYPE_INFO */
 #define Z_TYPE(zval)				zval_get_type(&(zval))
@@ -327,7 +346,7 @@ static zend_always_inline zend_uchar zval_get_type(const zval* pz) {
 			(Z_GC_FLAGS(zval) & ~IS_OBJ_APPLY_COUNT) | \
 			((Z_GC_FLAGS(zval) & IS_OBJ_APPLY_COUNT) + 1); \
 	} while (0)
-	
+
 #define Z_OBJ_DEC_APPLY_COUNT(zval) do { \
 		Z_GC_FLAGS(zval) = \
 			(Z_GC_FLAGS(zval) & ~IS_OBJ_APPLY_COUNT) | \
@@ -700,6 +719,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 		zval *_z2 = (v);								\
 		(_z1)->value = (_z2)->value;					\
 		Z_TYPE_INFO_P(_z1) = Z_TYPE_INFO_P(_z2);		\
+        ZEND_DATAFLOW(_z2, "copy-src", _z1, "copy-dst");\
 	} while (0)
 
 #define ZVAL_COPY(z, v)									\

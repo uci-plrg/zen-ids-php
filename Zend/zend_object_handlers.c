@@ -595,7 +595,7 @@ found:
 				}
 #ifdef ZEND_MONITOR
         if (opcode_monitor != NULL)
-          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "A[i]");
+          opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "A[i]");
 #endif
 				goto exit;
 			}
@@ -646,10 +646,10 @@ write_std_property:
       zval *property = OBJ_PROP(zobj, property_info->offset);
 
 			ZVAL_COPY_VALUE(property, value);
-#ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_dataflow(value, "*", property, "A[i]");
-#endif
+//#ifdef ZEND_MONITOR
+//      if (opcode_monitor != NULL)
+//        opcode_monitor->notify_dataflow(value, "*", property, "A[i]");
+//#endif
 		} else {
 			if (!zobj->properties) {
 				rebuild_object_properties(zobj);

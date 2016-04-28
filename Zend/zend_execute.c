@@ -846,7 +846,7 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 			if ((value_type & (IS_VAR|IS_CV)) && variable_ptr == value) {
 #ifdef ZEND_MONITOR
         if (opcode_monitor != NULL)
-          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
+          opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "var");
 #endif
 				return variable_ptr;
 			}
@@ -864,10 +864,10 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 					}
 				}
 				_zval_dtor_func_for_ptr(garbage ZEND_FILE_LINE_CC);
-#ifdef ZEND_MONITOR
-        if (opcode_monitor != NULL)
-          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
-#endif
+//#ifdef ZEND_MONITOR
+//        if (opcode_monitor != NULL)
+//          opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
+//#endif
 				return variable_ptr;
 			} else { /* we need to split */
 				/* optimized version of GC_ZVAL_CHECK_POSSIBLE_ROOT(variable_ptr) */
@@ -890,10 +890,10 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 			Z_ADDREF_P(variable_ptr);
 		}
 	}
-#ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
-#endif
+//#ifdef ZEND_MONITOR
+//  if (opcode_monitor != NULL)
+//    opcode_monitor->notify_dataflow(value, "*", variable_ptr, "var");
+//#endif
 	return variable_ptr;
 }
 
