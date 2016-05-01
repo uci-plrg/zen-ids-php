@@ -583,7 +583,8 @@ found:
 						ZVAL_COPY_VALUE(&garbage, variable_ptr);
 
 						/* if we assign referenced variable, we should separate it */
-						ZVAL_COPY_VALUE(variable_ptr, value);
+						if (ZVAL_COPY_VALUE(variable_ptr, value) && zobj->properties != NULL)
+              zobj->properties->u.flags |= HASH_FLAG_TAINT;
 						if (Z_REFCOUNTED_P(variable_ptr)) {
 							Z_ADDREF_P(variable_ptr);
 							if (Z_ISREF_P(variable_ptr)) {
@@ -594,8 +595,12 @@ found:
 					}
 				}
 #ifdef ZEND_MONITOR
-        if (opcode_monitor != NULL)
-          opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "A[i]");
+        if (opcode_monitor != NULL) {
+          if (opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "A[i]") &&
+              zobj->properties != NULL) {
+              zobj->properties->u.flags |= HASH_FLAG_TAINT;
+          }
+        }
 #endif
 				goto exit;
 			}
@@ -645,11 +650,8 @@ write_std_property:
 		    EXPECTED((property_info->flags & ZEND_ACC_STATIC) == 0)) {
       zval *property = OBJ_PROP(zobj, property_info->offset);
 
-			ZVAL_COPY_VALUE(property, value);
-//#ifdef ZEND_MONITOR
-//      if (opcode_monitor != NULL)
-//        opcode_monitor->notify_dataflow(value, "*", property, "A[i]");
-//#endif
+			if (ZVAL_COPY_VALUE(property, value) && zobj->properties != NULL)
+        zobj->properties->u.flags |= HASH_FLAG_TAINT;
 		} else {
 			if (!zobj->properties) {
 				rebuild_object_properties(zobj);

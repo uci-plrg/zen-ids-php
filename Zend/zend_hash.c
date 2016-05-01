@@ -263,9 +263,9 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 	uint32_t nIndex;
 	uint32_t idx;
 	Bucket *p;
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
+//#ifdef ZEND_MONITOR
+//  extern zend_opcode_monitor_t *opcode_monitor;
+//#endif
 #ifdef ZEND_SIGNALS
 	TSRMLS_FETCH();
 #endif
@@ -295,7 +295,8 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			if (ht->pDestructor) {
 				ht->pDestructor(data);
 			}
-			ZVAL_COPY_VALUE(data, pData);
+			if (ZVAL_COPY_VALUE(data, pData))
+        ht->u.flags |= HASH_FLAG_TAINT;
 			HANDLE_UNBLOCK_INTERRUPTIONS();
 //#ifdef ZEND_MONITOR
 //      if (opcode_monitor != NULL)
@@ -318,7 +319,8 @@ add_to_hash:
 	p->h = h = zend_string_hash_val(key);
 	p->key = key;
 	zend_string_addref(key);
-	ZVAL_COPY_VALUE(&p->val, pData);
+	if (ZVAL_COPY_VALUE(&p->val, pData))
+    ht->u.flags |= HASH_FLAG_TAINT;
 	nIndex = h & ht->nTableMask;
 	Z_NEXT(p->val) = ht->arHash[nIndex];
 	ht->arHash[nIndex] = idx;
@@ -586,15 +588,39 @@ static void zend_hash_do_resize(HashTable *ht)
 	if (ht->nNumUsed < ht->nNumOfElements) {
 		HANDLE_BLOCK_INTERRUPTIONS();
 		zend_hash_rehash(ht);
+    // need to adjust here
 		HANDLE_UNBLOCK_INTERRUPTIONS();
 	} else if ((ht->nTableSize << 1) > 0) {	/* Let's double the table size */
 		HANDLE_BLOCK_INTERRUPTIONS();
+#ifdef ZEND_MONITOR
+    Bucket *old_arData = ht->arData;
+    uint32_t old_nNumUsed = ht->nNumUsed;
+#endif
 		ht->arData = (Bucket *) safe_perealloc(ht->arData, (ht->nTableSize << 1), sizeof(Bucket) + sizeof(uint32_t), 0, ht->u.flags & HASH_FLAG_PERSISTENT);
 		ht->arHash = (uint32_t*)(ht->arData + (ht->nTableSize << 1));
 		ht->nTableSize = (ht->nTableSize << 1);
 		ht->nTableMask = ht->nTableSize - 1;
 		zend_hash_rehash(ht);
+#ifdef ZEND_MONITOR
+//    if (old_arData != ht->arData)
+//      fprintf(stderr, "Expanded hashtable to 0x%x\n", (sizeof(Bucket) + sizeof(uint32_t)) * ht->nTableSize);
+//    what if it resized in place?
+    if (ht->u.flags & HASH_FLAG_TAINT) {
+      uint32_t iOld, iNew;
+      Bucket *pNew, *pOld;
+
+      fprintf(stderr, "Expand tainted hashtable with %d elements\n", old_nNumUsed);
+      for (iOld = 0, iNew = 0; iOld < old_nNumUsed; iOld++) {
+        pOld = old_arData + iOld;
+        if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
+        pNew = ht->arData + iNew;
+        ZEND_DATAFLOW(&pOld->val, "ht-old", &pNew->val, "ht-new");
+        // remove old taint!
+        iNew++;
+      }
+    }
 		HANDLE_UNBLOCK_INTERRUPTIONS();
+#endif
 	}
 }
 

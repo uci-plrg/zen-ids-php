@@ -18,9 +18,6 @@
    +----------------------------------------------------------------------+
 */
 
-#include <execinfo.h>
-#include <unistd.h>
-
 #ifdef ZEND_WIN32
 # pragma warning(once : 4101)
 # pragma warning(once : 6235)
@@ -311,6 +308,7 @@ static zend_uchar zend_user_opcodes[256] = {0,
 
 static opcode_handler_t zend_vm_get_opcode_handler(zend_uchar opcode, const zend_op* op);
 
+
 #undef OPLINE
 #undef DCL_OPLINE
 #undef USE_OPLINE
@@ -340,8 +338,9 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 	DCL_OPLINE
 
 #ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
+	extern zend_opcode_monitor_t *opcode_monitor;
 #endif
+
 
 	LOAD_OPLINE();
 
@@ -354,12 +353,12 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 #endif
 
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL) {
-      opcode_monitor->notify_opcode_interp(OPLINE);
-    }
+		if (opcode_monitor != NULL) {
+			opcode_monitor->notify_opcode_interp(OPLINE);
+		}
 #endif
-
-    ret = OPLINE->handler(execute_data TSRMLS_CC);
+		
+		ret = OPLINE->handler(execute_data TSRMLS_CC);
 		if (UNEXPECTED(ret != 0)) {
 			if (EXPECTED(ret > 0)) {
 				execute_data = EG(current_execute_data);
@@ -367,6 +366,7 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 				return;
 			}
 		}
+
 	}
 	zend_error_noreturn(E_ERROR, "Arrived at end of main loop which shouldn't happen");
 }
@@ -394,16 +394,13 @@ ZEND_API void zend_execute(zend_op_array *op_array, zval *return_value TSRMLS_DC
 static int ZEND_FASTCALL zend_leave_helper_SPEC(ZEND_OPCODE_HANDLER_ARGS)
 {
 	vm_frame_kind frame_kind = VM_FRAME_KIND(EX(frame_info));
+
 #ifdef ZEND_MONITOR
     extern zend_opcode_monitor_t *opcode_monitor;
     if (opcode_monitor != NULL && execute_data->func != NULL) {
         zend_op_array *op_array = &execute_data->func->op_array;
         zval *var = EX_VAR_NUM(0);
         zval *end = EX_VAR_NUM(op_array->last_var + op_array->T);
-        // zend_string *name = execute_data->func->common.function_name;
-
-        // fprintf(stderr, "zend leave from %s:%s\n", op_array->filename->val,
-        //        name == NULL ? "(none)" : name->val);
 
         do {
             opcode_monitor->notify_zval_free((zval *) var);
@@ -651,10 +648,10 @@ static int ZEND_FASTCALL  ZEND_DO_FCALL_SPEC_HANDLER(ZEND_OPCODE_HANDLER_ARGS)
 			object->handlers->call_method(fbc->common.function_name, object, call, EX_VAR(opline->result.var) TSRMLS_CC);
 			EG(current_execute_data) = call->prev_execute_data;
 		} else {
-      void *array[10];
-      size_t size;
-      size = backtrace(array, 10);
-      backtrace_symbols_fd(array, size, fileno(stderr));
+            // void *array[10];
+            // size_t size;
+            // size = backtrace(array, 10);
+            // backtrace_symbols_fd(array, size, fileno(stderr));
 			zend_error_noreturn(E_ERROR, "Cannot call overloaded function for non-object");
 		}
 
@@ -19062,7 +19059,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_VAR_CONST_HANDLER(ZEND_OPCODE_HAN
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -21367,7 +21371,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_VAR_TMP_HANDLER(ZEND_OPCODE_HANDL
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -23541,7 +23552,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_VAR_VAR_HANDLER(ZEND_OPCODE_HANDL
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -25222,7 +25240,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_VAR_UNUSED_HANDLER(ZEND_OPCODE_HA
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -26973,7 +26998,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_VAR_CV_HANDLER(ZEND_OPCODE_HANDLE
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -36526,7 +36558,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_CV_CONST_HANDLER(ZEND_OPCODE_HAND
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -38661,7 +38700,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_CV_TMP_HANDLER(ZEND_OPCODE_HANDLE
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -40707,7 +40753,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_CV_VAR_HANDLER(ZEND_OPCODE_HANDLE
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -42258,7 +42311,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_CV_UNUSED_HANDLER(ZEND_OPCODE_HAN
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}
@@ -43864,7 +43924,14 @@ static int ZEND_FASTCALL  ZEND_ASSIGN_DIM_SPEC_CV_CV_HANDLER(ZEND_OPCODE_HANDLER
 					ZVAL_NULL(EX_VAR(opline->result.var));
 				}
 			} else {
+#ifdef ZEND_MONITOR
+                extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
+#ifdef ZEND_MONITOR
+                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
+                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+#endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
 				}

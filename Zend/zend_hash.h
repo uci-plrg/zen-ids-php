@@ -5,7 +5,7 @@
    | Copyright (c) 1998-2014 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
-   | that is bundled with this package in the file LICENSE, and is        | 
+   | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
    | http://www.zend.com/license/2_00.txt.                                |
    | If you did not receive a copy of the Zend license and are unable to  |
@@ -39,6 +39,9 @@
 #define HASH_FLAG_PERSISTENT       (1<<0)
 #define HASH_FLAG_APPLY_PROTECTION (1<<1)
 #define HASH_FLAG_PACKED           (1<<2)
+#ifdef ZEND_MONITOR
+# define HASH_FLAG_TAINT           (1<<3)
+#endif
 
 #define HASH_MASK_CONSISTENCY      0x60
 
@@ -652,7 +655,7 @@ static zend_always_inline void *zend_hash_get_current_data_ptr_ex(HashTable *ht,
 #define ZEND_HASH_FOREACH_END() \
 		} \
 	} while (0)
-	
+
 #define ZEND_HASH_FOREACH_BUCKET(ht, _bucket) \
 	ZEND_HASH_FOREACH(ht, 0); \
 	_bucket = _p;
@@ -676,7 +679,7 @@ static zend_always_inline void *zend_hash_get_current_data_ptr_ex(HashTable *ht,
 #define ZEND_HASH_FOREACH_STR_KEY(ht, _key) \
 	ZEND_HASH_FOREACH(ht, 0); \
 	_key = _p->key;
-		
+
 #define ZEND_HASH_FOREACH_KEY(ht, _h, _key) \
 	ZEND_HASH_FOREACH(ht, 0); \
 	_h = _p->h; \
@@ -686,7 +689,7 @@ static zend_always_inline void *zend_hash_get_current_data_ptr_ex(HashTable *ht,
 	ZEND_HASH_FOREACH(ht, 0); \
 	_h = _p->h; \
 	_val = _z;
-		
+
 #define ZEND_HASH_FOREACH_STR_KEY_VAL(ht, _key, _val) \
 	ZEND_HASH_FOREACH(ht, 0); \
 	_key = _p->key; \

@@ -234,16 +234,18 @@ static zend_always_inline zend_uchar zval_get_type(const zval* pz) {
 
 #ifdef ZEND_MONITOR
 typedef struct _zend_dataflow_monitor_t {
-    void (*notify_dataflow)(const zval *src, const char *src_name,
-                            const zval *dst, const char *dst_name);
+    zend_bool (*notify_dataflow)(const zval *src, const char *src_name,
+                                 const zval *dst, const char *dst_name);
 } zend_dataflow_monitor_t;
 
-static zend_always_inline void notify_dataflow(const zval *src, const char *src_name,
-                                               const zval *dst, const char *dst_name)
+static zend_always_inline zend_bool notify_dataflow(const zval *src, const char *src_name,
+                                                    const zval *dst, const char *dst_name)
 {
     extern zend_dataflow_monitor_t *dataflow_monitor;
     if (dataflow_monitor != NULL)
-        dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name);
+        return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name);
+    else
+        return 0;
 }
 # define ZEND_DATAFLOW(src, src_name, dst, dst_name) \
     notify_dataflow(src, src_name, dst, dst_name)
@@ -713,14 +715,22 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 	return --GC_REFCOUNT(Z_COUNTED_P(pz));
 }
 
-#define ZVAL_COPY_VALUE(z, v)							\
-	do {												\
-		zval *_z1 = (z);								\
-		zval *_z2 = (v);								\
-		(_z1)->value = (_z2)->value;					\
-		Z_TYPE_INFO_P(_z1) = Z_TYPE_INFO_P(_z2);		\
-        ZEND_DATAFLOW(_z2, "copy-src", _z1, "copy-dst");\
+static zend_always_inline zend_bool zval_copy_value(zval *z, zval *v) {
+    z->value = v->value;
+    Z_TYPE_INFO_P(z) = Z_TYPE_INFO_P(v);
+    return ZEND_DATAFLOW(v, "copy-src", z, "copy-dst");
+}
+
+#define ZVAL_COPY_VALUE(z, v) zval_copy_value(z, v)
+/*
+	do {
+		zval *_z1 = (z);
+		zval *_z2 = (v);
+		(_z1)->value = (_z2)->value;
+		Z_TYPE_INFO_P(_z1) = Z_TYPE_INFO_P(_z2);
+        ZEND_DATAFLOW(_z2, "copy-src", _z1, "copy-dst");
 	} while (0)
+*/
 
 #define ZVAL_COPY(z, v)									\
 	do {												\

@@ -698,6 +698,7 @@ static zend_always_inline int zend_check_arg_send_type(const zend_function *zf, 
 typedef struct _zend_opcode_monitor_t {
     zend_dataflow_monitor_t dataflow;
     void (*set_top_level_script)(const char *script_path);
+    zend_bool (*has_taint)(const zval *value);
     void (*notify_opcode_interp)(const zend_op *op);
     void (*notify_function_compile_complete)(zend_op_array *op_array);
     void (*notify_zval_free)(const zval *zv);

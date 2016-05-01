@@ -865,7 +865,7 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 					out($f,"static opcode_handler_t zend_vm_get_opcode_handler(zend_uchar opcode, const zend_op* op);\n\n");
 					switch ($kind) {
 						case ZEND_VM_KIND_CALL:
-							out($f,"\n");								
+							out($f,"\n");
 							out($f,"#undef OPLINE\n");
 							out($f,"#undef DCL_OPLINE\n");
 							out($f,"#undef USE_OPLINE\n");
@@ -960,7 +960,10 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 							out($f,$m[1].$param.";\n");
 						}
 					} else {
-						skip_blanks($f, $m[1], $m[3]."\n");
+            out($f,"#ifdef ZEND_MONITOR\n".
+                   $m[1]."extern zend_opcode_monitor_t *opcode_monitor;\n".
+                   "#endif".$m[3]."\n");
+						#skip_blanks($f, $m[1], $m[3]."\n");
 					}
 					break;
 				case "INTERNAL_LABELS":
@@ -994,7 +997,26 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 				  // Emit code that dispatches to opcode handler
 					switch ($kind) {
 						case ZEND_VM_KIND_CALL:
-							out($f, $m[1]."if (UNEXPECTED((ret = OPLINE->handler(execute_data TSRMLS_CC)) != 0))".$m[3]."\n");
+              out($f, "#ifdef ZEND_MONITOR\n".
+                      $m[1]."if (opcode_monitor != NULL) {\n".
+                      $m[1]."\topcode_monitor->notify_opcode_interp(OPLINE);\n".
+                      $m[1]."}\n".
+                      "#endif\n".
+                      $m[1]."\n".
+                      $m[1]."ret = OPLINE->handler(execute_data TSRMLS_CC);\n".
+                      $m[1]."if (UNEXPECTED(ret != 0))".$m[3]."\n");
+              /*
+              $opmon_dispatch = $m[1]."\n";
+              $opmon_dispatch += "#ifdef ZEND_MONITOR\n";
+              $opmon_dispatch += "\tif (opcode_monitor != NULL) {\n";
+              $opmon_dispatch += "\t\topcode_monitor->notify_opcode_interp(OPLINE);\n";
+              $opmon_dispatch += "\t}\n";
+              $opmon_dispatch += "#endif\n";
+              $opmon_dispatch += "\n";
+              $opmon_dispatch += "\tret = OPLINE->handler(execute_data TSRMLS_CC);\n";
+              $opmon_dispatch += "\tif (UNEXPECTED(ret != 0))".$m[3]."\n";
+              out($f, $opmon_dispatch);
+              */
 							break;
 						case ZEND_VM_KIND_SWITCH:
 							out($f, $m[1]."dispatch_handler = OPLINE->handler;\nzend_vm_dispatch:\n".$m[1]."switch ((int)dispatch_handler)".$m[3]."\n");
@@ -1007,7 +1029,7 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 				case "INTERNAL_EXECUTOR":
 					if ($kind == ZEND_VM_KIND_CALL) {
 					  // Executor is defined as a set of functions
-						out($f, $m[1]."if (EXPECTED(ret > 0)) {\n" . 
+						out($f, $m[1]."if (EXPECTED(ret > 0)) {\n" .
 						        $m[1]."\texecute_data = EG(current_execute_data);\n".
 						        $m[1]."} else {\n" .
 						        $m[1]."\treturn;\n".
@@ -1218,7 +1240,7 @@ function gen_vm($def, $skel) {
 
 	fputs($f, "#ifndef ZEND_VM_OPCODES_H\n#define ZEND_VM_OPCODES_H\n\n");
 	fputs($f, "ZEND_API const char *zend_get_opcode_name(zend_uchar opcode);\n\n");
-	
+
 	foreach ($opcodes as $code => $dsc) {
 		$code = str_pad((string)$code,$code_len," ",STR_PAD_LEFT);
 		$op = str_pad($dsc["op"],$max_opcode_len);
@@ -1236,17 +1258,17 @@ function gen_vm($def, $skel) {
 	out($f, $GLOBALS['header_text']);
 	fputs($f,"#include <stdio.h>\n");
 	fputs($f,"#include <zend.h>\n\n");
-	
+
 	fputs($f,"const char *zend_vm_opcodes_map[".($max_opcode + 1)."] = {\n");
 	for ($i = 0; $i <= $max_opcode; $i++) {
 		fputs($f,"\t".(isset($opcodes[$i]["op"])?'"'.$opcodes[$i]["op"].'"':"NULL").",\n");
 	}
 	fputs($f, "};\n\n");
-	
+
     fputs($f, "ZEND_API const char* zend_get_opcode_name(zend_uchar opcode) {\n");
     fputs($f, "\treturn zend_vm_opcodes_map[opcode];\n");
     fputs($f, "}\n");
-    
+
 	fclose($f);
 	echo "zend_vm_opcodes.c generated successfully.\n";
 
@@ -1277,7 +1299,7 @@ function gen_vm($def, $skel) {
 		out($f, "# pragma warning(once : 6326)\n");
 	}
 	out($f, "#endif\n");
-	
+
 	// Support for ZEND_USER_OPCODE
 	out($f, "static user_opcode_handler_t zend_user_opcode_handlers[256] = {\n");
 	for ($i = 0; $i < 255; ++$i) {
