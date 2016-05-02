@@ -602,9 +602,6 @@ static void zend_hash_do_resize(HashTable *ht)
 		ht->nTableMask = ht->nTableSize - 1;
 		zend_hash_rehash(ht);
 #ifdef ZEND_MONITOR
-//    if (old_arData != ht->arData)
-//      fprintf(stderr, "Expanded hashtable to 0x%x\n", (sizeof(Bucket) + sizeof(uint32_t)) * ht->nTableSize);
-//    what if it resized in place?
     if (ht->u.flags & HASH_FLAG_TAINT) {
       uint32_t iOld, iNew;
       Bucket *pNew, *pOld;
@@ -614,8 +611,8 @@ static void zend_hash_do_resize(HashTable *ht)
         pOld = old_arData + iOld;
         if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
         pNew = ht->arData + iNew;
-        ZEND_DATAFLOW(&pOld->val, "ht-old", &pNew->val, "ht-new");
-        // remove old taint!
+        if (pOld != pNew)
+          ZEND_DATAFLOW(&pOld->val, "ht-old", &pNew->val, "ht-new", 1/*internal transfer*/);
         iNew++;
       }
     }

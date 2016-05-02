@@ -846,7 +846,8 @@ static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval
 			if ((value_type & (IS_VAR|IS_CV)) && variable_ptr == value) {
 #ifdef ZEND_MONITOR
         if (opcode_monitor != NULL)
-          opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "var");
+          opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "var",
+                                                   0/*not a transfer*/);
 #endif
 				return variable_ptr;
 			}

@@ -235,20 +235,22 @@ static zend_always_inline zend_uchar zval_get_type(const zval* pz) {
 #ifdef ZEND_MONITOR
 typedef struct _zend_dataflow_monitor_t {
     zend_bool (*notify_dataflow)(const zval *src, const char *src_name,
-                                 const zval *dst, const char *dst_name);
+                                 const zval *dst, const char *dst_name,
+                                 zend_bool is_internal_transfer);
 } zend_dataflow_monitor_t;
 
 static zend_always_inline zend_bool notify_dataflow(const zval *src, const char *src_name,
-                                                    const zval *dst, const char *dst_name)
+                                                    const zval *dst, const char *dst_name,
+                                                    zend_bool is_internal_transfer)
 {
     extern zend_dataflow_monitor_t *dataflow_monitor;
     if (dataflow_monitor != NULL)
-        return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name);
+        return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
     else
         return 0;
 }
-# define ZEND_DATAFLOW(src, src_name, dst, dst_name) \
-    notify_dataflow(src, src_name, dst, dst_name)
+# define ZEND_DATAFLOW(src, src_name, dst, dst_name, is_internal_transfer) \
+    notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer)
 #else
 # define ZEND_DATAFLOW(src, src_name, dst, dst_name)
 #endif
@@ -718,7 +720,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 static zend_always_inline zend_bool zval_copy_value(zval *z, zval *v) {
     z->value = v->value;
     Z_TYPE_INFO_P(z) = Z_TYPE_INFO_P(v);
-    return ZEND_DATAFLOW(v, "copy-src", z, "copy-dst");
+    return ZEND_DATAFLOW(v, "copy-src", z, "copy-dst", 0 /*not a transfer*/);
 }
 
 #define ZVAL_COPY_VALUE(z, v) zval_copy_value(z, v)
@@ -728,7 +730,7 @@ static zend_always_inline zend_bool zval_copy_value(zval *z, zval *v) {
 		zval *_z2 = (v);
 		(_z1)->value = (_z2)->value;
 		Z_TYPE_INFO_P(_z1) = Z_TYPE_INFO_P(_z2);
-        ZEND_DATAFLOW(_z2, "copy-src", _z1, "copy-dst");
+        ZEND_DATAFLOW(_z2, "copy-src", _z1, "copy-dst", 0 / *not a transfer* /);
 	} while (0)
 */
 
