@@ -4727,6 +4727,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CONST_CONST_HANDLER(ZE
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -4785,9 +4789,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -4827,6 +4840,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -4839,6 +4859,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CONST_HANDLER(Z
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -4847,6 +4871,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CONST_HANDLER(Z
 	if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -4859,6 +4889,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CONST_HANDLER(Z
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -5847,6 +5884,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CONST_TMP_HANDLER(ZEND
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -5905,9 +5946,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -5948,6 +5998,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -5960,6 +6017,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_TMP_HANDLER(ZEN
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -5968,6 +6029,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_TMP_HANDLER(ZEN
 	if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -5981,6 +6048,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_TMP_HANDLER(ZEN
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -7229,6 +7303,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CONST_VAR_HANDLER(ZEND
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -7287,9 +7365,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -7330,6 +7417,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -7342,6 +7436,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_VAR_HANDLER(ZEN
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -7350,6 +7448,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_VAR_HANDLER(ZEN
 	if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -7363,6 +7467,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_VAR_HANDLER(ZEN
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -9095,6 +9206,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CONST_CV_HANDLER(ZEND_
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -9153,9 +9268,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -9195,6 +9319,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -9207,6 +9338,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CV_HANDLER(ZEND
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = opline->op1.zv;
@@ -9215,6 +9350,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CV_HANDLER(ZEND
 	if (IS_CONST == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -9227,6 +9368,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CV_HANDLER(ZEND
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -11559,6 +11707,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP_CONST_HANDLER(ZEND
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -11617,9 +11769,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -11659,6 +11820,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -11671,6 +11839,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CONST_HANDLER(ZEN
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -11679,6 +11851,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CONST_HANDLER(ZEN
 	if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -11691,6 +11869,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CONST_HANDLER(ZEN
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -12658,6 +12843,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP_TMP_HANDLER(ZEND_O
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -12716,9 +12905,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -12759,6 +12957,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -12771,6 +12976,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_TMP_HANDLER(ZEND_
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -12779,6 +12988,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_TMP_HANDLER(ZEND_
 	if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -12792,6 +13007,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_TMP_HANDLER(ZEND_
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -14014,6 +14236,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP_VAR_HANDLER(ZEND_O
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -14072,9 +14298,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -14115,6 +14350,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -14127,6 +14369,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_VAR_HANDLER(ZEND_
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -14135,6 +14381,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_VAR_HANDLER(ZEND_
 	if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -14148,6 +14400,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_VAR_HANDLER(ZEND_
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -15690,6 +15949,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP_CV_HANDLER(ZEND_OP
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -15748,9 +16011,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -15790,6 +16062,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -15802,6 +16081,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CV_HANDLER(ZEND_O
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_tmp(opline->op1.var, execute_data, &free_op1);
@@ -15810,6 +16093,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CV_HANDLER(ZEND_O
 	if (IS_TMP_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -15822,6 +16111,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CV_HANDLER(ZEND_O
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -19846,6 +20142,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_VAR_CONST_HANDLER(ZEND
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -19904,9 +20204,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -19946,6 +20255,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -19958,6 +20274,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CONST_HANDLER(ZEN
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -19966,6 +20286,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CONST_HANDLER(ZEN
 	if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -19978,6 +20304,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CONST_HANDLER(ZEN
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -21916,6 +22249,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_VAR_TMP_HANDLER(ZEND_O
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -21974,9 +22311,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -22017,6 +22363,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -22029,6 +22382,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_TMP_HANDLER(ZEND_
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -22037,6 +22394,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_TMP_HANDLER(ZEND_
 	if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -22050,6 +22413,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_TMP_HANDLER(ZEND_
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -24309,6 +24679,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_VAR_VAR_HANDLER(ZEND_O
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -24367,9 +24741,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -24410,6 +24793,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -24422,6 +24812,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_VAR_HANDLER(ZEND_
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -24430,6 +24824,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_VAR_HANDLER(ZEND_
 	if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -24443,6 +24843,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_VAR_HANDLER(ZEND_
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -27605,6 +28012,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_VAR_CV_HANDLER(ZEND_OP
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -27663,9 +28074,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -27705,6 +28125,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -27717,6 +28144,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CV_HANDLER(ZEND_O
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_var_deref(opline->op1.var, execute_data, &free_op1);
@@ -27725,6 +28156,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CV_HANDLER(ZEND_O
 	if (IS_VAR == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -27737,6 +28174,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CV_HANDLER(ZEND_O
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 	zval_ptr_dtor_nogc(free_op1);
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -29102,6 +29546,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_UNUSED_CONST_HANDLER(Z
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -29160,9 +29608,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -29202,6 +29659,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -29214,6 +29678,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CONST_HANDLER(
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -29222,6 +29690,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CONST_HANDLER(
 	if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -29234,6 +29708,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CONST_HANDLER(
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -30419,6 +30900,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_UNUSED_TMP_HANDLER(ZEN
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -30477,9 +30962,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -30520,6 +31014,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -30532,6 +31033,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_TMP_HANDLER(ZE
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -30540,6 +31045,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_TMP_HANDLER(ZE
 	if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -30553,6 +31064,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_TMP_HANDLER(ZE
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -31738,6 +32256,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_UNUSED_VAR_HANDLER(ZEN
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -31796,9 +32318,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -31839,6 +32370,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -31851,6 +32389,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_VAR_HANDLER(ZE
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -31859,6 +32401,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_VAR_HANDLER(ZE
 	if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -31872,6 +32420,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_VAR_HANDLER(ZE
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -33540,6 +34095,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_UNUSED_CV_HANDLER(ZEND
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -33598,9 +34157,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -33640,6 +34208,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -33652,6 +34227,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CV_HANDLER(ZEN
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_obj_zval_ptr_unused(execute_data);
@@ -33660,6 +34239,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CV_HANDLER(ZEN
 	if (IS_UNUSED == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -33672,6 +34257,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CV_HANDLER(ZEN
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -37120,6 +37712,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_CONST_HANDLER(ZEND_
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -37178,9 +37774,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -37220,6 +37825,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -37232,6 +37844,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CONST_HANDLER(ZEND
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -37240,6 +37856,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CONST_HANDLER(ZEND
 	if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -37252,6 +37874,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CONST_HANDLER(ZEND
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -39119,6 +39748,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_TMP_HANDLER(ZEND_OP
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -39177,9 +39810,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -39220,6 +39862,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -39232,6 +39881,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_TMP_HANDLER(ZEND_O
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -39240,6 +39893,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_TMP_HANDLER(ZEND_O
 	if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -39253,6 +39912,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_TMP_HANDLER(ZEND_O
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -41382,6 +42048,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_VAR_HANDLER(ZEND_OP
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -41440,9 +42110,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -41483,6 +42162,13 @@ num_index_prop:
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -41495,6 +42181,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_VAR_HANDLER(ZEND_O
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -41503,6 +42193,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_VAR_HANDLER(ZEND_O
 	if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -41516,6 +42212,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_VAR_HANDLER(ZEND_O
 
 	zval_ptr_dtor_nogc(free_op2);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -44404,6 +45107,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_CV_HANDLER(ZEND_OPC
 	int result;
 	zend_ulong hval;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -44462,9 +45169,18 @@ num_index_prop:
 		} else /* if (opline->extended_value & ZEND_ISEMPTY) */ {
 			result = (value == NULL || !i_zend_is_true(value TSRMLS_CC));
 		}
+#ifdef ZEND_MONITOR
+        internal_value = value;
+#endif
 	} else if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check element of non-array");
 			result = 0;
@@ -44504,6 +45220,13 @@ num_index_prop:
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();
@@ -44516,6 +45239,10 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CV_HANDLER(ZEND_OP
 	zval *container;
 	int result;
 	zval *offset;
+#ifdef ZEND_MONITOR
+    extern zend_opcode_monitor_t *opcode_monitor;
+    zval *internal_value = NULL;
+#endif
 
 	SAVE_OPLINE();
 	container = _get_zval_ptr_cv_deref_BP_VAR_IS(execute_data, opline->op1.var TSRMLS_CC);
@@ -44524,6 +45251,12 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CV_HANDLER(ZEND_OP
 	if (IS_CV == IS_UNUSED || EXPECTED(Z_TYPE_P(container) == IS_OBJECT)) {
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
+#ifdef ZEND_MONITOR
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+                zval rv; // compulsory, not used
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+            }
+#endif
 		} else {
 			zend_error(E_NOTICE, "Trying to check property of non-object");
 			result = 0;
@@ -44536,6 +45269,13 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CV_HANDLER(ZEND_OP
 	}
 
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && internal_value != NULL) {
+        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                                 EX_VAR(opline->result.var), "R",
+                                                 0 /*not a transfer*/);
+    }
+#endif
 
 	CHECK_EXCEPTION();
 	ZEND_VM_NEXT_OPCODE();

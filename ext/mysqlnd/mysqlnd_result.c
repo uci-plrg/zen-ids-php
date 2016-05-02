@@ -1066,6 +1066,9 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 	MYSQLND_RES_BUFFERED_ZVAL * set = (MYSQLND_RES_BUFFERED_ZVAL *) result->stored_data;
 #ifdef ZEND_MONITOR
   extern zend_opcode_monitor_t *opcode_monitor;
+  const char *table_names[16];
+  const char *column_names[16];
+  const zval *column_values[16];
 #endif
 
 	DBG_ENTER("mysqlnd_result_buffered_zval::fetch_row");
@@ -1105,17 +1108,14 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 		}
 
 		for (i = 0; i < field_count; i++) {
-			zval * data = &current_row[i];
-#ifdef ZEND_MONITOR
-      zval *row_value;
-#endif
+			zval * data = &current_row[i], *mapped_data;
 
 			set->lengths[i] = (Z_TYPE_P(data) == IS_STRING)? Z_STRLEN_P(data) : 0;
 
 			if (flags & MYSQLND_FETCH_NUM) {
 				Z_TRY_ADDREF_P(data);
 #ifdef ZEND_MONITOR
-        row_value =
+        mapped_data =
 #endif
 				zend_hash_next_index_insert(Z_ARRVAL_P(row), data);
 			}
@@ -1130,24 +1130,28 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 				Z_TRY_ADDREF_P(data);
 				if (meta->zend_hash_keys[i].is_numeric == FALSE) {
 #ifdef ZEND_MONITOR
-          row_value =
+          mapped_data =
 #endif
 					zend_hash_update(Z_ARRVAL_P(row), meta->fields[i].sname, data);
 				} else {
 #ifdef ZEND_MONITOR
-          row_value =
+          mapped_data =
 #endif
 					zend_hash_index_update(Z_ARRVAL_P(row), meta->zend_hash_keys[i].key, data);
 				}
 			}
 #ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL && strlen(meta->fields[i].org_table) > 0) {
-        opcode_monitor->notify_site_modification_fetch(row_value,
-                                                       meta->fields[i].org_table,
-                                                       meta->fields[i].org_name);
+      if (i < 16) {
+        table_names[i] = meta->fields[i].org_table;
+        column_names[i] = meta->fields[i].org_name;
+        column_values[i] = mapped_data;
       }
 #endif
 		}
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL && field_count > 0 && strlen(meta->fields[0].org_table) > 0)
+      opcode_monitor->notify_site_modification_fetch(field_count, table_names, column_names, column_values);
+#endif
 		set->data_cursor += field_count;
 		MYSQLND_INC_GLOBAL_STATISTIC(STAT_ROWS_FETCHED_FROM_CLIENT_NORMAL_BUF);
 		*fetched_anything = TRUE;
