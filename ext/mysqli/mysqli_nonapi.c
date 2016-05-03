@@ -554,6 +554,9 @@ PHP_FUNCTION(mysqli_query)
 	char				*query = NULL;
 	size_t 				query_len;
 	zend_long 				resultmode = MYSQLI_STORE_RESULT;
+#ifdef ZEND_MONITOR
+  extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 
 	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os|l", &mysql_link, mysqli_link_class_entry, &query, &query_len, &resultmode) == FAILURE) {
 		return;
@@ -624,24 +627,10 @@ PHP_FUNCTION(mysqli_query)
 		RETURN_FALSE;
 	}
 
-/*
 #ifdef ZEND_MONITOR
-  {
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *query_arg = ZEND_CALL_ARG(execute_data, 2);
-
-    if (opcode_monitor != NULL) {
-      int field_count = mysql_num_fields(result);
-      MYSQL_FIELD *fields = mysql_fetch_fields(result);
-
-      opcode_monitor->notify_database_query(query, field_count, fields);
-    } else {
-      fprintf(stderr, "mysqli doesn't see opmon :-(\n");
-    // fprintf(stderr, "Is this the arg? 0x%llx\n", query_arg);
-    }
-  }
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_database_query(query);
 #endif
-*/
 
 	if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {
 		php_mysqli_report_index(query, mysqli_server_status(mysql->mysql) TSRMLS_CC);

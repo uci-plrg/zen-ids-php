@@ -606,7 +606,6 @@ static void zend_hash_do_resize(HashTable *ht)
       uint32_t iOld, iNew;
       Bucket *pNew, *pOld;
 
-      fprintf(stderr, "Expand tainted hashtable with %d elements\n", old_nNumUsed);
       for (iOld = 0, iNew = 0; iOld < old_nNumUsed; iOld++) {
         pOld = old_arData + iOld;
         if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
