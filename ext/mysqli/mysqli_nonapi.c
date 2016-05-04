@@ -596,6 +596,11 @@ PHP_FUNCTION(mysqli_query)
 		RETURN_FALSE;
 	}
 
+#ifdef ZEND_MONITOR
+  if (opcode_monitor != NULL)
+    opcode_monitor->notify_database_query(query);
+#endif
+
 	if (!mysql_field_count(mysql->mysql)) {
 		/* no result set - not a SELECT */
 		if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {
@@ -626,11 +631,6 @@ PHP_FUNCTION(mysqli_query)
 										"%s", mysql_error(mysql->mysql));
 		RETURN_FALSE;
 	}
-
-#ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_database_query(query);
-#endif
 
 	if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {
 		php_mysqli_report_index(query, mysqli_server_status(mysql->mysql) TSRMLS_CC);
