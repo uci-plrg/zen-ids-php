@@ -44,6 +44,21 @@
         zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "")
 #endif
 
+#ifdef ZEND_MONITOR
+# define MAX_BIGINT_CHARS 32
+# define EVO_COMMIT_QUERY "CALL opmon_evolution_commit()"
+# define EVO_DISCARD_QUERY "CALL opmon_evolution_discard()"
+# define EVO_STATE_QUERY "SELECT id, table_name, column_name, table_key " \
+                         "FROM opmon_evolution "                          \
+                         "WHERE id > %d"
+# define EVO_COMMIT_QUERY_LENGTH (sizeof(EVO_COMMIT_QUERY) - 1)
+# define EVO_DISCARD_QUERY_LENGTH (sizeof(EVO_DISCARD_QUERY) - 1)
+# define EVO_STATE_QUERY_MAX_LENGTH (sizeof(EVO_STATE_QUERY) + MAX_BIGINT_CHARS)
+# define EVO_STATE_QUERY_FIELD_COUNT 4
+
+static unsigned long long last_loaded_id = 0ULL;
+#endif
+
 /* {{{ php_mysqli_set_error
  */
 static void php_mysqli_set_error(zend_long mysql_errno, char *mysql_err TSRMLS_DC)
@@ -579,6 +594,35 @@ PHP_FUNCTION(mysqli_query)
 
 	MYSQLI_DISABLE_MQ;
 
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL) { /* before starting the client query */
+      char evo_state_query[EVO_STATE_QUERY_MAX_LENGTH];
+      MYSQL_ROW row;
+      unsigned long long id;
+
+      snprintf(evo_state_query, EVO_STATE_QUERY_MAX_LENGTH, EVO_STATE_QUERY, last_loaded_id);
+	    if (mysql_real_query(mysql->mysql, evo_state_query, strlen(evo_state_query)) != 0) {
+        if (mysql_field_count(mysql->mysql))
+          fprintf(stderr, "Error querying evolution state.\n");
+      } else {
+        result = mysql_store_result(mysql->mysql);
+        if (result == NULL) {
+          if (mysql_field_count(mysql->mysql))
+            fprintf(stderr, "Error querying evolution state.\n");
+        } else {
+          while ((row = mysql_fetch_row(result)) != NULL) {
+            if (row[0] == NULL || strlen(row[0]) == 0)
+              break;
+            id = strtoull(row[0], NULL, 10);
+            if (id > last_loaded_id)
+              last_loaded_id = id;
+            opcode_monitor->notify_database_site_modification(row[1], row[2], strtoull(row[3], NULL, 10));
+          }
+          mysql_free_result(result);
+        }
+      }
+    }
+#endif
 
 #ifdef MYSQLI_USE_MYSQLND
 	if (resultmode & MYSQLI_ASYNC) {
@@ -596,13 +640,18 @@ PHP_FUNCTION(mysqli_query)
 		RETURN_FALSE;
 	}
 
-#ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_database_query(query);
-#endif
-
 	if (!mysql_field_count(mysql->mysql)) {
 		/* no result set - not a SELECT */
+
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL) { /* after evo triggers have executed */
+      if (opcode_monitor->notify_database_query(query))
+        mysql_real_query(mysql->mysql, EVO_COMMIT_QUERY, EVO_COMMIT_QUERY_LENGTH);
+      else
+        mysql_real_query(mysql->mysql, EVO_DISCARD_QUERY, EVO_DISCARD_QUERY_LENGTH);
+    }
+#endif
+
 		if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {
 			php_mysqli_report_index(query, mysqli_server_status(mysql->mysql) TSRMLS_CC);
 		}

@@ -32,6 +32,10 @@
 
 #define MYSQLND_SILENT
 
+#ifdef ZEND_MONITOR
+# define EVO_MAX_COLUMNS 16
+#endif
+
 /* {{{ mysqlnd_result_buffered_zval::initialize_result_set_rest */
 static enum_func_status
 MYSQLND_METHOD(mysqlnd_result_buffered_zval, initialize_result_set_rest)(MYSQLND_RES_BUFFERED * const result, MYSQLND_RES_METADATA * const meta,
@@ -1066,9 +1070,9 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 	MYSQLND_RES_BUFFERED_ZVAL * set = (MYSQLND_RES_BUFFERED_ZVAL *) result->stored_data;
 #ifdef ZEND_MONITOR
   extern zend_opcode_monitor_t *opcode_monitor;
-  const char *table_names[16];
-  const char *column_names[16];
-  const zval *column_values[16];
+  const char *table_names[EVO_MAX_COLUMNS];
+  const char *column_names[EVO_MAX_COLUMNS];
+  const zval *column_values[EVO_MAX_COLUMNS];
 #endif
 
 	DBG_ENTER("mysqlnd_result_buffered_zval::fetch_row");
@@ -1141,7 +1145,7 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 				}
 			}
 #ifdef ZEND_MONITOR
-      if (i < 16) {
+     if (i < EVO_MAX_COLUMNS) {
         table_names[i] = meta->fields[i].org_table;
         column_names[i] = meta->fields[i].org_name;
         column_values[i] = mapped_data;
@@ -1150,7 +1154,7 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 		}
 #ifdef ZEND_MONITOR
     if (opcode_monitor != NULL && field_count > 0 && strlen(meta->fields[0].org_table) > 0)
-      opcode_monitor->notify_site_modification_fetch(field_count, table_names, column_names, column_values);
+      opcode_monitor->notify_database_fetch(field_count, table_names, column_names, column_values);
 #endif
 		set->data_cursor += field_count;
 		MYSQLND_INC_GLOBAL_STATISTIC(STAT_ROWS_FETCHED_FROM_CLIENT_NORMAL_BUF);

@@ -671,7 +671,7 @@ zend_first_try {
 #ifdef ZEND_MONITOR
     if (opcode_monitor != NULL) {
       opmon_notified = 1;
-      opcode_monitor->notify_request(1);
+      opcode_monitor->notify_http_request(1);
     }
 #endif
 		if (!parent_req) {
@@ -705,7 +705,7 @@ zend_first_try {
 
 #ifdef ZEND_MONITOR
   if (opmon_notified)
-    opcode_monitor->notify_request(0);
+    opcode_monitor->notify_http_request(0);
 #endif
 	return OK;
 }

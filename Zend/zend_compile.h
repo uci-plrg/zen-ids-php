@@ -702,10 +702,13 @@ typedef struct _zend_opcode_monitor_t {
     void (*notify_opcode_interp)(const zend_op *op);
     void (*notify_function_compile_complete)(zend_op_array *op_array);
     void (*notify_zval_free)(const zval *zv);
-    void (*notify_request)(zend_bool start);
-    void (*notify_database_query)(const char *query);
-    void (*notify_site_modification_fetch)(uint32_t field_count, const char **table_names,
-                                           const char **column_names, const zval **value);
+    void (*notify_http_request)(zend_bool start);
+    zend_bool (*notify_database_query)(const char *query);
+    void (*notify_database_site_modification)(const char *table_name,
+                                              const char *column_name,
+                                              unsigned long long table_key);
+    void (*notify_database_fetch)(uint32_t field_count, const char **table_names,
+                                  const char **column_names, const zval **value);
     void (*notify_worker_startup)();
     void (*opmon_tokenize)();
     int (*opmon_dataflow)();
