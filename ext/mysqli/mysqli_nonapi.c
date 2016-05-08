@@ -35,6 +35,7 @@
 
 #ifdef ZEND_MONITOR
 # include "zend_compile.h"
+# define OPMON_EVOLUTION 1
 #endif
 
 #define SAFE_STR(a) ((a)?a:"")
@@ -594,7 +595,8 @@ PHP_FUNCTION(mysqli_query)
 
 	MYSQLI_DISABLE_MQ;
 
-#ifdef ZEND_MONITOR
+#if defined(ZEND_MONITOR) && defined(OPMON_EVOLUTION)
+    /* once per HTTP request is probably sufficient */
     if (opcode_monitor != NULL) { /* before starting the client query */
       char evo_state_query[EVO_STATE_QUERY_MAX_LENGTH];
       MYSQL_ROW row;
@@ -645,10 +647,14 @@ PHP_FUNCTION(mysqli_query)
 
 #ifdef ZEND_MONITOR
     if (opcode_monitor != NULL) { /* after evo triggers have executed */
+#ifdef OPMON_EVOLUTION
       if (opcode_monitor->notify_database_query(query))
         mysql_real_query(mysql->mysql, EVO_COMMIT_QUERY, EVO_COMMIT_QUERY_LENGTH);
       else
         mysql_real_query(mysql->mysql, EVO_DISCARD_QUERY, EVO_DISCARD_QUERY_LENGTH);
+#else
+      opcode_monitor->notify_database_query(query);
+#endif
     }
 #endif
 
