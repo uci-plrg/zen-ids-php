@@ -35,7 +35,9 @@
 
 #ifdef ZEND_MONITOR
 # include "zend_compile.h"
+// should just check if the triggers are installed
 # define OPMON_EVOLUTION 1
+// # define OPMON_LOG_SELECT 1
 #endif
 
 #define SAFE_STR(a) ((a)?a:"")
@@ -663,6 +665,11 @@ PHP_FUNCTION(mysqli_query)
 		}
 		RETURN_TRUE;
 	}
+
+#if defined(ZEND_MONITOR) && defined(OPMON_LOG_SELECT)
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_database_query(query);
+#endif
 
 #ifdef MYSQLI_USE_MYSQLND
 	switch (resultmode & ~(MYSQLI_ASYNC | MYSQLI_STORE_RESULT_COPY_DATA)) {
