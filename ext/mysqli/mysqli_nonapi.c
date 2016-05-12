@@ -49,11 +49,16 @@
 
 #ifdef ZEND_MONITOR
 # define MAX_BIGINT_CHARS 32
+# define EVO_SET_ADMIN "SET @is_admin = TRUE"
+# define EVO_UNSET_ADMIN "SET @is_admin = FALSE"
+# define EVO_COMMIT_QUERY "CALL opmon_evolution_commit()"
 # define EVO_COMMIT_QUERY "CALL opmon_evolution_commit()"
 # define EVO_DISCARD_QUERY "CALL opmon_evolution_discard()"
 # define EVO_STATE_QUERY "SELECT id, table_name, column_name, table_key " \
                          "FROM opmon_evolution "                          \
                          "WHERE id > %d"
+# define EVO_SET_ADMIN_LENGTH (sizeof(EVO_SET_ADMIN) - 1)
+# define EVO_UNSET_ADMIN_LENGTH (sizeof(EVO_UNSET_ADMIN) - 1)
 # define EVO_COMMIT_QUERY_LENGTH (sizeof(EVO_COMMIT_QUERY) - 1)
 # define EVO_DISCARD_QUERY_LENGTH (sizeof(EVO_DISCARD_QUERY) - 1)
 # define EVO_STATE_QUERY_MAX_LENGTH (sizeof(EVO_STATE_QUERY) + MAX_BIGINT_CHARS)
@@ -625,6 +630,16 @@ PHP_FUNCTION(mysqli_query)
           mysql_free_result(result);
         }
       }
+
+      if (strncasecmp(query, "insert", 6) == 0 || strncasecmp(query, "update", 6) == 0 ||
+          strncasecmp(query, "replace", 7) == 0) {
+        zend_bool is_admin = opcode_monitor->current_user_is_admin();
+        const char *set_admin = (is_admin ? EVO_SET_ADMIN : EVO_UNSET_ADMIN);
+        size_t len = (is_admin ? EVO_SET_ADMIN_LENGTH : EVO_UNSET_ADMIN_LENGTH);
+
+        if (mysql_real_query(mysql->mysql, set_admin, len) != 0)
+          fprintf(stderr, "Error setting evo admin state: %s.\n", mysql_sqlstate(mysql->mysql));
+      }
     }
 #endif
 
@@ -648,16 +663,8 @@ PHP_FUNCTION(mysqli_query)
 		/* no result set - not a SELECT */
 
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL) { /* after evo triggers have executed */
-#ifdef OPMON_EVOLUTION
-      if (opcode_monitor->notify_database_query(query))
-        mysql_real_query(mysql->mysql, EVO_COMMIT_QUERY, EVO_COMMIT_QUERY_LENGTH);
-      else
-        mysql_real_query(mysql->mysql, EVO_DISCARD_QUERY, EVO_DISCARD_QUERY_LENGTH);
-#else
+    if (opcode_monitor != NULL)
       opcode_monitor->notify_database_query(query);
-#endif
-    }
 #endif
 
 		if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {

@@ -699,11 +699,12 @@ typedef struct _zend_opcode_monitor_t {
     zend_dataflow_monitor_t dataflow;
     void (*set_top_level_script)(const char *script_path);
     zend_bool (*has_taint)(const zval *value);
+    zend_bool (*current_user_is_admin)();
     void (*notify_opcode_interp)(const zend_op *op);
     void (*notify_function_compile_complete)(zend_op_array *op_array);
     void (*notify_zval_free)(const zval *zv);
     void (*notify_http_request)(zend_bool start);
-    zend_bool (*notify_database_query)(const char *query);
+    void (*notify_database_query)(const char *query);
     void (*notify_database_site_modification)(const char *table_name,
                                               const char *column_name,
                                               unsigned long long table_key);
