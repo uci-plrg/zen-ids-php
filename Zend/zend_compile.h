@@ -695,6 +695,11 @@ static zend_always_inline int zend_check_arg_send_type(const zend_function *zf, 
 #define ZEND_ARRAY_SIZE_SHIFT		2
 
 #ifdef ZEND_MONITOR
+typedef enum _monitor_query_flags_t {
+    MONITOR_QUERY_FLAG_IS_WRITE = 0x1,
+    MONITOR_QUERY_FLAG_IS_ADMIN = 0x2,
+} monitor_query_flags_t;
+
 typedef struct _zend_opcode_monitor_t {
     zend_dataflow_monitor_t dataflow;
     void (*set_top_level_script)(const char *script_path);
@@ -703,7 +708,7 @@ typedef struct _zend_opcode_monitor_t {
     void (*notify_function_compile_complete)(zend_op_array *op_array);
     void (*notify_zval_free)(const zval *zv);
     void (*notify_http_request)(zend_bool start);
-    void (*notify_database_query)(void *db_connection, const char *query);
+    monitor_query_flags_t (*notify_database_query)(const char *query);
     void (*notify_database_fetch)(uint32_t field_count, const char **table_names,
                                   const char **column_names, const zval **value);
     void (*notify_worker_startup)();

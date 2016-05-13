@@ -584,10 +584,17 @@ PHP_FUNCTION(mysqli_query)
 #endif
 
 #ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL) {
-    opcode_monitor->notify_database_query(mysql->mysql, query);
+# define EVO_SET_ADMIN   "SET @is_admin = TRUE "
+# define EVO_UNSET_ADMIN "SET @is_admin = FALSE"
+# define EVO_SET_ADMIN_LEN (sizeof(EVO_SET_ADMIN) - 1)
 
-    /* before the query is executed */
+  if (opcode_monitor != NULL) {
+    monitor_query_flags_t flags = opcode_monitor->notify_database_query(query);
+    if ((flags & MONITOR_QUERY_FLAG_IS_WRITE) == MONITOR_QUERY_FLAG_IS_WRITE) {
+      const char *set_session_admin_flag = (flags & MONITOR_QUERY_FLAG_IS_ADMIN) ? EVO_SET_ADMIN : EVO_UNSET_ADMIN;
+      if (mysql_real_query(mysql->mysql, set_session_admin_flag, EVO_SET_ADMIN_LEN) != 0)
+        fprintf(stderr, "Error: failed to set the admin session flag.\n");
+    }
   }
 #endif
 
