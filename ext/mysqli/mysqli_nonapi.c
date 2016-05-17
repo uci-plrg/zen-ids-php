@@ -33,33 +33,11 @@
 #include "php_mysqli_structs.h"
 #include "mysqli_priv.h"
 
-#ifdef ZEND_MONITOR
-# include "zend_compile.h"
-// should just check if the triggers are installed
-# define OPMON_EVOLUTION 1
-// # define OPMON_LOG_SELECT 1
-#endif
-
 #define SAFE_STR(a) ((a)?a:"")
 
 #ifndef zend_parse_parameters_none
 #define zend_parse_parameters_none()	\
         zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "")
-#endif
-
-#ifdef ZEND_MONITOR
-# define MAX_BIGINT_CHARS 32
-# define EVO_COMMIT_QUERY "CALL opmon_evolution_commit()"
-# define EVO_DISCARD_QUERY "CALL opmon_evolution_discard()"
-# define EVO_STATE_QUERY "SELECT id, table_name, column_name, table_key " \
-                         "FROM opmon_evolution "                          \
-                         "WHERE id > %d"
-# define EVO_COMMIT_QUERY_LENGTH (sizeof(EVO_COMMIT_QUERY) - 1)
-# define EVO_DISCARD_QUERY_LENGTH (sizeof(EVO_DISCARD_QUERY) - 1)
-# define EVO_STATE_QUERY_MAX_LENGTH (sizeof(EVO_STATE_QUERY) + MAX_BIGINT_CHARS)
-# define EVO_STATE_QUERY_FIELD_COUNT 4
-
-static unsigned long long last_loaded_id = 0ULL;
 #endif
 
 /* {{{ php_mysqli_set_error
@@ -572,9 +550,6 @@ PHP_FUNCTION(mysqli_query)
 	char				*query = NULL;
 	size_t 				query_len;
 	zend_long 				resultmode = MYSQLI_STORE_RESULT;
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os|l", &mysql_link, mysqli_link_class_entry, &query, &query_len, &resultmode) == FAILURE) {
 		return;
@@ -597,37 +572,6 @@ PHP_FUNCTION(mysqli_query)
 
 	MYSQLI_DISABLE_MQ;
 
-#if defined(ZEND_MONITOR) && defined(OPMON_EVOLUTION)
-    /* once per HTTP request is probably sufficient */
-    if (opcode_monitor != NULL) { /* before starting the client query */
-      char evo_state_query[EVO_STATE_QUERY_MAX_LENGTH];
-      MYSQL_ROW row;
-      unsigned long long id;
-
-      snprintf(evo_state_query, EVO_STATE_QUERY_MAX_LENGTH, EVO_STATE_QUERY, last_loaded_id);
-	    if (mysql_real_query(mysql->mysql, evo_state_query, strlen(evo_state_query)) != 0) {
-        if (mysql_field_count(mysql->mysql))
-          fprintf(stderr, "Error querying evolution state.\n");
-      } else {
-        result = mysql_store_result(mysql->mysql);
-        if (result == NULL) {
-          if (mysql_field_count(mysql->mysql))
-            fprintf(stderr, "Error querying evolution state.\n");
-        } else {
-          while ((row = mysql_fetch_row(result)) != NULL) {
-            if (row[0] == NULL || strlen(row[0]) == 0)
-              break;
-            id = strtoull(row[0], NULL, 10);
-            if (id > last_loaded_id)
-              last_loaded_id = id;
-            opcode_monitor->notify_database_site_modification(row[1], row[2], strtoull(row[3], NULL, 10));
-          }
-          mysql_free_result(result);
-        }
-      }
-    }
-#endif
-
 #ifdef MYSQLI_USE_MYSQLND
 	if (resultmode & MYSQLI_ASYNC) {
 		if (mysqli_async_query(mysql->mysql, query, query_len)) {
@@ -639,6 +583,21 @@ PHP_FUNCTION(mysqli_query)
 	}
 #endif
 
+#ifdef ZEND_MONITOR
+# define EVO_SET_ADMIN   "SET @is_admin = TRUE "
+# define EVO_UNSET_ADMIN "SET @is_admin = FALSE"
+# define EVO_SET_ADMIN_LEN (sizeof(EVO_SET_ADMIN) - 1)
+
+  if (opcode_monitor != NULL) {
+    monitor_query_flags_t flags = opcode_monitor->notify_database_query(query);
+    if ((flags & MONITOR_QUERY_FLAG_IS_WRITE) == MONITOR_QUERY_FLAG_IS_WRITE) {
+      const char *set_session_admin_flag = (flags & MONITOR_QUERY_FLAG_IS_ADMIN) ? EVO_SET_ADMIN : EVO_UNSET_ADMIN;
+      if (mysql_real_query(mysql->mysql, set_session_admin_flag, EVO_SET_ADMIN_LEN) != 0)
+        fprintf(stderr, "Error: failed to set the admin session flag.\n");
+    }
+  }
+#endif
+
 	if (mysql_real_query(mysql->mysql, query, query_len)) {
 		MYSQLI_REPORT_MYSQL_ERROR(mysql->mysql);
 		RETURN_FALSE;
@@ -646,30 +605,11 @@ PHP_FUNCTION(mysqli_query)
 
 	if (!mysql_field_count(mysql->mysql)) {
 		/* no result set - not a SELECT */
-
-#ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL) { /* after evo triggers have executed */
-#ifdef OPMON_EVOLUTION
-      if (opcode_monitor->notify_database_query(query))
-        mysql_real_query(mysql->mysql, EVO_COMMIT_QUERY, EVO_COMMIT_QUERY_LENGTH);
-      else
-        mysql_real_query(mysql->mysql, EVO_DISCARD_QUERY, EVO_DISCARD_QUERY_LENGTH);
-#else
-      opcode_monitor->notify_database_query(query);
-#endif
-    }
-#endif
-
 		if (MyG(report_mode) & MYSQLI_REPORT_INDEX) {
 			php_mysqli_report_index(query, mysqli_server_status(mysql->mysql) TSRMLS_CC);
 		}
 		RETURN_TRUE;
 	}
-
-#if defined(ZEND_MONITOR) && defined(OPMON_LOG_SELECT)
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_database_query(query);
-#endif
 
 #ifdef MYSQLI_USE_MYSQLND
 	switch (resultmode & ~(MYSQLI_ASYNC | MYSQLI_STORE_RESULT_COPY_DATA)) {
