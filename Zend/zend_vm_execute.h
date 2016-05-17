@@ -4798,7 +4798,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -5955,7 +5955,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -7374,7 +7374,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -9277,7 +9277,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -11778,7 +11778,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -12914,7 +12914,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -14307,7 +14307,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -16020,7 +16020,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -20213,7 +20213,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -22320,7 +22320,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -24750,7 +24750,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -28083,7 +28083,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -29617,7 +29617,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -30971,7 +30971,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -32327,7 +32327,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -34166,7 +34166,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -37783,7 +37783,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -39819,7 +39819,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -42119,7 +42119,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -45178,7 +45178,7 @@ num_index_prop:
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
