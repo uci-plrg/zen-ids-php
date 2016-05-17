@@ -5044,10 +5044,10 @@ ZEND_VM_C_LABEL(num_index_prop):
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
                 // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((OP2_TYPE == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
-					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
+				internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
