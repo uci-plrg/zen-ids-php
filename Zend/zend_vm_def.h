@@ -5123,7 +5123,7 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMP|VAR|UNUSED|CV, CONST
 #ifdef ZEND_MONITOR
             if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((OP2_TYPE == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((OP2_TYPE == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
