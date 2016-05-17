@@ -4796,9 +4796,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -4872,9 +4873,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CONST_HANDLER(Z
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -5953,9 +5954,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -6030,9 +6032,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_TMP_HANDLER(ZEN
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -7372,9 +7374,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -7449,9 +7452,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_VAR_HANDLER(ZEN
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -9275,9 +9278,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -9351,9 +9355,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CONST_CV_HANDLER(ZEND
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -11776,9 +11780,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -11852,9 +11857,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CONST_HANDLER(ZEN
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -12912,9 +12917,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -12989,9 +12995,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_TMP_HANDLER(ZEND_
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -14305,9 +14311,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -14382,9 +14389,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_VAR_HANDLER(ZEND_
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -16018,9 +16025,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -16094,9 +16102,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TMP_CV_HANDLER(ZEND_O
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -20211,9 +20219,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -20287,9 +20296,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CONST_HANDLER(ZEN
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -22318,9 +22327,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -22395,9 +22405,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_TMP_HANDLER(ZEND_
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -24748,9 +24758,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -24825,9 +24836,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_VAR_HANDLER(ZEND_
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -28081,9 +28092,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -28157,9 +28169,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_VAR_CV_HANDLER(ZEND_O
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -29615,9 +29627,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -29691,9 +29704,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CONST_HANDLER(
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -30969,9 +30982,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -31046,9 +31060,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_TMP_HANDLER(ZE
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -32325,9 +32339,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -32402,9 +32417,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_VAR_HANDLER(ZE
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -34164,9 +34179,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -34240,9 +34256,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UNUSED_CV_HANDLER(ZEN
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -37781,9 +37797,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -37857,9 +37874,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CONST_HANDLER(ZEND
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -39817,9 +39834,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -39894,9 +39912,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_TMP_HANDLER(ZEND_O
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_TMP_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -42117,9 +42135,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -42194,9 +42213,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_VAR_HANDLER(ZEND_O
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_VAR == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -45176,9 +45195,10 @@ num_index_prop:
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_dimension)) {
 			result = Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0 TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                // internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_R, ((IS_CV == IS_CONST && offset->u2.cache_slot < 0xffffffffU) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+					      internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
             }
 #endif
 		} else {
@@ -45252,9 +45272,9 @@ static int ZEND_FASTCALL  ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV_CV_HANDLER(ZEND_OP
 		if (EXPECTED(Z_OBJ_HT_P(container)->has_property)) {
 			result = Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL) TSRMLS_CC);
 #ifdef ZEND_MONITOR
-            if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+            if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
                 zval rv; // compulsory, not used
-                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+                internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
             }
 #endif
 		} else {
