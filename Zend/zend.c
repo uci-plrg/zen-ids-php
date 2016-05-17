@@ -1034,6 +1034,9 @@ static void zend_error_va_list(int type, const char *format, va_list args)
 		case E_USER_WARNING:
 		case E_USER_NOTICE:
 		case E_USER_DEPRECATED:
+#ifdef ZEND_MONITOR
+    case E_CFI_CONSTRAINT:
+#endif
 		case E_RECOVERABLE_ERROR:
 			if (zend_is_compiling(TSRMLS_C)) {
 				error_filename = zend_get_compiled_filename(TSRMLS_C)->val;
