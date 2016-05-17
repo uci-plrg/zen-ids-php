@@ -1,0 +1,29 @@
+#!/bin/bash
+
+./configure \
+    --prefix=$PHP_HOME \
+    --enable-mbstring \
+    --enable-intl \
+    --enable-mysqlnd \
+    --enable-pdo \
+    --enable-exif \
+    --enable-mbregex \
+    --enable-ftp \
+    --with-gd \
+    --with-png-dir=/stash/www \
+    --with-jpeg-dir=/stash/www \
+    --with-apxs2=/usr/bin/apxs \
+    --with-gettext \
+    --with-mysqli \
+    --with-pdo-mysql \
+    --with-openssl \
+    --with-xsl \
+    --with-curl \
+    --with-mcrypt \
+    --with-xdiff \
+    --with-tidy \
+    --with-zlib \
+    --with-config-file-path=$PHP_HOME/conf.d \
+
+# --enable-debug 
+
