@@ -583,8 +583,12 @@ found:
 						ZVAL_COPY_VALUE(&garbage, variable_ptr);
 
 						/* if we assign referenced variable, we should separate it */
+#ifdef ZEND_MONITOR
 						if (ZVAL_COPY_VALUE(variable_ptr, value) && zobj->properties != NULL)
               zobj->properties->u.flags |= HASH_FLAG_TAINT;
+#else
+						ZVAL_COPY_VALUE(variable_ptr, value);
+#endif
 						if (Z_REFCOUNTED_P(variable_ptr)) {
 							Z_ADDREF_P(variable_ptr);
 							if (Z_ISREF_P(variable_ptr)) {
@@ -651,8 +655,12 @@ write_std_property:
 		    EXPECTED((property_info->flags & ZEND_ACC_STATIC) == 0)) {
       zval *property = OBJ_PROP(zobj, property_info->offset);
 
+#ifdef ZEND_MONITOR
 			if (ZVAL_COPY_VALUE(property, value) && zobj->properties != NULL)
         zobj->properties->u.flags |= HASH_FLAG_TAINT;
+#else
+			ZVAL_COPY_VALUE(property, value);
+#endif
 		} else {
 			if (!zobj->properties) {
 				rebuild_object_properties(zobj);

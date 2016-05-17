@@ -720,7 +720,11 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 static zend_always_inline zend_bool zval_copy_value(zval *z, zval *v) {
     z->value = v->value;
     Z_TYPE_INFO_P(z) = Z_TYPE_INFO_P(v);
+#ifdef ZEND_MONITOR
     return ZEND_DATAFLOW(v, "copy-src", z, "copy-dst", 0 /*not a transfer*/);
+#else
+    return 0;
+#endif
 }
 
 #define ZVAL_COPY_VALUE(z, v) zval_copy_value(z, v)

@@ -22,7 +22,7 @@
 #ifndef PHP_H
 #define PHP_H
 
-#define ZEND_DEBUG 1
+// #define ZEND_DEBUG 1
 
 #ifdef HAVE_DMALLOC
 #include <dmalloc.h>

@@ -295,8 +295,12 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			if (ht->pDestructor) {
 				ht->pDestructor(data);
 			}
+#ifdef ZEND_MONITOR
 			if (ZVAL_COPY_VALUE(data, pData))
         ht->u.flags |= HASH_FLAG_TAINT;
+#else
+			ZVAL_COPY_VALUE(data, pData);
+#endif
 			HANDLE_UNBLOCK_INTERRUPTIONS();
 //#ifdef ZEND_MONITOR
 //      if (opcode_monitor != NULL)
@@ -319,8 +323,12 @@ add_to_hash:
 	p->h = h = zend_string_hash_val(key);
 	p->key = key;
 	zend_string_addref(key);
+#ifdef ZEND_MONITOR
 	if (ZVAL_COPY_VALUE(&p->val, pData))
     ht->u.flags |= HASH_FLAG_TAINT;
+#else
+	ZVAL_COPY_VALUE(&p->val, pData);
+#endif
 	nIndex = h & ht->nTableMask;
 	Z_NEXT(p->val) = ht->arHash[nIndex];
 	ht->arHash[nIndex] = idx;

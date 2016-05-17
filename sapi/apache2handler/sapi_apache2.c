@@ -545,7 +545,9 @@ static int php_handler(request_rec *r)
 	apr_status_t rv;
 	request_rec * volatile parent_req = NULL;
   zend_bool opmon_notified = 0;
+#ifdef ZEND_MONITOR
   extern zend_opcode_monitor_t *opcode_monitor;
+#endif
 	TSRMLS_FETCH();
 
 #define PHPAP_INI_OFF php_apache_ini_dtor(r, parent_req TSRMLS_CC);
