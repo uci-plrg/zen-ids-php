@@ -472,6 +472,7 @@ static void zend_mm_munmap(void *addr, size_t size)
 	if (munmap(addr, size) != 0) {
 #if ZEND_MM_ERROR
 		fprintf(stderr, "\nmunmap() failed: [%d] %s\n", errno, strerror(errno));
+    exit(1);
 #endif
 	}
 #endif
