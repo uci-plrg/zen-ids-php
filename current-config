@@ -1,5 +1,12 @@
 #!/bin/bash
 
+while getopts "d" option
+do
+  case $option in
+    d) debug="--enable-debug";;
+  esac
+done
+
 ./configure \
     --prefix=$PHP_HOME \
     --enable-zend-monitor \
@@ -10,6 +17,8 @@
     --enable-exif \
     --enable-mbregex \
     --enable-ftp \
+    --enable-opcache \
+    $debug \
     --with-gd \
     --with-png-dir=/stash/www \
     --with-jpeg-dir=/stash/www \
@@ -26,6 +35,4 @@
     --with-zlib \
     --with-config-file-path=$PHP_HOME/conf.d \
     --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
-
-# --enable-debug 
 

@@ -86,6 +86,16 @@ void register_opcode_monitor(zend_opcode_monitor_t *monitor)
   opcode_monitor = monitor;
   dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
 }
+
+zend_dataflow_monitor_t *get_zend_dataflow_monitor()
+{
+  return dataflow_monitor;
+}
+
+void zend_notify_function_compiled(void *op_array)
+{
+  opcode_monitor->notify_function_compile_complete((zend_op_array *) op_array);
+}
 #endif
 
 static void zend_destroy_property_info(zval *zv) /* {{{ */
@@ -4206,10 +4216,10 @@ void zend_compile_func_decl(znode *result, zend_ast *ast TSRMLS_DC) /* {{{ */
 	pass_two(CG(active_op_array) TSRMLS_CC);
 	zend_release_labels(0 TSRMLS_CC);
 
-#ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_function_compile_complete(op_array);
-#endif
+ #ifdef ZEND_MONITOR
+   if (opcode_monitor != NULL)
+     opcode_monitor->notify_function_compile_complete(op_array);
+ #endif
 
 	/* Pop the loop variable stack separator */
 	zend_stack_del_top(&CG(loop_var_stack));

@@ -1273,6 +1273,11 @@ ZEND_API int zend_execute_scripts(int type TSRMLS_DC, zval *retval, int file_cou
 		}
 		zend_destroy_file_handle(file_handle TSRMLS_CC);
 		if (op_array) {
+#ifdef ZEND_MONITOR
+      extern zend_opcode_monitor_t *opcode_monitor;
+      if (opcode_monitor != NULL)
+        opcode_monitor->notify_function_compile_complete(op_array);
+#endif
 			zend_execute(op_array, retval TSRMLS_CC);
 			zend_exception_restore(TSRMLS_C);
 			if (EG(exception)) {

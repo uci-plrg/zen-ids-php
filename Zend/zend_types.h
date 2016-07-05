@@ -239,6 +239,9 @@ typedef struct _zend_dataflow_monitor_t {
                                  zend_bool is_internal_transfer);
 } zend_dataflow_monitor_t;
 
+ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
+ZEND_API void zend_notify_function_compiled(void *op_array);
+
 static zend_always_inline zend_bool notify_dataflow(const zval *src, const char *src_name,
                                                     const zval *dst, const char *dst_name,
                                                     zend_bool is_internal_transfer)

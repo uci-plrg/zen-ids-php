@@ -602,10 +602,6 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type TSR
 	CG(active_op_array) = original_active_op_array;
 	if (compilation_successful) {
 		pass_two(op_array TSRMLS_CC);
-#ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_compile_complete(op_array);
-#endif
 		zend_release_labels(0 TSRMLS_CC);
 	} else {
 		efree_size(op_array, sizeof(zend_op_array));
@@ -637,6 +633,12 @@ zend_op_array *compile_filename(int type, zval *filename TSRMLS_DC)
 	file_handle.handle.fp = NULL;
 
 	retval = zend_compile_file(&file_handle, type TSRMLS_CC);
+  if (retval) {
+#ifdef ZEND_MONITOR
+    if (opcode_monitor != NULL)
+      opcode_monitor->notify_function_compile_complete(retval);
+#endif
+  }
 	if (retval && file_handle.handle.stream.handle) {
 		if (!file_handle.opened_path) {
 			file_handle.opened_path = opened_path = estrndup(Z_STRVAL_P(filename), Z_STRLEN_P(filename));
@@ -760,11 +762,6 @@ zend_op_array *compile_string(zval *source_string, char *filename TSRMLS_DC)
 			zend_emit_final_return(NULL TSRMLS_CC);
 			pass_two(op_array TSRMLS_CC);
 			zend_release_labels(0 TSRMLS_CC);
-
-#ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_function_compile_complete(op_array);
-#endif
 
 			CG(active_op_array) = original_active_op_array;
 		}
