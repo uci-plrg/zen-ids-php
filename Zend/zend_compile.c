@@ -4217,8 +4217,8 @@ void zend_compile_func_decl(znode *result, zend_ast *ast TSRMLS_DC) /* {{{ */
 	zend_release_labels(0 TSRMLS_CC);
 
  #ifdef ZEND_MONITOR
-   if (opcode_monitor != NULL)
-     opcode_monitor->notify_function_compile_complete(op_array);
+   //if (opcode_monitor != NULL)
+   //  opcode_monitor->notify_function_compile_complete(op_array);
  #endif
 
 	/* Pop the loop variable stack separator */

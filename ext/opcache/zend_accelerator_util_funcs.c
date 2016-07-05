@@ -129,10 +129,6 @@ static int move_user_function(zval *zv TSRMLS_DC, int num_args, va_list args, ze
 	HashTable *function_table = va_arg(args, HashTable *);
 	(void)num_args; /* keep the compiler happy */
 
-#ifdef ZEND_MONITOR
-  zend_notify_function_compiled(&function->op_array);
-#endif
-
 	if (function->type == ZEND_USER_FUNCTION) {
 		zend_hash_update_ptr(function_table, hash_key->key, function);
 		return 1;
@@ -420,6 +416,10 @@ static void zend_hash_clone_methods(HashTable *ht, HashTable *source, zend_class
 		/* Copy data */
 		ZVAL_PTR(&q->val, ARENA_REALLOC(Z_PTR(p->val)));
 		new_entry = (zend_op_array*)Z_PTR(q->val);
+
+#ifdef ZEND_MONITOR
+    zend_notify_function_compiled(new_entry);
+#endif
 
 		/* Copy constructor */
 		/* we use refcount to show that op_array is referenced from several places */
@@ -748,6 +748,9 @@ static void zend_accel_function_hash_copy(HashTable *target, HashTable *source, 
 			Z_PTR_P(t) = ARENA_REALLOC(Z_PTR(p->val));
 			pCopyConstructor(Z_PTR_P(t));
 		}
+#ifdef ZEND_MONITOR
+    zend_notify_function_compiled(Z_PTR_P(t));
+#endif
 	}
 	target->nInternalPointer = target->nNumOfElements ? 0 : INVALID_IDX;
 	return;

@@ -3060,9 +3060,9 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HANDLER(ZEND_OPCODE_HA
 		zval *return_value = NULL;
 		zend_execute_data *call;
 #ifdef ZEND_MONITOR
-          extern zend_opcode_monitor_t *opcode_monitor;
-          if (opcode_monitor != NULL)
-            opcode_monitor->notify_function_compile_complete(new_op_array);
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_function_compile_complete(new_op_array);
 #endif
 
 		if (RETURN_VALUE_USED(opline)) {
@@ -10181,9 +10181,9 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_TMP_HANDLER(ZEND_OPCODE_HAND
 		zval *return_value = NULL;
 		zend_execute_data *call;
 #ifdef ZEND_MONITOR
-          extern zend_opcode_monitor_t *opcode_monitor;
-          if (opcode_monitor != NULL)
-            opcode_monitor->notify_function_compile_complete(new_op_array);
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_function_compile_complete(new_op_array);
 #endif
 
 		if (RETURN_VALUE_USED(opline)) {
@@ -17325,9 +17325,9 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_VAR_HANDLER(ZEND_OPCODE_HAND
 		zval *return_value = NULL;
 		zend_execute_data *call;
 #ifdef ZEND_MONITOR
-          extern zend_opcode_monitor_t *opcode_monitor;
-          if (opcode_monitor != NULL)
-            opcode_monitor->notify_function_compile_complete(new_op_array);
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_function_compile_complete(new_op_array);
 #endif
 
 		if (RETURN_VALUE_USED(opline)) {
@@ -35386,9 +35386,9 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLER(ZEND_OPCODE_HANDL
 		zval *return_value = NULL;
 		zend_execute_data *call;
 #ifdef ZEND_MONITOR
-          extern zend_opcode_monitor_t *opcode_monitor;
-          if (opcode_monitor != NULL)
-            opcode_monitor->notify_function_compile_complete(new_op_array);
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+          opcode_monitor->notify_function_compile_complete(new_op_array);
 #endif
 
 		if (RETURN_VALUE_USED(opline)) {

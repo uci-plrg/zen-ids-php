@@ -1,9 +1,9 @@
 <?php
 
-#include "a.php";
+include "a.php";
 
-$dynamic_include = "a.php";
-include $dynamic_include;
+#$dynamic_include = "a.php";
+#include $dynamic_include;
 
 print "a: " . a(str_repeat("main", 2)) . "\n";
 
