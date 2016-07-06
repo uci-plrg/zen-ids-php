@@ -92,9 +92,9 @@ zend_dataflow_monitor_t *get_zend_dataflow_monitor()
   return dataflow_monitor;
 }
 
-void zend_notify_function_compiled(void *op_array)
+void zend_notify_function_copied(void *src_op_array, void *dst_op_array)
 {
-  opcode_monitor->notify_function_compile_complete((zend_op_array *) op_array);
+  opcode_monitor->notify_function_created((zend_op_array *) src_op_array, (zend_op_array *) dst_op_array);
 }
 #endif
 

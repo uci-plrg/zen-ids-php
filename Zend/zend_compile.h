@@ -705,7 +705,7 @@ typedef struct _zend_opcode_monitor_t {
     void (*set_top_level_script)(const char *script_path);
     zend_bool (*has_taint)(const zval *value);
     void (*notify_opcode_interp)(const zend_op *op);
-    void (*notify_function_compile_complete)(zend_op_array *op_array);
+    void (*notify_function_created)(zend_op_array *src, zend_op_array *f);
     void (*notify_zval_free)(const zval *zv);
     void (*notify_http_request)(zend_bool start);
     monitor_query_flags_t (*notify_database_query)(const char *query);

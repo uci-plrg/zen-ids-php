@@ -1410,6 +1410,10 @@ static zend_persistent_script *compile_and_cache_file(zend_file_handle *file_han
 	zend_accel_move_user_functions(&ZCG(function_table), &new_persistent_script->function_table TSRMLS_CC);
 	new_persistent_script->main_op_array = *op_array;
 
+#ifdef ZEND_MONITOR
+  zend_notify_function_copied(NULL /*new copy src*/, &new_persistent_script->main_op_array);
+#endif
+
 	efree(op_array); /* we have valid persistent_script, so it's safe to free op_array */
 
     /* Fill in the ping_auto_globals_mask for the new script. If jit for auto globals is enabled we

@@ -4219,6 +4219,12 @@ ZEND_VM_HANDLER(73, ZEND_INCLUDE_OR_EVAL, CONST|TMP|VAR|CV, ANY)
 
 					new_op_array = zend_compile_string(inc_filename, eval_desc TSRMLS_CC);
 					efree(eval_desc);
+
+#ifdef ZEND_MONITOR
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+              opcode_monitor->notify_function_created(NULL, new_op_array);
+#endif
 				}
 				break;
 			EMPTY_SWITCH_DEFAULT_CASE()
@@ -4233,11 +4239,6 @@ ZEND_VM_HANDLER(73, ZEND_INCLUDE_OR_EVAL, CONST|TMP|VAR|CV, ANY)
 	} else if (EXPECTED(new_op_array != NULL)) {
 		zval *return_value = NULL;
 		zend_execute_data *call;
-#ifdef ZEND_MONITOR
-        extern zend_opcode_monitor_t *opcode_monitor;
-        if (opcode_monitor != NULL)
-          opcode_monitor->notify_function_compile_complete(new_op_array);
-#endif
 
 		if (RETURN_VALUE_USED(opline)) {
 			return_value = EX_VAR(opline->result.var);

@@ -240,7 +240,7 @@ typedef struct _zend_dataflow_monitor_t {
 } zend_dataflow_monitor_t;
 
 ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
-ZEND_API void zend_notify_function_compiled(void *op_array);
+ZEND_API void zend_notify_function_copied(void *src_op_array, void *dst_op_array);
 
 static zend_always_inline zend_bool notify_dataflow(const zval *src, const char *src_name,
                                                     const zval *dst, const char *dst_name,

@@ -418,7 +418,7 @@ static void zend_hash_clone_methods(HashTable *ht, HashTable *source, zend_class
 		new_entry = (zend_op_array*)Z_PTR(q->val);
 
 #ifdef ZEND_MONITOR
-    zend_notify_function_compiled(new_entry);
+    zend_notify_function_copied(Z_PTR(p->val), new_entry);
 #endif
 
 		/* Copy constructor */
@@ -749,7 +749,7 @@ static void zend_accel_function_hash_copy(HashTable *target, HashTable *source, 
 			pCopyConstructor(Z_PTR_P(t));
 		}
 #ifdef ZEND_MONITOR
-    zend_notify_function_compiled(Z_PTR_P(t));
+    zend_notify_function_copied(Z_PTR(p->val), Z_PTR_P(t));
 #endif
 	}
 	target->nInternalPointer = target->nNumOfElements ? 0 : INVALID_IDX;
@@ -880,6 +880,10 @@ zend_op_array* zend_accel_load_script(zend_persistent_script *persistent_script,
 	if (UNEXPECTED(!from_shared_memory)) {
 		free_persistent_script(persistent_script, 0); /* free only hashes */
 	}
+
+#ifdef ZEND_MONITOR
+  zend_notify_function_copied(&persistent_script->main_op_array, op_array);
+#endif
 
 	return op_array;
 }
