@@ -337,6 +337,8 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 {
 	DCL_OPLINE
 
+	int ret = 1;
+
 #ifdef ZEND_MONITOR
 	extern zend_opcode_monitor_t *opcode_monitor;
 #endif
@@ -345,7 +347,6 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 	LOAD_OPLINE();
 
 	while (1) {
-    	int ret;
 #ifdef ZEND_WIN32
 		if (EG(timed_out)) {
 			zend_timeout(0);
@@ -353,9 +354,8 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 #endif
 
 #ifdef ZEND_MONITOR
-		if (opcode_monitor != NULL) {
-			opcode_monitor->notify_opcode_interp(OPLINE);
-		}
+		if (opcode_monitor != NULL) 
+			opcode_monitor->notify_opcode_interp(OPLINE, ret);
 #endif
 		
 		ret = OPLINE->handler(execute_data TSRMLS_CC);
@@ -363,6 +363,10 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 			if (EXPECTED(ret > 0)) {
 				execute_data = EG(current_execute_data);
 			} else {
+#ifdef ZEND_MONITOR
+			if (opcode_monitor != NULL) 
+				opcode_monitor->notify_opcode_interp(OPLINE, ret);
+#endif
 				return;
 			}
 		}
@@ -3018,7 +3022,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HANDLER(ZEND_OPCODE_HA
 						}
 
 						if (zend_hash_str_add_empty_element(&EG(included_files), file_handle.opened_path, (int)strlen(file_handle.opened_path))) {
-                            // may be implemented by opcache or the plain compiler
 							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE) TSRMLS_CC);
 							zend_destroy_file_handle(&file_handle TSRMLS_CC);
 						} else {
@@ -3044,9 +3047,14 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HANDLER(ZEND_OPCODE_HA
 			case ZEND_EVAL: {
 					char *eval_desc = zend_make_compiled_string_description("eval()'d code" TSRMLS_CC);
 
-                    // always the plain compiler
 					new_op_array = zend_compile_string(inc_filename, eval_desc TSRMLS_CC);
 					efree(eval_desc);
+
+#ifdef ZEND_MONITOR
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+              opcode_monitor->notify_function_created(NULL, new_op_array);
+#endif
 				}
 				break;
 			EMPTY_SWITCH_DEFAULT_CASE()
@@ -3061,17 +3069,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HANDLER(ZEND_OPCODE_HA
 	} else if (EXPECTED(new_op_array != NULL)) {
 		zval *return_value = NULL;
 		zend_execute_data *call;
-#ifdef ZEND_MONITOR
-        extern zend_opcode_monitor_t *opcode_monitor;
-        if (opcode_monitor != NULL) {
-          switch (opline->extended_value) {
-            case ZEND_INCLUDE_ONCE:
-            case ZEND_REQUIRE_ONCE:
-			      case ZEND_EVAL:
-              opcode_monitor->notify_function_created(NULL, new_op_array);
-          }
-        }
-#endif
 
 		if (RETURN_VALUE_USED(opline)) {
 			return_value = EX_VAR(opline->result.var);
@@ -10147,7 +10144,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_TMP_HANDLER(ZEND_OPCODE_HAND
 						}
 
 						if (zend_hash_str_add_empty_element(&EG(included_files), file_handle.opened_path, (int)strlen(file_handle.opened_path))) {
-                            // may be implemented by opcache or the plain compiler
 							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE) TSRMLS_CC);
 							zend_destroy_file_handle(&file_handle TSRMLS_CC);
 						} else {
@@ -10173,9 +10169,14 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_TMP_HANDLER(ZEND_OPCODE_HAND
 			case ZEND_EVAL: {
 					char *eval_desc = zend_make_compiled_string_description("eval()'d code" TSRMLS_CC);
 
-                    // always the plain compiler
 					new_op_array = zend_compile_string(inc_filename, eval_desc TSRMLS_CC);
 					efree(eval_desc);
+
+#ifdef ZEND_MONITOR
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+              opcode_monitor->notify_function_created(NULL, new_op_array);
+#endif
 				}
 				break;
 			EMPTY_SWITCH_DEFAULT_CASE()
@@ -10190,17 +10191,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_TMP_HANDLER(ZEND_OPCODE_HAND
 	} else if (EXPECTED(new_op_array != NULL)) {
 		zval *return_value = NULL;
 		zend_execute_data *call;
-#ifdef ZEND_MONITOR
-        extern zend_opcode_monitor_t *opcode_monitor;
-        if (opcode_monitor != NULL) {
-          switch (opline->extended_value) {
-            case ZEND_INCLUDE_ONCE:
-            case ZEND_REQUIRE_ONCE:
-			      case ZEND_EVAL:
-              opcode_monitor->notify_function_created(NULL, new_op_array);
-          }
-        }
-#endif
 
 		if (RETURN_VALUE_USED(opline)) {
 			return_value = EX_VAR(opline->result.var);
@@ -17299,7 +17289,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_VAR_HANDLER(ZEND_OPCODE_HAND
 						}
 
 						if (zend_hash_str_add_empty_element(&EG(included_files), file_handle.opened_path, (int)strlen(file_handle.opened_path))) {
-                            // may be implemented by opcache or the plain compiler
 							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE) TSRMLS_CC);
 							zend_destroy_file_handle(&file_handle TSRMLS_CC);
 						} else {
@@ -17325,9 +17314,14 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_VAR_HANDLER(ZEND_OPCODE_HAND
 			case ZEND_EVAL: {
 					char *eval_desc = zend_make_compiled_string_description("eval()'d code" TSRMLS_CC);
 
-                    // always the plain compiler
 					new_op_array = zend_compile_string(inc_filename, eval_desc TSRMLS_CC);
 					efree(eval_desc);
+
+#ifdef ZEND_MONITOR
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+              opcode_monitor->notify_function_created(NULL, new_op_array);
+#endif
 				}
 				break;
 			EMPTY_SWITCH_DEFAULT_CASE()
@@ -17342,17 +17336,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_VAR_HANDLER(ZEND_OPCODE_HAND
 	} else if (EXPECTED(new_op_array != NULL)) {
 		zval *return_value = NULL;
 		zend_execute_data *call;
-#ifdef ZEND_MONITOR
-        extern zend_opcode_monitor_t *opcode_monitor;
-        if (opcode_monitor != NULL) {
-          switch (opline->extended_value) {
-            case ZEND_INCLUDE_ONCE:
-            case ZEND_REQUIRE_ONCE:
-			      case ZEND_EVAL:
-              opcode_monitor->notify_function_created(NULL, new_op_array);
-          }
-        }
-#endif
 
 		if (RETURN_VALUE_USED(opline)) {
 			return_value = EX_VAR(opline->result.var);
@@ -35368,7 +35351,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLER(ZEND_OPCODE_HANDL
 						}
 
 						if (zend_hash_str_add_empty_element(&EG(included_files), file_handle.opened_path, (int)strlen(file_handle.opened_path))) {
-                            // may be implemented by opcache or the plain compiler
 							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE) TSRMLS_CC);
 							zend_destroy_file_handle(&file_handle TSRMLS_CC);
 						} else {
@@ -35394,9 +35376,14 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLER(ZEND_OPCODE_HANDL
 			case ZEND_EVAL: {
 					char *eval_desc = zend_make_compiled_string_description("eval()'d code" TSRMLS_CC);
 
-                    // always the plain compiler
 					new_op_array = zend_compile_string(inc_filename, eval_desc TSRMLS_CC);
 					efree(eval_desc);
+
+#ifdef ZEND_MONITOR
+        extern zend_opcode_monitor_t *opcode_monitor;
+        if (opcode_monitor != NULL)
+              opcode_monitor->notify_function_created(NULL, new_op_array);
+#endif
 				}
 				break;
 			EMPTY_SWITCH_DEFAULT_CASE()
@@ -35411,17 +35398,6 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLER(ZEND_OPCODE_HANDL
 	} else if (EXPECTED(new_op_array != NULL)) {
 		zval *return_value = NULL;
 		zend_execute_data *call;
-#ifdef ZEND_MONITOR
-        extern zend_opcode_monitor_t *opcode_monitor;
-        if (opcode_monitor != NULL) {
-          switch (opline->extended_value) {
-            case ZEND_INCLUDE_ONCE:
-            case ZEND_REQUIRE_ONCE:
-			      case ZEND_EVAL:
-              opcode_monitor->notify_function_created(NULL, new_op_array);
-          }
-        }
-#endif
 
 		if (RETURN_VALUE_USED(opline)) {
 			return_value = EX_VAR(opline->result.var);
