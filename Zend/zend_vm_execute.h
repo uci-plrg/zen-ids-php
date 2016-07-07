@@ -346,6 +346,11 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 
 	LOAD_OPLINE();
 
+#ifdef ZEND_MONITOR
+		if (opcode_monitor != NULL)
+		opcode_monitor->notify_top_stack_motion(execute_data, OPLINE, 3);
+#endif
+
 	while (1) {
 #ifdef ZEND_WIN32
 		if (EG(timed_out)) {
@@ -353,19 +358,14 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 		}
 #endif
 
-#ifdef ZEND_MONITOR
-		if (opcode_monitor != NULL) 
-			opcode_monitor->notify_opcode_interp(OPLINE, ret);
-#endif
-		
 		ret = OPLINE->handler(execute_data TSRMLS_CC);
 		if (UNEXPECTED(ret != 0)) {
 			if (EXPECTED(ret > 0)) {
 				execute_data = EG(current_execute_data);
 			} else {
 #ifdef ZEND_MONITOR
-			if (opcode_monitor != NULL) 
-				opcode_monitor->notify_opcode_interp(OPLINE, ret);
+			if (opcode_monitor != NULL)
+				opcode_monitor->notify_top_stack_motion(execute_data, OPLINE, -1);
 #endif
 				return;
 			}
