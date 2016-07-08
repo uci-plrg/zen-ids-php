@@ -263,9 +263,6 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 	uint32_t nIndex;
 	uint32_t idx;
 	Bucket *p;
-//#ifdef ZEND_MONITOR
-//  extern zend_opcode_monitor_t *opcode_monitor;
-//#endif
 #ifdef ZEND_SIGNALS
 	TSRMLS_FETCH();
 #endif
@@ -302,10 +299,6 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			ZVAL_COPY_VALUE(data, pData);
 #endif
 			HANDLE_UNBLOCK_INTERRUPTIONS();
-//#ifdef ZEND_MONITOR
-//      if (opcode_monitor != NULL)
-//        opcode_monitor->notify_dataflow(pData, "*", data, "A[i]");
-//#endif
 			return data;
 		}
 	}
@@ -334,10 +327,6 @@ add_to_hash:
 	ht->arHash[nIndex] = idx;
 	HANDLE_UNBLOCK_INTERRUPTIONS();
 
-//#ifdef ZEND_MONITOR
-//    if (opcode_monitor != NULL)
-//      opcode_monitor->notify_dataflow(pData, "*", &p->val, "A[i]");
-//#endif
 	return &p->val;
 }
 

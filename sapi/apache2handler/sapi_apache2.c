@@ -544,8 +544,8 @@ static int php_handler(request_rec *r)
 	apr_bucket *bucket;
 	apr_status_t rv;
 	request_rec * volatile parent_req = NULL;
-  zend_bool opmon_notified = 0;
 #ifdef ZEND_MONITOR
+  zend_bool opmon_notified = 0;
   extern zend_opcode_monitor_t *opcode_monitor;
 #endif
 	TSRMLS_FETCH();
