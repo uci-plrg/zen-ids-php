@@ -85,6 +85,11 @@ void register_opcode_monitor(zend_opcode_monitor_t *monitor)
 {
   opcode_monitor = monitor;
   dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
+
+  if (monitor == NULL || monitor->opmon_interp == NULL)
+    zend_execute_ex = execute_ex;
+  else
+    zend_execute_ex = monitor->opmon_interp;
 }
 
 zend_dataflow_monitor_t *get_zend_dataflow_monitor()

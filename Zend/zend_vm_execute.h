@@ -339,17 +339,12 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 
 	int ret = 1;
 
-#ifdef ZEND_MONITOR
+#ifdef ZEND_MONITOR__refactored
 	extern zend_opcode_monitor_t *opcode_monitor;
 #endif
 
 
 	LOAD_OPLINE();
-
-#ifdef ZEND_MONITOR
-		if (opcode_monitor != NULL)
-		opcode_monitor->notify_top_stack_motion(execute_data, OPLINE, 3);
-#endif
 
 	while (1) {
 #ifdef ZEND_WIN32
@@ -358,14 +353,19 @@ ZEND_API void execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 		}
 #endif
 
+#ifdef ZEND_MONITOR__refactored
+		if (opcode_monitor != NULL)
+			opcode_monitor->notify_opcode_interp(OPLINE, ret);
+#endif
+
 		ret = OPLINE->handler(execute_data TSRMLS_CC);
 		if (UNEXPECTED(ret != 0)) {
 			if (EXPECTED(ret > 0)) {
 				execute_data = EG(current_execute_data);
 			} else {
-#ifdef ZEND_MONITOR
-			if (opcode_monitor != NULL)
-				opcode_monitor->notify_top_stack_motion(execute_data, OPLINE, -1);
+#ifdef ZEND_MONITOR__refactored
+				if (opcode_monitor != NULL)
+					opcode_monitor->notify_opcode_interp(OPLINE, ret);
 #endif
 				return;
 			}
@@ -631,7 +631,7 @@ static int ZEND_FASTCALL  ZEND_DO_FCALL_SPEC_HANDLER(ZEND_OPCODE_HANDLER_ARGS)
 			call->prev_execute_data = execute_data;
 			i_init_func_execute_data(call, &fbc->op_array, return_value TSRMLS_CC);
 
-			if (EXPECTED(zend_execute_ex == execute_ex)) {
+			if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 				ZEND_VM_ENTER();
 			} else {
 				call->frame_info = VM_FRAME_INFO(
@@ -3085,7 +3085,7 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HANDLER(ZEND_OPCODE_HA
 
 		call->prev_execute_data = execute_data;
 	    i_init_code_execute_data(call, new_op_array, return_value TSRMLS_CC);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			call->frame_info = VM_FRAME_TOP_CODE;
@@ -10207,7 +10207,7 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_TMP_HANDLER(ZEND_OPCODE_HAND
 
 		call->prev_execute_data = execute_data;
 	    i_init_code_execute_data(call, new_op_array, return_value TSRMLS_CC);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			call->frame_info = VM_FRAME_TOP_CODE;
@@ -17352,7 +17352,7 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_VAR_HANDLER(ZEND_OPCODE_HAND
 
 		call->prev_execute_data = execute_data;
 	    i_init_code_execute_data(call, new_op_array, return_value TSRMLS_CC);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			call->frame_info = VM_FRAME_TOP_CODE;
@@ -35414,7 +35414,7 @@ static int ZEND_FASTCALL  ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLER(ZEND_OPCODE_HANDL
 
 		call->prev_execute_data = execute_data;
 	    i_init_code_execute_data(call, new_op_array, return_value TSRMLS_CC);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			call->frame_info = VM_FRAME_TOP_CODE;
@@ -49770,7 +49770,15 @@ static opcode_handler_t zend_vm_get_opcode_handler(zend_uchar opcode, const zend
 
 ZEND_API void zend_vm_set_opcode_handler(zend_op* op)
 {
+#ifdef ZEND_MONITOR
+	extern zend_opcode_monitor_t *opcode_monitor;
+	if (opcode_monitor != NULL) {
+		opcode_handler_t handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);
+		op->handler = (opcode_handler_t) (((zend_uintptr_t) handler) | 1);
+}
+#else
 	op->handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);
+#endif
 }
 
 ZEND_API int zend_do_fcall(ZEND_OPCODE_HANDLER_ARGS)

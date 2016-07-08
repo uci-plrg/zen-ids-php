@@ -961,7 +961,7 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 						}
 					} else {
             out($f,$m[1]."int ret = 1;\n\n".
-                   "#ifdef ZEND_MONITOR\n".
+                   "#ifdef ZEND_MONITOR__refactored\n".
                    $m[1]."extern zend_opcode_monitor_t *opcode_monitor;\n".
                    "#endif".$m[3]."\n");
 						#skip_blanks($f, $m[1], $m[3]."\n");
@@ -998,7 +998,7 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 				  // Emit code that dispatches to opcode handler
 					switch ($kind) {
 						case ZEND_VM_KIND_CALL:
-              out($f, "#ifdef ZEND_MONITOR\n".
+              out($f, "#ifdef ZEND_MONITOR__refactored\n".
                       $m[1]."if (opcode_monitor != NULL) \n".
                       $m[1]."\topcode_monitor->notify_opcode_interp(OPLINE, ret);\n".
                       "#endif\n".
@@ -1032,7 +1032,7 @@ function gen_executor($f, $skl, $spec, $kind, $executor_name, $initializer_name,
 						out($f, $m[1]."if (EXPECTED(ret > 0)) {\n" .
 						        $m[1]."\texecute_data = EG(current_execute_data);\n".
 						        $m[1]."} else {\n" .
-                    "#ifdef ZEND_MONITOR\n".
+                    "#ifdef ZEND_MONITOR__refactored\n".
                     $m[1]."\tif (opcode_monitor != NULL) \n".
                     $m[1]."\t\topcode_monitor->notify_opcode_interp(OPLINE, ret);\n".
                     "#endif\n".
@@ -1373,7 +1373,15 @@ function gen_vm($def, $skel) {
 	// Generate zend_vm_get_opcode_handler() function
 	out($f, "ZEND_API void zend_vm_set_opcode_handler(zend_op* op)\n");
 	out($f, "{\n");
+	out($f, "#ifdef ZEND_MONITOR\n");
+	out($f, "\textern zend_opcode_monitor_t *opcode_monitor;\n");
+	out($f, "\tif (opcode_monitor != NULL) {\n");
+	out($f, "\t\topcode_handler_t handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);\n");
+	out($f, "\t\top->handler = (opcode_handler_t) (((zend_uintptr_t) handler) | 1);\n");
+	out($f, "}\n");
+	out($f, "#else\n");
 	out($f, "\top->handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);\n");
+	out($f, "#endif\n");
 	out($f, "}\n\n");
 
 	// Export handlers and helpers
