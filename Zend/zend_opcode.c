@@ -342,8 +342,7 @@ ZEND_API void destroy_op_array(zend_op_array *op_array TSRMLS_DC)
 		while (i > 0) {
 			i--;
 #ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL) // todo: this is a zend_string, not a zval!
-        opcode_monitor->notify_zval_free(op_array->vars[i]);
+      opcode_monitor->notify_zval_free(op_array->vars[i]);
 #endif
 			zend_string_release(op_array->vars[i]);
 		}
@@ -354,8 +353,7 @@ ZEND_API void destroy_op_array(zend_op_array *op_array TSRMLS_DC)
 	 	end = literal + op_array->last_literal;
 	 	while (literal < end) {
 #ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_zval_free(literal);
+      opcode_monitor->notify_zval_free(literal);
 #endif
 			zval_ptr_dtor_nogc(literal);
 			literal++;

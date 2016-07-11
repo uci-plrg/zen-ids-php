@@ -1425,8 +1425,7 @@ static void init_request_info(fcgi_request *request TSRMLS_DC)
 		}
 
 #ifdef ZEND_MONITOR
-        if (opcode_monitor != NULL)
-          opcode_monitor->set_top_level_script(SG(request_info).path_translated);
+    opcode_monitor->set_top_level_script(SG(request_info).path_translated);
 #endif
 
 		SG(request_info).request_method = CGI_GETENV("REQUEST_METHOD");

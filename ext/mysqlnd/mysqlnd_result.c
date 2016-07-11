@@ -1153,7 +1153,7 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 #endif
 		}
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL && field_count > 0 && strlen(meta->fields[0].org_table) > 0)
+    if (field_count > 0 && strlen(meta->fields[0].org_table) > 0)
       opcode_monitor->notify_database_fetch(field_count, table_names, column_names, column_values);
 #endif
 		set->data_cursor += field_count;

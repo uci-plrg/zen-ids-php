@@ -603,8 +603,7 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type TSR
 	if (compilation_successful) {
 		pass_two(op_array TSRMLS_CC);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_created(NULL, op_array);
+    opcode_monitor->notify_function_created(NULL, op_array);
 #endif
 		zend_release_labels(0 TSRMLS_CC);
 	} else {
@@ -639,8 +638,7 @@ zend_op_array *compile_filename(int type, zval *filename TSRMLS_DC)
 	retval = zend_compile_file(&file_handle, type TSRMLS_CC);
   if (retval) {
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL)
-      opcode_monitor->notify_function_created(NULL, retval);
+    opcode_monitor->notify_function_created(NULL, retval);
 #endif
   }
 	if (retval && file_handle.handle.stream.handle) {

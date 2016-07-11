@@ -671,10 +671,8 @@ zend_first_try {
 		zfd.opened_path = NULL;
 
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL) {
-      opmon_notified = 1;
-      opcode_monitor->notify_http_request(1);
-    }
+    opmon_notified = 1;
+    opcode_monitor->notify_http_request(1);
 #endif
 		if (!parent_req) {
 			php_execute_script(&zfd TSRMLS_CC);
@@ -715,8 +713,7 @@ zend_first_try {
 static void php_apache_child_init(apr_pool_t *pchild, server_rec *s)
 {
 #ifdef ZEND_MONITOR
-  if (opcode_monitor != NULL)
-    opcode_monitor->notify_worker_startup();
+  opcode_monitor->notify_worker_startup();
 #endif
 
 	apr_pool_cleanup_register(pchild, NULL, php_apache_child_shutdown, apr_pool_cleanup_null);

@@ -1275,8 +1275,7 @@ ZEND_API int zend_execute_scripts(int type TSRMLS_DC, zval *retval, int file_cou
 		if (op_array) {
 #ifdef ZEND_MONITOR
       extern zend_opcode_monitor_t *opcode_monitor;
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_function_created(NULL, op_array);
+      opcode_monitor->notify_function_created(NULL, op_array);
 #endif
 			zend_execute(op_array, retval TSRMLS_CC);
 			zend_exception_restore(TSRMLS_C);

@@ -1592,8 +1592,7 @@ ZEND_API void zend_detach_symbol_table(zend_execute_data *execute_data) /* {{{ *
 	for (i = 0; i < op_array->last_var; i++) {
 		if (Z_TYPE_P(EX_VAR_NUM(i)) == IS_UNDEF) {
 #ifdef ZEND_MONITOR
-      if (opcode_monitor != NULL)
-        opcode_monitor->notify_zval_free(EX_VAR_NUM(i));
+      opcode_monitor->notify_zval_free(EX_VAR_NUM(i));
 #endif
 			zend_hash_del(ht, op_array->vars[i]);
 		} else {

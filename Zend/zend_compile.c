@@ -78,11 +78,83 @@ ZEND_API zend_executor_globals executor_globals;
 #endif
 
 #ifdef ZEND_MONITOR
-zend_opcode_monitor_t *opcode_monitor = NULL;
-zend_dataflow_monitor_t *dataflow_monitor = NULL;
+zend_bool nop_notify_dataflow(const zval *src, const char *src_name,
+                              const zval *dst, const char *dst_name,
+                              zend_bool is_internal_transfer)
+{
+  return 0;
+}
+
+void nop_set_top_level_script(const char *script_path)
+{
+}
+
+zend_bool nop_has_taint(const zval *value)
+{
+  return 0;
+}
+
+void nop_opmon_interp(zend_execute_data *execute_data TSRMLS_DC)
+{
+}
+
+void nop_notify_function_created(zend_op_array *src, zend_op_array *f)
+{
+}
+
+void nop_notify_zval_free(const zval *zv)
+{
+}
+
+void nop_notify_http_request(zend_bool start)
+{
+}
+
+monitor_query_flags_t nop_notify_database_query(const char *query)
+{
+  return 0;
+}
+
+void nop_notify_database_fetch(uint32_t field_count, const char **table_names,
+                              const char **column_names, const zval **value)
+{
+}
+
+void nop_notify_worker_startup()
+{
+}
+
+void nop_opmon_tokenize()
+{
+}
+
+int nop_opmon_dataflow()
+{
+  return 0;
+}
+
+zend_opcode_monitor_t nop_opcode_monitor = {
+  { nop_notify_dataflow },
+  nop_set_top_level_script,
+  nop_has_taint,
+  nop_opmon_interp,
+  nop_notify_function_created,
+  nop_notify_zval_free,
+  nop_notify_http_request,
+  nop_notify_database_query,
+  nop_notify_database_fetch,
+  nop_notify_worker_startup,
+  nop_opmon_tokenize,
+  nop_opmon_dataflow
+};
+
+zend_opcode_monitor_t *opcode_monitor = &nop_opcode_monitor;
+zend_dataflow_monitor_t *dataflow_monitor = &nop_opcode_monitor.dataflow;
 
 void register_opcode_monitor(zend_opcode_monitor_t *monitor)
 {
+  //if (1) return;
+
   opcode_monitor = monitor;
   dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
 

@@ -1627,8 +1627,8 @@ ZEND_VM_HANDLER(147, ZEND_ASSIGN_DIM, VAR|CV, CONST|TMP|VAR|UNUSED|CV)
 #endif
 			 	value = zend_assign_to_variable(variable_ptr, value, (opline+1)->op1_type TSRMLS_CC);
 #ifdef ZEND_MONITOR
-                if (opcode_monitor != NULL && opcode_monitor->has_taint(value))
-                    object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
+        if (opcode_monitor->has_taint(value))
+          object_ptr->value.arr->ht.u.flags |= HASH_FLAG_TAINT;
 #endif
 			 	if ((opline+1)->op1_type == IS_VAR) {
 					FREE_OP(free_op_data1);
@@ -1750,7 +1750,7 @@ ZEND_VM_HELPER(zend_leave_helper, ANY, ANY)
 
 #ifdef ZEND_MONITOR
     extern zend_opcode_monitor_t *opcode_monitor;
-    if (opcode_monitor != NULL && execute_data->func != NULL) {
+    if (execute_data->func != NULL) {
         zend_op_array *op_array = &execute_data->func->op_array;
         zval *var = EX_VAR_NUM(0);
         zval *end = EX_VAR_NUM(op_array->last_var + op_array->T);
@@ -4222,8 +4222,7 @@ ZEND_VM_HANDLER(73, ZEND_INCLUDE_OR_EVAL, CONST|TMP|VAR|CV, ANY)
 
 #ifdef ZEND_MONITOR
         extern zend_opcode_monitor_t *opcode_monitor;
-        if (opcode_monitor != NULL)
-              opcode_monitor->notify_function_created(NULL, new_op_array);
+        opcode_monitor->notify_function_created(NULL, new_op_array);
 #endif
 				}
 				break;
@@ -5097,10 +5096,10 @@ ZEND_VM_C_LABEL(num_index_prop):
 	FREE_OP2();
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL && internal_value != NULL) {
-        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                                 EX_VAR(opline->result.var), "R",
-                                                 0 /*not a transfer*/);
+    if (internal_value != NULL) {
+      opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                               EX_VAR(opline->result.var), "R",
+                                               0 /*not a transfer*/);
     }
 #endif
 	FREE_OP1();
@@ -5147,10 +5146,10 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMP|VAR|UNUSED|CV, CONST
 	FREE_OP2();
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor != NULL && internal_value != NULL) {
-        opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                                 EX_VAR(opline->result.var), "R",
-                                                 0 /*not a transfer*/);
+    if (internal_value != NULL) {
+      opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
+                                               EX_VAR(opline->result.var), "R",
+                                               0 /*not a transfer*/);
     }
 #endif
 	FREE_OP1();

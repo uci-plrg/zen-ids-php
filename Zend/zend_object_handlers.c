@@ -599,12 +599,10 @@ found:
 					}
 				}
 #ifdef ZEND_MONITOR
-        if (opcode_monitor != NULL) {
-          if (opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "A[i]",
-                                                       0 /*not a transfer*/) &&
-              zobj->properties != NULL) {
-              zobj->properties->u.flags |= HASH_FLAG_TAINT;
-          }
+        if (opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "A[i]",
+                                                     0 /*not a transfer*/) &&
+            zobj->properties != NULL) {
+            zobj->properties->u.flags |= HASH_FLAG_TAINT;
         }
 #endif
 				goto exit;

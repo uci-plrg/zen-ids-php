@@ -197,8 +197,7 @@ static zend_always_inline void zend_vm_stack_free_extra_args(zend_execute_data *
 		do {
 			p--;
 #ifdef ZEND_MONITOR
-            if (opcode_monitor != NULL)
-              opcode_monitor->notify_zval_free(p);
+      opcode_monitor->notify_zval_free(p);
 #endif
 			zval_ptr_dtor_nogc(p);
 		} while (p != end);
@@ -219,8 +218,7 @@ static zend_always_inline void zend_vm_stack_free_args(zend_execute_data *call T
 		do {
 			p--;
 #ifdef ZEND_MONITOR
-            if (opcode_monitor != NULL)
-              opcode_monitor->notify_zval_free(p);
+      opcode_monitor->notify_zval_free(p);
 #endif
 			zval_ptr_dtor_nogc(p);
 		} while (p != end);

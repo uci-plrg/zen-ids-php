@@ -945,8 +945,7 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 				}
 				script_filename = script_file;
 #ifdef ZEND_MONITOR
-        if (opcode_monitor != NULL)
-          opcode_monitor->set_top_level_script(script_filename);
+        opcode_monitor->set_top_level_script(script_filename);
 #endif
 			}
 		} else {
@@ -1022,7 +1021,7 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			break;
 #ifdef ZEND_MONITOR
 		case PHP_MODE_TOKENIZE:
-      if (opcode_monitor != NULL && open_file_for_scanning(&file_handle TSRMLS_CC)==SUCCESS) {
+      if (open_file_for_scanning(&file_handle TSRMLS_CC)==SUCCESS) {
 				opcode_monitor->opmon_tokenize(TSRMLS_C);
 			}
 			goto out;
