@@ -612,8 +612,8 @@ static void zend_hash_do_resize(HashTable *ht)
         iNew++;
       }
     }
-		HANDLE_UNBLOCK_INTERRUPTIONS();
 #endif
+		HANDLE_UNBLOCK_INTERRUPTIONS();
 	}
 }
 

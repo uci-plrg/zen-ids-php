@@ -49766,7 +49766,7 @@ static opcode_handler_t zend_vm_get_opcode_handler(zend_uchar opcode, const zend
 
 ZEND_API void zend_vm_set_opcode_handler(zend_op* op)
 {
-#ifdef ZEND_MONITOR
+#ifdef ZEND_MONITOR_refactored
 	extern zend_opcode_monitor_t *opcode_monitor;
 	opcode_handler_t handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);
 	op->handler = (opcode_handler_t) (((zend_uintptr_t) handler) | 1);

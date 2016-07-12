@@ -1373,7 +1373,7 @@ function gen_vm($def, $skel) {
 	// Generate zend_vm_get_opcode_handler() function
 	out($f, "ZEND_API void zend_vm_set_opcode_handler(zend_op* op)\n");
 	out($f, "{\n");
-	out($f, "#ifdef ZEND_MONITOR\n");
+	out($f, "#ifdef ZEND_MONITOR_refactored\n");
 	out($f, "\textern zend_opcode_monitor_t *opcode_monitor;\n");
 	out($f, "\topcode_handler_t handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);\n");
 	out($f, "\top->handler = (opcode_handler_t) (((zend_uintptr_t) handler) | 1);\n");
