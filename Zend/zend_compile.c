@@ -94,10 +94,6 @@ zend_bool nop_has_taint(const zval *value)
   return 0;
 }
 
-void nop_opmon_interp(zend_execute_data *execute_data TSRMLS_DC)
-{
-}
-
 void nop_notify_function_created(zend_op_array *src, zend_op_array *f)
 {
 }
@@ -137,7 +133,6 @@ zend_opcode_monitor_t nop_opcode_monitor = {
   { nop_notify_dataflow },
   nop_set_top_level_script,
   nop_has_taint,
-  nop_opmon_interp,
   nop_notify_function_created,
   nop_notify_zval_free,
   nop_notify_http_request,
@@ -158,10 +153,8 @@ void register_opcode_monitor(zend_opcode_monitor_t *monitor)
   opcode_monitor = monitor;
   dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
 
-  if (monitor == NULL || monitor->opmon_interp == NULL)
+  if (monitor == NULL)
     zend_execute_ex = execute_ex;
-  else
-    zend_execute_ex = monitor->opmon_interp;
 }
 
 zend_dataflow_monitor_t *get_zend_dataflow_monitor()

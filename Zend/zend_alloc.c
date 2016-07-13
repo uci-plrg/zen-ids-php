@@ -55,6 +55,7 @@
 
 #include "zend.h"
 #include "zend_alloc.h"
+#include "zend_API.h"
 #include "zend_globals.h"
 #include "zend_operators.h"
 #include "zend_multiply.h"
@@ -426,7 +427,13 @@ static void *zend_mm_mmap_fixed(void *addr, size_t size)
 	} else if (ptr != addr) {
 		if (munmap(ptr, size) != 0) {
 #if ZEND_MM_ERROR
-			fprintf(stderr, "\nmunmap() failed: [%d] %s\n", errno, strerror(errno));
+      zval fname, retval;
+
+      ZVAL_STRING(&fname, "opcache_reset");
+      call_user_function_ex(CG(function_table), NULL, &fname, &retval, 0, NULL, 0, NULL TSRMLS_CC);
+
+			fprintf(stderr, "\nmunmap() failed: [%d] %s (exiting now)\n", errno, strerror(errno));
+      exit(1);
 #endif
 		}
 		return NULL;
@@ -471,7 +478,13 @@ static void zend_mm_munmap(void *addr, size_t size)
 #else
 	if (munmap(addr, size) != 0) {
 #if ZEND_MM_ERROR
-		fprintf(stderr, "\nmunmap() failed: [%d] %s\n", errno, strerror(errno));
+    zval fname, retval;
+
+    EG(active) = 1;
+    ZVAL_STRING(&fname, "opcache_reset");
+	  call_user_function_ex(CG(function_table), NULL, &fname, &retval, 0, NULL, 0, NULL TSRMLS_CC);
+
+		fprintf(stderr, "\nmunmap() failed: [%d] %s (exiting now)\n", errno, strerror(errno));
     exit(1);
 #endif
 	}
