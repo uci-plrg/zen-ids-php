@@ -825,7 +825,6 @@ void zend_post_startup(void) /* {{{ */
 
 void zend_shutdown(void) /* {{{ */
 {
-<<<<<<< HEAD
 #ifdef ZEND_MONITOR
     extern zend_opcode_monitor_t *opcode_monitor;
 #endif

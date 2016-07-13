@@ -773,7 +773,7 @@ write_std_property:
 		}
 		if (EXPECTED(property_offset != ZEND_DYNAMIC_PROPERTY_OFFSET)) {
 #ifdef ZEND_MONITOR
-			if (ZVAL_COPY_VALUE(OBJ_PROP(zobj, property_offset), value)
+			if (zval_copy_value(OBJ_PROP(zobj, property_offset), value))
         zobj->properties->u.flags |= HASH_FLAG_TAINT;
 #else
 			ZVAL_COPY_VALUE(OBJ_PROP(zobj, property_offset), value);

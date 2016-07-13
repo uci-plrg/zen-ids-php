@@ -1129,7 +1129,7 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 		}
 
 		for (i = 0; i < field_count; ++i) {
-			zval * data = &current_row[i];
+			zval * data = &current_row[i], *mapped_data;
 
 			set->lengths[i] = (Z_TYPE_P(data) == IS_STRING)? Z_STRLEN_P(data) : 0;
 

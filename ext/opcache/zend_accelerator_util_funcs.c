@@ -703,7 +703,7 @@ zend_op_array* zend_accel_load_script(zend_persistent_script *persistent_script,
 	}
 
 #ifdef ZEND_MONITOR
-  zend_notify_function_copied(&persistent_script->main_op_array, op_array);
+  zend_notify_function_copied(&persistent_script->script.main_op_array, op_array);
 #endif
 
 	return op_array;

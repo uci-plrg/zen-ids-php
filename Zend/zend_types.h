@@ -861,7 +861,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 }
 
 #ifdef ZEND_MONITOR
-static zend_always_inline zend_bool zval_copy_value_ex(zval *src, zval *dst, zend_refcounted *gc, uint32_t t) {
+static zend_always_inline zend_bool zval_copy_value_ex(const zval *src, zval *dst, zend_refcounted *gc, uint32_t t) {
 # if SIZEOF_SIZE_T == 4
   uint32_t _w2 = src->value.ww.w2;
   Z_COUNTED_P(dst) = gc;
@@ -874,6 +874,12 @@ static zend_always_inline zend_bool zval_copy_value_ex(zval *src, zval *dst, zen
 #  error "Unknown SIZEOF_SIZE_T"
 # endif
   return ZEND_DATAFLOW(src, "copy-src", dst, "copy-dst", 0 /*not a transfer*/);
+}
+
+static zend_always_inline zend_bool zval_copy_value(const zval *src, zval *dst) {
+  zend_refcounted *gc = Z_COUNTED_P(src);
+  uint32_t t = Z_TYPE_INFO_P(src);
+  return zval_copy_value_ex(src, dst, gc, t);
 }
 # define ZVAL_COPY_VALUE_EX(z, v, gc, t)	zval_copy_value_ex(v, z, gc, t)
 #else /* !ZEND_MONITOR */

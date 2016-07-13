@@ -1546,7 +1546,7 @@ static zend_persistent_script *opcache_compile_file(zend_file_handle *file_handl
 	new_persistent_script->script.main_op_array = *op_array;
 
 #ifdef ZEND_MONITOR
-  zend_notify_function_copied(NULL /*new copy src*/, &new_persistent_script->main_op_array);
+  zend_notify_function_copied(NULL /*new copy src*/, &new_persistent_script->script.main_op_array);
 #endif
 
 	efree(op_array); /* we have valid persistent_script, so it's safe to free op_array */

@@ -30,9 +30,10 @@ done
     --with-xsl \
     --with-curl \
     --with-mcrypt \
-    --with-xdiff \
     --with-tidy \
     --with-zlib \
     --with-config-file-path=$PHP_HOME/conf.d \
     --with-config-file-scan-dir=$PHP_HOME/conf.d/ext
+
+#--with-xdiff
 
