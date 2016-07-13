@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -23,7 +23,7 @@
 
 #include "php_pdo_driver.h"
 
-PDO_API void pdo_handle_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt TSRMLS_DC);
+PDO_API void pdo_handle_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt);
 
 #define PDO_DBH_CLEAR_ERR()             do { \
 	strlcpy(dbh->error_code, PDO_ERR_NONE, sizeof(PDO_ERR_NONE)); \
@@ -33,8 +33,8 @@ PDO_API void pdo_handle_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt TSRMLS_DC);
 	} \
 } while (0)
 #define PDO_STMT_CLEAR_ERR()    strcpy(stmt->error_code, PDO_ERR_NONE)
-#define PDO_HANDLE_DBH_ERR()    if (strcmp(dbh->error_code, PDO_ERR_NONE)) { pdo_handle_error(dbh, NULL TSRMLS_CC); }
-#define PDO_HANDLE_STMT_ERR()   if (strcmp(stmt->error_code, PDO_ERR_NONE)) { pdo_handle_error(stmt->dbh, stmt TSRMLS_CC); }
+#define PDO_HANDLE_DBH_ERR()    if (strcmp(dbh->error_code, PDO_ERR_NONE)) { pdo_handle_error(dbh, NULL); }
+#define PDO_HANDLE_STMT_ERR()   if (strcmp(stmt->error_code, PDO_ERR_NONE)) { pdo_handle_error(stmt->dbh, stmt); }
 
 #endif /* PHP_PDO_ERROR_H */
 /*

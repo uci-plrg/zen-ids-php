@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 5                                                        |
+   | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -25,7 +25,7 @@
 #include "phpdbg_prompt.h"
 #include "phpdbg_io.h"
 
-ZEND_EXTERN_MODULE_GLOBALS(phpdbg);
+ZEND_EXTERN_MODULE_GLOBALS(phpdbg)
 
 static inline const char *phpdbg_command_name(const phpdbg_command_t *command, char *buffer) {
 	size_t pos = 0;
@@ -44,7 +44,7 @@ static inline const char *phpdbg_command_name(const phpdbg_command_t *command, c
 	return buffer;
 }
 
-PHPDBG_API const char *phpdbg_get_param_type(const phpdbg_param_t *param TSRMLS_DC) /* {{{ */
+PHPDBG_API const char *phpdbg_get_param_type(const phpdbg_param_t *param) /* {{{ */
 {
 	switch (param->type) {
 		case STACK_PARAM:
@@ -70,7 +70,7 @@ PHPDBG_API const char *phpdbg_get_param_type(const phpdbg_param_t *param TSRMLS_
 	}
 }
 
-PHPDBG_API void phpdbg_clear_param(phpdbg_param_t *param TSRMLS_DC) /* {{{ */
+PHPDBG_API void phpdbg_clear_param(phpdbg_param_t *param) /* {{{ */
 {
 	if (param) {
 		switch (param->type) {
@@ -91,39 +91,39 @@ PHPDBG_API void phpdbg_clear_param(phpdbg_param_t *param TSRMLS_DC) /* {{{ */
 
 } /* }}} */
 
-PHPDBG_API char* phpdbg_param_tostring(const phpdbg_param_t *param, char **pointer TSRMLS_DC) /* {{{ */
+PHPDBG_API char* phpdbg_param_tostring(const phpdbg_param_t *param, char **pointer) /* {{{ */
 {
 	switch (param->type) {
 		case STR_PARAM:
-			asprintf(pointer, "%s", param->str);
+			ZEND_IGNORE_VALUE(asprintf(pointer, "%s", param->str));
 		break;
 
 		case ADDR_PARAM:
-			asprintf(pointer, "%#llx", param->addr);
+			ZEND_IGNORE_VALUE(asprintf(pointer, ZEND_ULONG_FMT, param->addr));
 		break;
 
 		case NUMERIC_PARAM:
-			asprintf(pointer, "%li", param->num);
+			ZEND_IGNORE_VALUE(asprintf(pointer, "%li", param->num));
 		break;
 
 		case METHOD_PARAM:
-			asprintf(pointer, "%s::%s", param->method.class, param->method.name);
+			ZEND_IGNORE_VALUE(asprintf(pointer, "%s::%s", param->method.class, param->method.name));
 		break;
 
 		case FILE_PARAM:
 			if (param->num) {
-				asprintf(pointer, "%s:%lu#%lu", param->file.name, param->file.line, param->num);
+				ZEND_IGNORE_VALUE(asprintf(pointer, "%s:%lu#%lu", param->file.name, param->file.line, param->num));
 			} else {
-				asprintf(pointer, "%s:%lu", param->file.name, param->file.line);
+				ZEND_IGNORE_VALUE(asprintf(pointer, "%s:%lu", param->file.name, param->file.line));
 			}
 		break;
 
 		case NUMERIC_FUNCTION_PARAM:
-			asprintf(pointer, "%s#%lu", param->str, param->num);
+			ZEND_IGNORE_VALUE(asprintf(pointer, "%s#%lu", param->str, param->num));
 		break;
 
 		case NUMERIC_METHOD_PARAM:
-			asprintf(pointer, "%s::%s#%lu", param->method.class, param->method.name, param->num);
+			ZEND_IGNORE_VALUE(asprintf(pointer, "%s::%s#%lu", param->method.class, param->method.name, param->num));
 		break;
 
 		default:
@@ -133,7 +133,7 @@ PHPDBG_API char* phpdbg_param_tostring(const phpdbg_param_t *param, char **point
 	return *pointer;
 } /* }}} */
 
-PHPDBG_API void phpdbg_copy_param(const phpdbg_param_t* src, phpdbg_param_t* dest TSRMLS_DC) /* {{{ */
+PHPDBG_API void phpdbg_copy_param(const phpdbg_param_t* src, phpdbg_param_t* dest) /* {{{ */
 {
 	switch ((dest->type = src->type)) {
 		case STACK_PARAM:
@@ -191,7 +191,7 @@ PHPDBG_API void phpdbg_copy_param(const phpdbg_param_t* src, phpdbg_param_t* des
 	}
 } /* }}} */
 
-PHPDBG_API zend_ulong phpdbg_hash_param(const phpdbg_param_t *param TSRMLS_DC) /* {{{ */
+PHPDBG_API zend_ulong phpdbg_hash_param(const phpdbg_param_t *param) /* {{{ */
 {
 	zend_ulong hash = param->type;
 
@@ -246,7 +246,7 @@ PHPDBG_API zend_ulong phpdbg_hash_param(const phpdbg_param_t *param TSRMLS_DC) /
 	return hash;
 } /* }}} */
 
-PHPDBG_API zend_bool phpdbg_match_param(const phpdbg_param_t *l, const phpdbg_param_t *r TSRMLS_DC) /* {{{ */
+PHPDBG_API zend_bool phpdbg_match_param(const phpdbg_param_t *l, const phpdbg_param_t *r) /* {{{ */
 {
 	if (l && r) {
 		if (l->type == r->type) {
@@ -325,11 +325,11 @@ PHPDBG_API void phpdbg_param_debug(const phpdbg_param_t *param, const char *msg)
 	if (param && param->type) {
 		switch (param->type) {
 			case STR_PARAM:
-				fprintf(stderr, "%s STR_PARAM(%s=%lu)\n", msg, param->str, param->len);
+				fprintf(stderr, "%s STR_PARAM(%s=%zu)\n", msg, param->str, param->len);
 			break;
 
 			case ADDR_PARAM:
-				fprintf(stderr, "%s ADDR_PARAM(%llu)\n", msg, param->addr);
+				fprintf(stderr, "%s ADDR_PARAM(" ZEND_ULONG_FMT ")\n", msg, param->addr);
 			break;
 
 			case NUMERIC_FILE_PARAM:
@@ -357,11 +357,11 @@ PHPDBG_API void phpdbg_param_debug(const phpdbg_param_t *param, const char *msg)
 			break;
 
 			case COND_PARAM:
-				fprintf(stderr, "%s COND_PARAM(%s=%lu)\n", msg, param->str, param->len);
+				fprintf(stderr, "%s COND_PARAM(%s=%zu)\n", msg, param->str, param->len);
 			break;
 
 			case OP_PARAM:
-				fprintf(stderr, "%s OP_PARAM(%s=%lu)\n", msg, param->str, param->len);
+				fprintf(stderr, "%s OP_PARAM(%s=%zu)\n", msg, param->str, param->len);
 			break;
 
 			default: {
@@ -385,23 +385,31 @@ PHPDBG_API void phpdbg_stack_free(phpdbg_param_t *stack) {
 			switch (remove->type) {
 				case NUMERIC_METHOD_PARAM:
 				case METHOD_PARAM:
-					if (remove->method.class)
-						free(remove->method.class);
-					if (remove->method.name)
-						free(remove->method.name);
+					if (remove->method.class) {
+						efree(remove->method.class);
+					}
+					if (remove->method.name) {
+						efree(remove->method.name);
+					}
 				break;
 
 				case NUMERIC_FUNCTION_PARAM:
 				case STR_PARAM:
 				case OP_PARAM:
-					if (remove->str)
-						free(remove->str);
+				case EVAL_PARAM:
+				case SHELL_PARAM:
+				case COND_PARAM:
+				case RUN_PARAM:
+					if (remove->str) {
+						efree(remove->str);
+					}
 				break;
 
 				case NUMERIC_FILE_PARAM:
 				case FILE_PARAM:
-					if (remove->file.name)
-						free(remove->file.name);
+					if (remove->file.name) {
+						efree(remove->file.name);
+					}
 				break;
 
 				default: {
@@ -426,8 +434,9 @@ PHPDBG_API void phpdbg_stack_free(phpdbg_param_t *stack) {
 PHPDBG_API void phpdbg_stack_push(phpdbg_param_t *stack, phpdbg_param_t *param) {
 	phpdbg_param_t *next = calloc(1, sizeof(phpdbg_param_t));
 
-	if (!next)
+	if (!next) {
 		return;
+	}
 
 	*(next) = *(param);
 
@@ -446,7 +455,17 @@ PHPDBG_API void phpdbg_stack_push(phpdbg_param_t *stack, phpdbg_param_t *param) 
 	stack->len++;
 } /* }}} */
 
-PHPDBG_API int phpdbg_stack_verify(const phpdbg_command_t *command, phpdbg_param_t **stack TSRMLS_DC) {
+/* {{{ */
+PHPDBG_API void phpdbg_stack_separate(phpdbg_param_t *param) {
+	phpdbg_param_t *stack = calloc(1, sizeof(phpdbg_param_t));
+
+	stack->type = STACK_PARAM;
+	stack->next = param->next;
+	param->next = stack;
+	stack->top = param->top;
+} /* }}} */
+
+PHPDBG_API int phpdbg_stack_verify(const phpdbg_command_t *command, phpdbg_param_t **stack) {
 	if (command) {
 		char buffer[128] = {0,};
 		const phpdbg_param_t *top = (stack != NULL) ? *stack : NULL;
@@ -458,11 +477,11 @@ PHPDBG_API int phpdbg_stack_verify(const phpdbg_command_t *command, phpdbg_param
 
 		/* check for arg spec */
 		if (!(arg) || !(*arg)) {
-			if (!top) {
+			if (!top || top->type == STACK_PARAM) {
 				return SUCCESS;
 			}
 
-			phpdbg_error("command", "type=\"toomanyargs\" command=\"%s\" expected=\"0\"", "The command \"%s\" expected no arguments", 
+			phpdbg_error("command", "type=\"toomanyargs\" command=\"%s\" expected=\"0\"", "The command \"%s\" expected no arguments",
 				phpdbg_command_name(command, buffer));
 			return FAILURE;
 		}
@@ -492,12 +511,16 @@ PHPDBG_API int phpdbg_stack_verify(const phpdbg_command_t *command, phpdbg_param
 	phpdbg_error("command", "type=\"wrongarg\" command=\"%s\" expected=\"%s\" got=\"%s\" num=\"%lu\"", "The command \"%s\" expected %s and got %s at parameter %lu", \
 		phpdbg_command_name(command, buffer), \
 		(e),\
-		phpdbg_get_param_type((a) TSRMLS_CC), \
+		phpdbg_get_param_type((a)), \
 		current); \
 	return FAILURE; \
 }
 
 		while (arg && *arg) {
+			if (top && top->type == STACK_PARAM) {
+				break;
+			}
+
 			current++;
 
 			switch (*arg) {
@@ -520,9 +543,11 @@ PHPDBG_API int phpdbg_stack_verify(const phpdbg_command_t *command, phpdbg_param
 				case '*': { /* do nothing */ } break;
 			}
 
-			if (top ) {
+			if (top) {
 				top = top->next;
-			} else break;
+			} else {
+				break;
+			}
 
 			received++;
 			arg++;
@@ -544,7 +569,7 @@ PHPDBG_API int phpdbg_stack_verify(const phpdbg_command_t *command, phpdbg_param
 }
 
 /* {{{ */
-PHPDBG_API const phpdbg_command_t *phpdbg_stack_resolve(const phpdbg_command_t *commands, const phpdbg_command_t *parent, phpdbg_param_t **top TSRMLS_DC) {
+PHPDBG_API const phpdbg_command_t *phpdbg_stack_resolve(const phpdbg_command_t *commands, const phpdbg_command_t *parent, phpdbg_param_t **top) {
 	const phpdbg_command_t *command = commands;
 	phpdbg_param_t *name = *top;
 	const phpdbg_command_t *matched[3] = {NULL, NULL, NULL};
@@ -628,7 +653,7 @@ PHPDBG_API const phpdbg_command_t *phpdbg_stack_resolve(const phpdbg_command_t *
 	}
 
 	if (command->subs && (*top) && ((*top)->type == STR_PARAM)) {
-		return phpdbg_stack_resolve(command->subs, command, top TSRMLS_CC);
+		return phpdbg_stack_resolve(command->subs, command, top);
 	} else {
 		return command;
 	}
@@ -636,48 +661,35 @@ PHPDBG_API const phpdbg_command_t *phpdbg_stack_resolve(const phpdbg_command_t *
 	return NULL;
 } /* }}} */
 
-/* {{{ */
-PHPDBG_API int phpdbg_stack_execute(phpdbg_param_t *stack, zend_bool allow_async_unsafe TSRMLS_DC) {
-	phpdbg_param_t *top = NULL;
+static int phpdbg_internal_stack_execute(phpdbg_param_t *stack, zend_bool allow_async_unsafe) {
 	const phpdbg_command_t *handler = NULL;
-
-	if (stack->type != STACK_PARAM) {
-		phpdbg_error("command", "type=\"nostack\"", "The passed argument was not a stack !");
-		return FAILURE;
-	}
-
-	if (!stack->len) {
-		phpdbg_error("command", "type=\"emptystack\"", "The stack contains nothing !");
-		return FAILURE;
-	}
-
-	top = (phpdbg_param_t *) stack->next;
+	phpdbg_param_t *top = (phpdbg_param_t *) stack->next;
 
 	switch (top->type) {
 		case EVAL_PARAM:
-			phpdbg_activate_err_buf(0 TSRMLS_CC);
-			phpdbg_free_err_buf(TSRMLS_C);
-			return PHPDBG_COMMAND_HANDLER(ev)(top TSRMLS_CC);
+			phpdbg_activate_err_buf(0);
+			phpdbg_free_err_buf();
+			return PHPDBG_COMMAND_HANDLER(ev)(top);
 
 		case RUN_PARAM:
 			if (!allow_async_unsafe) {
 				phpdbg_error("signalsegv", "command=\"run\"", "run command is disallowed during hard interrupt");
 			}
-			phpdbg_activate_err_buf(0 TSRMLS_CC);
-			phpdbg_free_err_buf(TSRMLS_C);
-			return PHPDBG_COMMAND_HANDLER(run)(top TSRMLS_CC);
+			phpdbg_activate_err_buf(0);
+			phpdbg_free_err_buf();
+			return PHPDBG_COMMAND_HANDLER(run)(top);
 
 		case SHELL_PARAM:
 			if (!allow_async_unsafe) {
 				phpdbg_error("signalsegv", "command=\"sh\"", "sh command is disallowed during hard interrupt");
 				return FAILURE;
 			}
-			phpdbg_activate_err_buf(0 TSRMLS_CC);
-			phpdbg_free_err_buf(TSRMLS_C);
-			return PHPDBG_COMMAND_HANDLER(sh)(top TSRMLS_CC);
+			phpdbg_activate_err_buf(0);
+			phpdbg_free_err_buf();
+			return PHPDBG_COMMAND_HANDLER(sh)(top);
 
 		case STR_PARAM: {
-			handler = phpdbg_stack_resolve(phpdbg_prompt_commands, NULL, &top TSRMLS_CC);
+			handler = phpdbg_stack_resolve(phpdbg_prompt_commands, NULL, &top);
 
 			if (handler) {
 				if (!allow_async_unsafe && !(handler->flags & PHPDBG_ASYNC_SAFE)) {
@@ -685,10 +697,10 @@ PHPDBG_API int phpdbg_stack_execute(phpdbg_param_t *stack, zend_bool allow_async
 					return FAILURE;
 				}
 
-				if (phpdbg_stack_verify(handler, &top TSRMLS_CC) == SUCCESS) {
-					phpdbg_activate_err_buf(0 TSRMLS_CC);
-					phpdbg_free_err_buf(TSRMLS_C);
-					return handler->handler(top TSRMLS_CC);
+				if (phpdbg_stack_verify(handler, &top) == SUCCESS) {
+					phpdbg_activate_err_buf(0);
+					phpdbg_free_err_buf();
+					return handler->handler(top);
 				}
 			}
 		} return FAILURE;
@@ -701,14 +713,40 @@ PHPDBG_API int phpdbg_stack_execute(phpdbg_param_t *stack, zend_bool allow_async
 	return SUCCESS;
 } /* }}} */
 
-PHPDBG_API char *phpdbg_read_input(char *buffered TSRMLS_DC) /* {{{ */
+/* {{{ */
+PHPDBG_API int phpdbg_stack_execute(phpdbg_param_t *stack, zend_bool allow_async_unsafe) {
+	phpdbg_param_t *top = stack;
+
+	if (stack->type != STACK_PARAM) {
+		phpdbg_error("command", "type=\"nostack\"", "The passed argument was not a stack !");
+		return FAILURE;
+	}
+
+	if (!stack->len) {
+		phpdbg_error("command", "type=\"emptystack\"", "The stack contains nothing !");
+		return FAILURE;
+	}
+
+	do {
+		if (top->type == STACK_PARAM) {
+			int result;
+			if ((result = phpdbg_internal_stack_execute(top, allow_async_unsafe)) != SUCCESS) {
+				return result;
+			}
+		}
+	} while ((top = top->next));
+
+	return SUCCESS;
+} /* }}} */
+
+PHPDBG_API char *phpdbg_read_input(char *buffered) /* {{{ */
 {
 	char buf[PHPDBG_MAX_CMD];
 	char *cmd = NULL;
 	char *buffer = NULL;
 
 	if ((PHPDBG_G(flags) & (PHPDBG_IS_STOPPING | PHPDBG_IS_RUNNING)) != PHPDBG_IS_STOPPING) {
-		if ((PHPDBG_G(flags) & PHPDBG_IS_REMOTE) && (buffered == NULL) && !phpdbg_active_sigsafe_mem(TSRMLS_C)) {
+		if ((PHPDBG_G(flags) & PHPDBG_IS_REMOTE) && (buffered == NULL) && !phpdbg_active_sigsafe_mem()) {
 			fflush(PHPDBG_G(io)[PHPDBG_STDOUT].ptr);
 		}
 
@@ -716,24 +754,22 @@ PHPDBG_API char *phpdbg_read_input(char *buffered TSRMLS_DC) /* {{{ */
 #define USE_LIB_STAR (defined(HAVE_LIBREADLINE) || defined(HAVE_LIBEDIT))
 			/* note: EOF makes readline write prompt again in local console mode - and ignored if compiled without readline */
 #if USE_LIB_STAR
-readline:
-			if (PHPDBG_G(flags) & PHPDBG_IS_REMOTE)
+			if ((PHPDBG_G(flags) & PHPDBG_IS_REMOTE) || !isatty(PHPDBG_G(io)[PHPDBG_STDIN].fd))
 #endif
 			{
-				phpdbg_write("prompt", "", "%s", phpdbg_get_prompt(TSRMLS_C));
-				phpdbg_consume_stdin_line(cmd = buf TSRMLS_CC);
+				phpdbg_write("prompt", "", "%s", phpdbg_get_prompt());
+				phpdbg_consume_stdin_line(cmd = buf);
 			}
 #if USE_LIB_STAR
 			else {
-				cmd = readline(phpdbg_get_prompt(TSRMLS_C));
+				cmd = readline(phpdbg_get_prompt());
 				PHPDBG_G(last_was_newline) = 1;
-			}
 
-			if (!cmd) {
-				goto readline;
-			}
+				if (!cmd) {
+					PHPDBG_G(flags) |= PHPDBG_IS_QUITTING | PHPDBG_IS_DISCONNECTED;
+					zend_bailout();
+				}
 
-			if (!(PHPDBG_G(flags) & PHPDBG_IS_REMOTE)) {
 				add_history(cmd);
 			}
 #endif
@@ -744,7 +780,7 @@ readline:
 		buffer = estrdup(cmd);
 
 #if USE_LIB_STAR
-		if (!buffered && cmd &&	!(PHPDBG_G(flags) & PHPDBG_IS_REMOTE)) {
+		if (!buffered && cmd &&	!(PHPDBG_G(flags) & PHPDBG_IS_REMOTE) && isatty(PHPDBG_G(io)[PHPDBG_STDIN].fd)) {
 			free(cmd);
 		}
 #endif
@@ -762,31 +798,32 @@ readline:
 
 	if (buffer && strlen(buffer)) {
 		if (PHPDBG_G(buffer)) {
-			efree(PHPDBG_G(buffer));
+			free(PHPDBG_G(buffer));
 		}
-		PHPDBG_G(buffer) = estrdup(buffer);
-	} else {
-		if (PHPDBG_G(buffer)) {
-			buffer = estrdup(PHPDBG_G(buffer));
+		PHPDBG_G(buffer) = strdup(buffer);
+	} else if (PHPDBG_G(buffer)) {
+		if (buffer) {
+			efree(buffer);
 		}
+		buffer = estrdup(PHPDBG_G(buffer));
 	}
 
 	return buffer;
 } /* }}} */
 
-PHPDBG_API void phpdbg_destroy_input(char **input TSRMLS_DC) /*{{{ */
+PHPDBG_API void phpdbg_destroy_input(char **input) /*{{{ */
 {
 	efree(*input);
 } /* }}} */
 
-PHPDBG_API int phpdbg_ask_user_permission(const char *question TSRMLS_DC) {
+PHPDBG_API int phpdbg_ask_user_permission(const char *question) {
 	if (!(PHPDBG_G(flags) & PHPDBG_WRITE_XML)) {
 		char buf[PHPDBG_MAX_CMD];
 		phpdbg_out("%s", question);
 		phpdbg_out(" (type y or n): ");
 
 		while (1) {
-			phpdbg_consume_stdin_line(buf TSRMLS_CC);
+			phpdbg_consume_stdin_line(buf);
 			if (buf[1] == '\n' && (buf[0] == 'y' || buf[0] == 'n')) {
 				if (buf[0] == 'y') {
 					return SUCCESS;

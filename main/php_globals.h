@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -26,7 +26,7 @@
 typedef struct _php_core_globals php_core_globals;
 
 #ifdef ZTS
-# define PG(v) TSRMG(core_globals_id, php_core_globals *, v)
+# define PG(v) ZEND_TSRMG(core_globals_id, php_core_globals *, v)
 extern PHPAPI int core_globals_id;
 #else
 # define PG(v) (core_globals.v)
@@ -89,7 +89,7 @@ struct _php_core_globals {
 
 	char *upload_tmp_dir;
 	zend_long upload_max_filesize;
-	
+
 	char *error_append_string;
 	char *error_prepend_string;
 
@@ -142,10 +142,11 @@ struct _php_core_globals {
 	char *last_error_file;
 	int  last_error_lineno;
 
+	char *php_sys_temp_dir;
+
 	char *disable_functions;
 	char *disable_classes;
 	zend_bool allow_url_include;
-	zend_bool exit_on_timeout;
 #ifdef PHP_WIN32
 	zend_bool com_initialized;
 #endif

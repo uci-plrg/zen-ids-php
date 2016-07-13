@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -29,14 +29,12 @@ static void _php_image_output_putc(struct gdIOCtx *ctx, int c) /* {{{ */
 	 * big endian architectures:
 	 */
 	unsigned char ch = (unsigned char) c;
-	TSRMLS_FETCH();
-	php_write(&ch, 1 TSRMLS_CC);
+	php_write(&ch, 1);
 } /* }}} */
 
 static int _php_image_output_putbuf(struct gdIOCtx *ctx, const void* buf, int l) /* {{{ */
 {
-	TSRMLS_FETCH();
-	return php_write((void *)buf, l TSRMLS_CC);
+	return php_write((void *)buf, l);
 } /* }}} */
 
 static void _php_image_output_ctxfree(struct gdIOCtx *ctx) /* {{{ */
@@ -49,20 +47,17 @@ static void _php_image_output_ctxfree(struct gdIOCtx *ctx) /* {{{ */
 static void _php_image_stream_putc(struct gdIOCtx *ctx, int c) /* {{{ */ {
 	char ch = (char) c;
 	php_stream * stream = (php_stream *)ctx->data;
-	TSRMLS_FETCH();
 	php_stream_write(stream, &ch, 1);
 } /* }}} */
 
 static int _php_image_stream_putbuf(struct gdIOCtx *ctx, const void* buf, int l) /* {{{ */
 {
 	php_stream * stream = (php_stream *)ctx->data;
-	TSRMLS_FETCH();
 	return php_stream_write(stream, (void *)buf, l);
 } /* }}} */
 
 static void _php_image_stream_ctxfree(struct gdIOCtx *ctx) /* {{{ */
 {
-	TSRMLS_FETCH();
 
 	if(ctx->data) {
 		php_stream_close((php_stream *) ctx->data);
@@ -93,22 +88,24 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, 
 	 * from imagey<type>().
 	 */
 	if (image_type == PHP_GDIMG_TYPE_XBM) {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rp!|ll", &imgind, &file, &file_len, &quality, &basefilter) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "rp!|ll", &imgind, &file, &file_len, &quality, &basefilter) == FAILURE) {
 			return;
 		}
 	} else {
 		/* PHP_GDIMG_TYPE_GIF
-		 * PHP_GDIMG_TYPE_PNG 
-		 * PHP_GDIMG_TYPE_JPG 
-		 * PHP_GDIMG_TYPE_WBM 
-		 * PHP_GDIMG_TYPE_WEBP 
+		 * PHP_GDIMG_TYPE_PNG
+		 * PHP_GDIMG_TYPE_JPG
+		 * PHP_GDIMG_TYPE_WBM
+		 * PHP_GDIMG_TYPE_WEBP
 		 * */
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|z/!ll", &imgind, &to_zval, &quality, &basefilter) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "r|z/!ll", &imgind, &to_zval, &quality, &basefilter) == FAILURE) {
 			return;
 		}
 	}
 
-	ZEND_FETCH_RESOURCE(im, gdImagePtr, imgind, -1, "Image", phpi_get_le_gd());
+	if ((im = (gdImagePtr)zend_fetch_resource(Z_RES_P(imgind), "Image", phpi_get_le_gd())) == NULL) {
+		RETURN_FALSE;
+	}
 
 	if (argc >= 3) {
 		q = quality; /* or colorindex for foreground of BW images (defaults to black) */
@@ -125,7 +122,7 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, 
 			}
 		} else if (Z_TYPE_P(to_zval) == IS_STRING) {
 			if (CHECK_ZVAL_NULL_PATH(to_zval)) {
-				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid 2nd parameter, filename must not contain null bytes");
+				php_error_docref(NULL, E_WARNING, "Invalid 2nd parameter, filename must not contain null bytes");
 				RETURN_FALSE;
 			}
 
@@ -134,7 +131,12 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, 
 				RETURN_FALSE;
 			}
 		} else {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid 2nd parameter, it must a filename or a stream");
+			php_error_docref(NULL, E_WARNING, "Invalid 2nd parameter, it must a filename or a stream");
+			RETURN_FALSE;
+		}
+	} else if (argc > 1 && file != NULL) {
+		stream = php_stream_open_wrapper(file, "wb", REPORT_ERRORS|IGNORE_PATH|IGNORE_URL_WIN, NULL);
+		if (stream == NULL) {
 			RETURN_FALSE;
 		}
 	} else {
@@ -161,7 +163,7 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, 
 	switch(image_type) {
 		case PHP_GDIMG_CONVERT_WBM:
 			if(q<0||q>255) {
-				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid threshold value '%d'. It must be between 0 and 255", q);
+				php_error_docref(NULL, E_WARNING, "Invalid threshold value '%d'. It must be between 0 and 255", q);
 			}
 		case PHP_GDIMG_TYPE_JPG:
 			(*func_p)(im, ctx, q);
@@ -184,7 +186,7 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, 
 				q = i;
 			}
 			if (image_type == PHP_GDIMG_TYPE_XBM) {
-				(*func_p)(im, file, q, ctx);
+				(*func_p)(im, file ? file : "", q, ctx);
 			} else {
 				(*func_p)(im, q, ctx);
 			}

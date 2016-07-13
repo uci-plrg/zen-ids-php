@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 5                                                        |
+   | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -45,10 +45,10 @@
 #include <poll.h>
 #endif
 
-ZEND_EXTERN_MODULE_GLOBALS(phpdbg);
+ZEND_EXTERN_MODULE_GLOBALS(phpdbg)
 
 /* is easy to generalize ... but not needed for now */
-PHPDBG_API int phpdbg_consume_stdin_line(char *buf TSRMLS_DC) {
+PHPDBG_API int phpdbg_consume_stdin_line(char *buf) {
 	int bytes = PHPDBG_G(input_buflen), len = 0;
 
 	if (PHPDBG_G(input_buflen)) {
@@ -59,7 +59,7 @@ PHPDBG_API int phpdbg_consume_stdin_line(char *buf TSRMLS_DC) {
 
 	do {
 		int i;
-		if (bytes <= 0) { 
+		if (bytes <= 0) {
 			continue;
 		}
 
@@ -85,18 +85,17 @@ PHPDBG_API int phpdbg_consume_stdin_line(char *buf TSRMLS_DC) {
 		}
 
 		len += bytes;
-	} while ((bytes = phpdbg_mixed_read(PHPDBG_G(io)[PHPDBG_STDIN].fd, buf + len, PHPDBG_MAX_CMD - len, -1 TSRMLS_CC)) > 0);
+	} while ((bytes = phpdbg_mixed_read(PHPDBG_G(io)[PHPDBG_STDIN].fd, buf + len, PHPDBG_MAX_CMD - len, -1)) > 0);
 
 	if (bytes <= 0) {
 		PHPDBG_G(flags) |= PHPDBG_IS_QUITTING | PHPDBG_IS_DISCONNECTED;
 		zend_bailout();
-		return 0;
 	}
 
 	return bytes;
 }
 
-PHPDBG_API int phpdbg_consume_bytes(int sock, char *ptr, int len, int tmo TSRMLS_DC) {
+PHPDBG_API int phpdbg_consume_bytes(int sock, char *ptr, int len, int tmo) {
 	int got_now, i = len, j;
 	char *p = ptr;
 #ifndef PHP_WIN32
@@ -150,7 +149,7 @@ recv_once:
 #endif
 
 		if (got_now == -1) {
-			write(PHPDBG_G(io)[PHPDBG_STDERR].fd, ZEND_STRL("Read operation timed out!\n"));
+			quiet_write(PHPDBG_G(io)[PHPDBG_STDERR].fd, ZEND_STRL("Read operation timed out!\n"));
 			return -1;
 		}
 		i -= got_now;
@@ -177,27 +176,68 @@ PHPDBG_API int phpdbg_send_bytes(int sock, const char *ptr, int len) {
 }
 
 
-PHPDBG_API int phpdbg_mixed_read(int sock, char *ptr, int len, int tmo TSRMLS_DC) {
+PHPDBG_API int phpdbg_mixed_read(int sock, char *ptr, int len, int tmo) {
+	int ret;
+
 	if (PHPDBG_G(flags) & PHPDBG_IS_REMOTE) {
-		return phpdbg_consume_bytes(sock, ptr, len, tmo TSRMLS_CC);
+		return phpdbg_consume_bytes(sock, ptr, len, tmo);
 	}
 
-	return read(sock, ptr, len);
+	do {
+		ret = read(sock, ptr, len);
+	} while (ret == -1 && errno == EINTR);
+
+	return ret;
 }
 
+static int phpdbg_output_pager(int sock, const char *ptr, int len) {
+	int count = 0, bytes = 0;
+	const char *p = ptr, *endp = ptr + len;
+	
+	while ((p = memchr(p, '\n', endp - p))) {
+		count++;
+		p++;
+		
+		if (count % PHPDBG_G(lines) == 0) {
+			bytes += write(sock, ptr + bytes, (p - ptr) - bytes);
+			
+			if (memchr(p, '\n', endp - p)) {
+				char buf[PHPDBG_MAX_CMD];
+				write(sock, ZEND_STRL("\r---Type <return> to continue or q <return> to quit---"));
+				phpdbg_consume_stdin_line(buf);
+				if (*buf == 'q') {
+					break;
+				}
+				write(sock, "\r", 1);
+			} else break;
+		}
+	}
+	if (bytes && count % PHPDBG_G(lines) != 0) {
+		bytes += write(sock, ptr + bytes, len - bytes);
+	} else if (!bytes) {
+		bytes += write(sock, ptr, len);
+	}
+	return bytes;
+}
 
-PHPDBG_API int phpdbg_mixed_write(int sock, const char *ptr, int len TSRMLS_DC) {
+PHPDBG_API int phpdbg_mixed_write(int sock, const char *ptr, int len) {
 	if (PHPDBG_G(flags) & PHPDBG_IS_REMOTE) {
 		return phpdbg_send_bytes(sock, ptr, len);
+	}
+	
+	if ((PHPDBG_G(flags) & PHPDBG_HAS_PAGINATION)
+	 && !(PHPDBG_G(flags) & PHPDBG_WRITE_XML)
+	 && PHPDBG_G(io)[PHPDBG_STDOUT].fd == sock
+	 && PHPDBG_G(lines) > 0) {
+		return phpdbg_output_pager(sock, ptr, len);
 	}
 
 	return write(sock, ptr, len);
 }
 
-
-PHPDBG_API int phpdbg_open_socket(const char *interface, unsigned short port TSRMLS_DC) {
+PHPDBG_API int phpdbg_open_socket(const char *interface, unsigned short port) {
 	struct addrinfo res;
-	int fd = phpdbg_create_listenable_socket(interface, port, &res TSRMLS_CC);
+	int fd = phpdbg_create_listenable_socket(interface, port, &res);
 
 	if (fd == -1) {
 		return -1;
@@ -214,7 +254,7 @@ PHPDBG_API int phpdbg_open_socket(const char *interface, unsigned short port TSR
 }
 
 
-PHPDBG_API int phpdbg_create_listenable_socket(const char *addr, unsigned short port, struct addrinfo *addr_res TSRMLS_DC) {
+PHPDBG_API int phpdbg_create_listenable_socket(const char *addr, unsigned short port, struct addrinfo *addr_res) {
 	int sock = -1, rc;
 	int reuse = 1;
 	struct in6_addr serveraddr;
@@ -265,7 +305,7 @@ PHPDBG_API int phpdbg_create_listenable_socket(const char *addr, unsigned short 
 
 				wrote = snprintf(buf, 128, "Could not translate address '%s'", addr);
 				buf[wrote] = '\0';
-				write(PHPDBG_G(io)[PHPDBG_STDERR].fd, buf, strlen(buf));
+				quiet_write(PHPDBG_G(io)[PHPDBG_STDERR].fd, buf, strlen(buf));
 
 				return sock;
 			} else {
@@ -275,7 +315,7 @@ PHPDBG_API int phpdbg_create_listenable_socket(const char *addr, unsigned short 
 
 				wrote = snprintf(buf, 256, "Host '%s' not found. %s", addr, estrdup(gai_strerror(rc)));
 				buf[wrote] = '\0';
-				write(PHPDBG_G(io)[PHPDBG_STDERR].fd, buf, strlen(buf));
+				quiet_write(PHPDBG_G(io)[PHPDBG_STDERR].fd, buf, strlen(buf));
 
 				return sock;
 #ifndef PHP_WIN32
@@ -290,10 +330,10 @@ PHPDBG_API int phpdbg_create_listenable_socket(const char *addr, unsigned short 
 
 			wrote = sprintf(buf, "Unable to create socket");
 			buf[wrote] = '\0';
-			write(PHPDBG_G(io)[PHPDBG_STDERR].fd, buf, strlen(buf));
+			quiet_write(PHPDBG_G(io)[PHPDBG_STDERR].fd, buf, strlen(buf));
 
 			return sock;
-		} 
+		}
 
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*) &reuse, sizeof(reuse)) == -1) {
 			phpdbg_close_socket(sock);

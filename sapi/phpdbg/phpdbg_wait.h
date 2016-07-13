@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 5                                                        |
+   | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -24,6 +24,6 @@
 
 PHPDBG_COMMAND(wait);
 
-void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC);
+void phpdbg_webdata_decompress(char *msg, int len);
 
 #endif /* PHPDBG_WAIT_H */

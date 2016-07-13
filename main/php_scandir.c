@@ -1,8 +1,8 @@
-/* 
+/*
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -35,7 +35,7 @@
 #ifdef PHP_WIN32
 #include "win32/param.h"
 #include "win32/readdir.h"
-#endif  
+#endif
 
 #include <stdlib.h>
 #ifndef NETWARE
@@ -86,7 +86,7 @@ PHPAPI int php_scandir(const char *dirname, struct dirent **namelist[], int (*se
 			struct dirent **newv;
 			if (vector_size == 0) {
 				vector_size = 10;
-			} else { 
+			} else {
 				vector_size *= 2;
 			}
 
@@ -112,7 +112,7 @@ PHPAPI int php_scandir(const char *dirname, struct dirent **namelist[], int (*se
 	*namelist = vector;
 
 	if (compare) {
-		qsort (*namelist, nfiles, sizeof(struct dirent *), compare);
+		qsort (*namelist, nfiles, sizeof(struct dirent *), (int (*) (const void *, const void *)) compare);
 	}
 
 	return nfiles;
@@ -122,7 +122,7 @@ fail:
 		free(vector[nfiles]);
 	}
 	free(vector);
-	return -1;	
+	return -1;
 }
 #endif
 

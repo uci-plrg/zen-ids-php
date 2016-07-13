@@ -1,8 +1,8 @@
-/* 
+/*
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -32,11 +32,11 @@ PHP_FUNCTION(unserialize);
 PHP_FUNCTION(memory_get_usage);
 PHP_FUNCTION(memory_get_peak_usage);
 
-PHPAPI void php_var_dump(zval *struc, int level TSRMLS_DC);
-PHPAPI void php_var_export(zval *struc, int level TSRMLS_DC);
-PHPAPI void php_var_export_ex(zval *struc, int level, smart_str *buf TSRMLS_DC);
+PHPAPI void php_var_dump(zval *struc, int level);
+PHPAPI void php_var_export(zval *struc, int level);
+PHPAPI void php_var_export_ex(zval *struc, int level, smart_str *buf);
 
-PHPAPI void php_debug_zval_dump(zval *struc, int level TSRMLS_DC);
+PHPAPI void php_debug_zval_dump(zval *struc, int level);
 
 struct php_serialize_data {
 	HashTable ht;
@@ -53,10 +53,11 @@ struct php_unserialize_data {
 typedef struct php_serialize_data *php_serialize_data_t;
 typedef struct php_unserialize_data *php_unserialize_data_t;
 
-PHPAPI void php_var_serialize(smart_str *buf, zval *struc, php_serialize_data_t *data TSRMLS_DC);
-PHPAPI int php_var_unserialize(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash TSRMLS_DC);
-PHPAPI int php_var_unserialize_ref(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash TSRMLS_DC);
-PHPAPI int php_var_unserialize_intern(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash TSRMLS_DC);
+PHPAPI void php_var_serialize(smart_str *buf, zval *struc, php_serialize_data_t *data);
+PHPAPI int php_var_unserialize(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash);
+PHPAPI int php_var_unserialize_ref(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash);
+PHPAPI int php_var_unserialize_intern(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash);
+PHPAPI int php_var_unserialize_ex(zval *rval, const unsigned char **p, const unsigned char *max, php_unserialize_data_t *var_hash, HashTable *classes);
 
 #define PHP_VAR_SERIALIZE_INIT(d) \
 do  { \
@@ -116,7 +117,7 @@ do { \
 
 PHPAPI void var_replace(php_unserialize_data_t *var_hash, zval *ozval, zval *nzval);
 PHPAPI void var_push_dtor(php_unserialize_data_t *var_hash, zval *val);
-PHPAPI void var_push_dtor_no_addref(php_unserialize_data_t *var_hashx, zval *rval);
+PHPAPI zval *var_tmp_var(php_unserialize_data_t *var_hashx);
 PHPAPI void var_destroy(php_unserialize_data_t *var_hash);
-	
+
 #endif /* PHP_VAR_H */

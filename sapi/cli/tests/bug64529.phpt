@@ -5,6 +5,9 @@ Bug #64529 (Ran out of opcode space)
 if (substr(PHP_OS, 0, 3) == "WIN") {
 	die("skip non windows test");
 }
+if (!extension_loaded("readline") || !readline_info("done")) {
+	die("skip readline support required");
+}
 exec('which expect', $output, $ret);
 if ($ret) {
 	die("skip no expect installed");
@@ -21,7 +24,7 @@ if (extension_loaded("readline")) {
 
 set php_executable [lindex \$argv 0]
 
-spawn \$php_executable -n -a
+spawn \$php_executable -n -d cli.prompt="" -a
 
 expect "php >"
 
@@ -39,7 +42,7 @@ SCRIPT;
 
 set php_executable [lindex \$argv 0]
 
-spawn \$php_executable -n -a
+spawn \$php_executable -n -d cli.prompt="" -a
 
 expect "Interactive mode enabled"
 
@@ -60,8 +63,8 @@ system($expect_executable . " " . $script . " " . $php_executable);
 @unlink($script);
 ?>
 --EXPECTF--
-spawn %sphp -n -a
+spawn %sphp -n -d cli.prompt="" -a
 Interactive %s
 
-%secho 'hello world';
-%sello worl%s
+%Secho 'hello world';
+%Shello world

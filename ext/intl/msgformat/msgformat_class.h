@@ -24,6 +24,11 @@
 #include "../intl_common.h"
 #include "../intl_error.h"
 #include "../intl_data.h"
+
+#if U_ICU_VERSION_MAJOR_NUM * 10 + U_ICU_VERSION_MINOR_NUM < 48
+# define MSG_FORMAT_QUOTE_APOS 1
+#endif
+
 #include "msgformat_data.h"
 
 typedef struct {
@@ -37,7 +42,7 @@ static inline MessageFormatter_object *php_intl_messageformatter_fetch_object(ze
 }
 #define Z_INTL_MESSAGEFORMATTER_P(zv) php_intl_messageformatter_fetch_object(Z_OBJ_P(zv))
 
-void msgformat_register_class( TSRMLS_D );
+void msgformat_register_class( void );
 extern zend_class_entry *MessageFormatter_ce_ptr;
 
 /* Auxiliary macros */
@@ -48,14 +53,10 @@ extern zend_class_entry *MessageFormatter_ce_ptr;
 	MSG_FORMAT_METHOD_FETCH_OBJECT_NO_CHECK;							\
 	if (MSG_FORMAT_OBJECT(mfo) == NULL)	{								\
 		intl_errors_set(&mfo->mf_data.error, U_ILLEGAL_ARGUMENT_ERROR,	\
-				"Found unconstructed MessageFormatter", 0 TSRMLS_CC);	\
+				"Found unconstructed MessageFormatter", 0);	\
 		RETURN_FALSE;													\
 	}
 
 #define MSG_FORMAT_OBJECT(mfo)			(mfo)->mf_data.umsgf
-
-#if U_ICU_VERSION_MAJOR_NUM * 10 + U_ICU_VERSION_MINOR_NUM < 48
-# define MSG_FORMAT_QUOTE_APOS 1
-#endif
 
 #endif // #ifndef MSG_FORMAT_CLASS_H

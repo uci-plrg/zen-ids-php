@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 5                                                        |
+   | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -22,13 +22,12 @@
 #define PHPDBG_PROMPT_H
 
 /* {{{ */
-void phpdbg_string_init(char *buffer TSRMLS_DC);
-void phpdbg_init(char *init_file, size_t init_file_len, zend_bool use_default TSRMLS_DC);
-void phpdbg_try_file_init(char *init_file, size_t init_file_len, zend_bool free_init TSRMLS_DC);
-int phpdbg_interactive(zend_bool allow_async_unsafe TSRMLS_DC);
-int phpdbg_compile(TSRMLS_D);
-void phpdbg_clean(zend_bool full TSRMLS_DC);
-void phpdbg_force_interruption(TSRMLS_D);
+void phpdbg_string_init(char *buffer);
+void phpdbg_init(char *init_file, size_t init_file_len, zend_bool use_default);
+void phpdbg_try_file_init(char *init_file, size_t init_file_len, zend_bool free_init);
+int phpdbg_interactive(zend_bool allow_async_unsafe);
+int phpdbg_compile(void);
+void phpdbg_force_interruption(void);
 /* }}} */
 
 /* {{{ phpdbg command handlers */
@@ -57,17 +56,13 @@ PHPDBG_COMMAND(export);
 PHPDBG_COMMAND(register);
 PHPDBG_COMMAND(quit);
 PHPDBG_COMMAND(watch);
+PHPDBG_COMMAND(next);
 PHPDBG_COMMAND(eol);
 PHPDBG_COMMAND(wait); /* }}} */
 
 /* {{{ prompt commands */
 extern const phpdbg_command_t phpdbg_prompt_commands[]; /* }}} */
 
-/* {{{ */
-#if PHP_VERSION_ID >= 50500
-void phpdbg_execute_ex(zend_execute_data *execute_data TSRMLS_DC);
-#else
-void phpdbg_execute_ex(zend_op_array *op_array TSRMLS_DC);
-#endif /* }}} */
+void phpdbg_execute_ex(zend_execute_data *execute_data);
 
 #endif /* PHPDBG_PROMPT_H */

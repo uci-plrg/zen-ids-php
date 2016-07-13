@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -19,7 +19,7 @@
 /* $Id$ */
 
 /*
-	Based on CPANs "Text-Metaphone-1.96" by Michael G Schwern <schwern@pobox.com> 
+	Based on CPANs "Text-Metaphone-1.96" by Michael G Schwern <schwern@pobox.com>
 */
 
 #include "php.h"
@@ -35,11 +35,11 @@ PHP_FUNCTION(metaphone)
 	zend_string *result = NULL;
 	zend_long phones = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S|l", &str, &phones) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|l", &str, &phones) == FAILURE) {
 		return;
 	}
 
-	if (metaphone((unsigned char *)str->val, str->len, phones, &result, 1) == 0) {
+	if (metaphone((unsigned char *)ZSTR_VAL(str), ZSTR_LEN(str), phones, &result, 1) == 0) {
 		RETVAL_STR(result);
 	} else {
 		if (result) {
@@ -50,10 +50,10 @@ PHP_FUNCTION(metaphone)
 }
 /* }}} */
 
-/* 
+/*
    this is now the original code by Michael G Schwern:
-   i've changed it just a slightly bit (use emalloc, 
-   get rid of includes etc) 
+   i've changed it just a slightly bit (use emalloc,
+   get rid of includes etc)
 	- thies - 13.09.1999
 */
 
@@ -117,7 +117,7 @@ char _codes[26] =
 /* Look two letters down.  It makes sure you don't walk off the string. */
 #define After_Next_Letter	(Next_Letter != '\0' ? toupper(word[w_idx+2]) \
 											     : '\0')
-#define Look_Ahead_Letter(n) (toupper(Lookahead(word+w_idx, n)))
+#define Look_Ahead_Letter(n) (toupper(Lookahead((char *) word+w_idx, n)))
 
 
 /* Allows us to safely look ahead an arbitrary # of letters */
@@ -142,20 +142,20 @@ static char Lookahead(char *word, int how_far)
  * could be one though; or more too). */
 #define Phonize(c)	{ \
 						if (p_idx >= max_buffer_len) { \
-							*phoned_word = zend_string_realloc(*phoned_word, 2 * sizeof(char) + max_buffer_len, 0); \
+							*phoned_word = zend_string_extend(*phoned_word, 2 * sizeof(char) + max_buffer_len, 0); \
 							max_buffer_len += 2; \
 						} \
-						(*phoned_word)->val[p_idx++] = c; \
-						(*phoned_word)->len = p_idx; \
+						ZSTR_VAL(*phoned_word)[p_idx++] = c; \
+						ZSTR_LEN(*phoned_word) = p_idx; \
 					}
 /* Slap a null character on the end of the phoned word */
 #define End_Phoned_Word	{ \
 							if (p_idx == max_buffer_len) { \
-								*phoned_word = zend_string_realloc(*phoned_word, 1 * sizeof(char) + max_buffer_len, 0); \
+								*phoned_word = zend_string_extend(*phoned_word, 1 * sizeof(char) + max_buffer_len, 0); \
 								max_buffer_len += 1; \
 							} \
-							(*phoned_word)->val[p_idx] = '\0'; \
-							(*phoned_word)->len = p_idx; \
+							ZSTR_VAL(*phoned_word)[p_idx] = '\0'; \
+							ZSTR_LEN(*phoned_word) = p_idx; \
 						}
 /* How long is the phoned word? */
 #define Phone_Len	(p_idx)
@@ -168,7 +168,7 @@ static char Lookahead(char *word, int how_far)
 static int metaphone(unsigned char *word, size_t word_len, zend_long max_phonemes, zend_string **phoned_word, int traditional)
 {
 	int w_idx = 0;				/* point in the phonization we're at. */
-	int p_idx = 0;				/* end of the phoned phrase */
+	size_t p_idx = 0;				/* end of the phoned phrase */
 	size_t max_buffer_len = 0;		/* maximum length of the destination buffer */
 
 /*-- Parameter checks --*/
@@ -226,8 +226,8 @@ static int metaphone(unsigned char *word, size_t word_len, zend_long max_phoneme
 			w_idx += 2;
 		}
 		break;
-		/* WH becomes W, 
-		   WR becomes R 
+		/* WH becomes W,
+		   WR becomes R
 		   W if followed by a vowel */
 	case 'W':
 		if (Next_Letter == 'R') {
@@ -265,9 +265,9 @@ static int metaphone(unsigned char *word, size_t word_len, zend_long max_phoneme
 
 	/* On to the metaphoning */
 	for (; Curr_Letter != '\0' &&
-		 (max_phonemes == 0 || Phone_Len < max_phonemes);
+		 (max_phonemes == 0 || Phone_Len < (size_t)max_phonemes);
 		 w_idx++) {
-		/* How many letters to skip because an eariler encoding handled     
+		/* How many letters to skip because an eariler encoding handled
 		 * multiple letters */
 		unsigned short int skip_letter = 0;
 
@@ -335,7 +335,7 @@ static int metaphone(unsigned char *word, size_t word_len, zend_long max_phoneme
 				Phonize('T');
 			break;
 			/* F if in -GH and not B--GH, D--GH, -H--GH, -H---GH
-			 * else dropped if -GNED, -GN, 
+			 * else dropped if -GNED, -GN,
 			 * else dropped if -DGE-, -DGI- or -DGY- (handled in D)
 			 * else J if in -GE-, -GI, -GY and not GG
 			 * else K

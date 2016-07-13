@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -36,12 +36,12 @@ typedef struct {
 
 static int le_service;
 
-static void _php_ibase_free_service(zend_resource *rsrc TSRMLS_DC) /* {{{ */
+static void _php_ibase_free_service(zend_resource *rsrc) /* {{{ */
 {
 	ibase_service *sv = (ibase_service *) rsrc->ptr;
 
 	if (isc_service_detach(IB_STATUS, &sv->handle)) {
-		_php_ibase_error(TSRMLS_C);
+		_php_ibase_error();
 	}
 
 	if (sv->hostname) {
@@ -55,15 +55,15 @@ static void _php_ibase_free_service(zend_resource *rsrc TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
-/* the svc api seems to get confused after an error has occurred, 
+/* the svc api seems to get confused after an error has occurred,
    so invalidate the handle on errors */
 #define IBASE_SVC_ERROR(svm) \
-	do { zend_list_delete(svm->res); _php_ibase_error(TSRMLS_C); } while (0)
-	
+	do { zend_list_delete(svm->res); _php_ibase_error(); } while (0)
+
 
 void php_ibase_service_minit(INIT_FUNC_ARGS) /* {{{ */
 {
-	le_service = zend_register_list_destructors_ex(_php_ibase_free_service, NULL, 
+	le_service = zend_register_list_destructors_ex(_php_ibase_free_service, NULL,
 	    "interbase service manager handle", module_number);
 
 	/* backup options */
@@ -134,7 +134,7 @@ void php_ibase_service_minit(INIT_FUNC_ARGS) /* {{{ */
 static void _php_ibase_user(INTERNAL_FUNCTION_PARAMETERS, char operation) /* {{{ */
 {
 	/* user = 0, password = 1, first_name = 2, middle_name = 3, last_name = 4 */
-	static char const user_flags[] = { isc_spb_sec_username, isc_spb_sec_password, 
+	static char const user_flags[] = { isc_spb_sec_username, isc_spb_sec_password,
 	    isc_spb_sec_firstname, isc_spb_sec_middlename, isc_spb_sec_lastname };
 	char buf[128], *args[] = { NULL, NULL, NULL, NULL, NULL };
 	int i, args_len[] = { 0, 0, 0, 0, 0 };
@@ -144,26 +144,25 @@ static void _php_ibase_user(INTERNAL_FUNCTION_PARAMETERS, char operation) /* {{{
 
 	RESET_ERRMSG;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(),
 			(operation == isc_action_svc_delete_user) ? "rs" : "rss|sss",
 			&res, &args[0], &args_len[0], &args[1], &args_len[1], &args[2], &args_len[2],
 			&args[3], &args_len[3], &args[4], &args_len[4])) {
 		RETURN_FALSE;
 	}
-			
-	ZEND_FETCH_RESOURCE(svm, ibase_service *, res, -1, "Interbase service manager handle",
+
+	svm = (ibase_service *)zend_fetch_resource_ex(res, "Interbase service manager handle",
 		le_service);
 
 	buf[0] = operation;
-	
+
 	for (i = 0; i < sizeof(user_flags); ++i) {
 		if (args[i] != NULL) {
 			int chunk = slprintf(&buf[spb_len], sizeof(buf) - spb_len, "%c%c%c%s",
 				user_flags[i], (char)args_len[i], (char)(args_len[i] >> 8), args[i]);
-			
+
 			if ((spb_len + chunk) > sizeof(buf) || chunk <= 0) {
-				_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%d)"
-					TSRMLS_CC, spb_len);
+				_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%d)", spb_len);
 				RETURN_FALSE;
 			}
 			spb_len += chunk;
@@ -211,11 +210,11 @@ PHP_FUNCTION(ibase_service_attach)
 	size_t hlen, ulen, plen, spb_len;
 	ibase_service *svm;
 	char buf[128], *host, *user, *pass, *loc;
-	isc_svc_handle handle = NULL;
+	isc_svc_handle handle = 0;
 
 	RESET_ERRMSG;
 
-	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss",
+	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS(), "sss",
 			&host, &hlen, &user, &ulen, &pass, &plen)) {
 
 		RETURN_FALSE;
@@ -227,7 +226,7 @@ PHP_FUNCTION(ibase_service_attach)
 		user, isc_spb_password, (char)plen, pass, host);
 
 	if (spb_len > sizeof(buf) || spb_len == -1) {
-		_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%d)" TSRMLS_CC, spb_len);
+		_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%zd)", spb_len);
 		RETURN_FALSE;
 	}
 
@@ -236,7 +235,7 @@ PHP_FUNCTION(ibase_service_attach)
 
 	/* attach to the service manager */
 	if (isc_service_attach(IB_STATUS, 0, loc, &handle, (unsigned short)spb_len, buf)) {
-		_php_ibase_error(TSRMLS_C);
+		_php_ibase_error();
 		RETURN_FALSE;
 	}
 
@@ -245,8 +244,8 @@ PHP_FUNCTION(ibase_service_attach)
 	svm->hostname = estrdup(host);
 	svm->username = estrdup(user);
 
-	ZEND_REGISTER_RESOURCE(return_value, svm, le_service);
-	Z_ADDREF_P(return_value);
+	RETVAL_RES(zend_register_resource(svm, le_service));
+	Z_TRY_ADDREF_P(return_value);
 	svm->res = Z_RES_P(return_value);
 }
 /* }}} */
@@ -259,7 +258,7 @@ PHP_FUNCTION(ibase_service_detach)
 
 	RESET_ERRMSG;
 
-	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &res)) {
+	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS(), "r", &res)) {
 		RETURN_FALSE;
 	}
 
@@ -275,7 +274,7 @@ static void _php_ibase_service_query(INTERNAL_FUNCTION_PARAMETERS, /* {{{ */
 	static char spb[] = { isc_info_svc_timeout, 10, 0, 0, 0 };
 
 	char res_buf[400], *result, *heap_buf = NULL, *heap_p;
-	long heap_buf_size = 200, line_len;
+	zend_long heap_buf_size = 200, line_len;
 
 	/* info about users requires an action first */
 	if (info_action == isc_info_svc_get_users) {
@@ -313,7 +312,7 @@ query_loop:
 					}
 				}
 				if (!heap_buf || (heap_p - heap_buf + line_len +2) > heap_buf_size) {
-					long res_size = heap_buf ? heap_p - heap_buf : 0;
+					zend_long res_size = heap_buf ? heap_p - heap_buf : 0;
 
 					while (heap_buf_size < (res_size + line_len +2)) {
 						heap_buf_size *= 2;
@@ -426,18 +425,18 @@ static void _php_ibase_backup_restore(INTERNAL_FUNCTION_PARAMETERS, char operati
 	zval *res;
 	char *db, *bk, buf[200];
 	size_t dblen, bklen, spb_len;
-	long opts = 0;
+	zend_long opts = 0;
 	zend_bool verbose = 0;
 	ibase_service *svm;
 
 	RESET_ERRMSG;
 
-	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rss|lb",
+	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS(), "rss|lb",
 			&res, &db, &dblen, &bk, &bklen, &opts, &verbose)) {
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(svm, ibase_service *, res, -1,
+	svm = (ibase_service *)zend_fetch_resource_ex(res,
 		"Interbase service manager handle", le_service);
 
 	/* fill the param buffer */
@@ -451,7 +450,7 @@ static void _php_ibase_backup_restore(INTERNAL_FUNCTION_PARAMETERS, char operati
 	}
 
 	if (spb_len > sizeof(buf) || spb_len <= 0) {
-		_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%d)" TSRMLS_CC, spb_len);
+		_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%zd)", spb_len);
 		RETURN_FALSE;
 	}
 
@@ -489,18 +488,19 @@ static void _php_ibase_service_action(INTERNAL_FUNCTION_PARAMETERS, char svc_act
 {
 	zval *res;
 	char buf[128], *db;
-	int dblen, spb_len;
-	long action, argument = 0;
+	size_t dblen;
+	int spb_len;
+	zend_long action, argument = 0;
 	ibase_service *svm;
 
 	RESET_ERRMSG;
 
-	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rsl|l",
+	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS(), "rsl|l",
 			&res, &db, &dblen, &action, &argument)) {
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(svm, ibase_service *, res, -1,
+	svm = (ibase_service *)zend_fetch_resource_ex(res,
 		"Interbase service manager handle", le_service);
 
 	if (svc_action == isc_action_svc_db_stats) {
@@ -520,7 +520,7 @@ static void _php_ibase_service_action(INTERNAL_FUNCTION_PARAMETERS, char svc_act
 		switch (action) {
 			default:
 unknown_option:
-				_php_ibase_module_error("Unrecognised option (%ld)" TSRMLS_CC, action);
+				_php_ibase_module_error("Unrecognised option (" ZEND_LONG_FMT ")", action);
 				RETURN_FALSE;
 
 			case isc_spb_rpr_check_db:
@@ -559,7 +559,7 @@ options_argument:
 	}
 
 	if (spb_len > sizeof(buf) || spb_len == -1) {
-		_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%d)" TSRMLS_CC, spb_len);
+		_php_ibase_module_error("Internal error: insufficient buffer space for SPB (%d)", spb_len);
 		RETURN_FALSE;
 	}
 
@@ -597,16 +597,16 @@ PHP_FUNCTION(ibase_db_info)
 PHP_FUNCTION(ibase_server_info)
 {
 	zval *res;
-	long action;
+	zend_long action;
 	ibase_service *svm;
 
 	RESET_ERRMSG;
 
-	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &res, &action)) {
+	if (SUCCESS != zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &res, &action)) {
 		RETURN_FALSE;
 	}
 
-	ZEND_FETCH_RESOURCE(svm, ibase_service *, res, -1,
+	svm = (ibase_service *)zend_fetch_resource_ex(res,
 		"Interbase service manager handle", le_service);
 
 	_php_ibase_service_query(INTERNAL_FUNCTION_PARAM_PASSTHRU, svm, (char)action);

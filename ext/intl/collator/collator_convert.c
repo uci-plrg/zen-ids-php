@@ -28,14 +28,8 @@
 #include <unicode/ustring.h>
 #include <php.h>
 
-#if PHP_VERSION_ID <= 50100
-#define CAST_OBJECT_SHOULD_FREE ,0
-#else
-#define CAST_OBJECT_SHOULD_FREE
-#endif
-
 #define COLLATOR_CONVERT_RETURN_FAILED(retval) { \
-			zval_add_ref( retval );              \
+			Z_TRY_ADDREF_P(retval);              \
 			return retval;                       \
 	}
 
@@ -45,10 +39,10 @@ static void collator_convert_hash_item_from_utf8_to_utf16(
 	UErrorCode* status )
 {
 	const char* old_val;
-	int         old_val_len;
+	size_t      old_val_len;
 	UChar*      new_val      = NULL;
-	int         new_val_len  = 0;
-	zval       znew_val;
+	int32_t     new_val_len  = 0;
+	zval        znew_val;
 
 	/* Process string values only. */
 	if( Z_TYPE_P( hashData ) != IS_STRING )
@@ -86,10 +80,9 @@ static void collator_convert_hash_item_from_utf16_to_utf8(
 	UErrorCode* status )
 {
 	const char* old_val;
-	int        old_val_len;
-	char*      new_val      = NULL;
-	int        new_val_len  = 0;
-	zval       znew_val;
+	size_t      old_val_len;
+	zend_string* u8str;
+	zval        znew_val;
 
 	/* Process string values only. */
 	if( Z_TYPE_P( hashData ) != IS_STRING )
@@ -99,15 +92,13 @@ static void collator_convert_hash_item_from_utf16_to_utf8(
 	old_val_len = Z_STRLEN_P( hashData );
 
 	/* Convert it from UTF-16LE to UTF-8 and save the result to new_val[_len]. */
-	intl_convert_utf16_to_utf8( &new_val, &new_val_len,
+	u8str = intl_convert_utf16_to_utf8(
 		(UChar*)old_val, UCHARS(old_val_len), status );
-	if( U_FAILURE( *status ) )
+	if( !u8str )
 		return;
 
 	/* Update current hash item with the converted value. */
-	ZVAL_STRINGL( &znew_val, (char*)new_val, new_val_len);
-	//???
-	efree(new_val);
+	ZVAL_NEW_STR( &znew_val, u8str);
 
 	if( hashKey )
 	{
@@ -169,23 +160,19 @@ void collator_convert_hash_from_utf16_to_utf8( HashTable* hash, UErrorCode* stat
  */
 zval* collator_convert_zstr_utf16_to_utf8( zval* utf16_zval, zval *rv )
 {
-	zval* utf8_zval   = NULL;
-	char* str         = NULL;
-	int   str_len     = 0;
+	zend_string* u8str;
 	UErrorCode status = U_ZERO_ERROR;
 
 	/* Convert to utf8 then. */
-	intl_convert_utf16_to_utf8( &str, &str_len,
+	u8str = intl_convert_utf16_to_utf8(
 		(UChar*) Z_STRVAL_P(utf16_zval), UCHARS( Z_STRLEN_P(utf16_zval) ), &status );
-	if( U_FAILURE( status ) )
+	if( !u8str ) {
 		php_error( E_WARNING, "Error converting utf16 to utf8 in collator_convert_zval_utf16_to_utf8()" );
-
-	utf8_zval = rv;
-	ZVAL_STRINGL( utf8_zval, str, str_len);
-	//???
-	efree(str);
-
-	return utf8_zval;
+		ZVAL_EMPTY_STRING( rv );
+	} else {
+		ZVAL_NEW_STR( rv, u8str );
+	}
+	return rv;
 }
 /* }}} */
 
@@ -201,7 +188,7 @@ zval* collator_convert_zstr_utf8_to_utf16( zval* utf8_zval, zval *rv )
 {
 	zval* zstr        = NULL;
 	UChar* ustr       = NULL;
-	int    ustr_len   = 0;
+	int32_t ustr_len   = 0;
 	UErrorCode status = U_ZERO_ERROR;
 
 	/* Convert the string to UTF-16. */
@@ -215,7 +202,7 @@ zval* collator_convert_zstr_utf8_to_utf16( zval* utf8_zval, zval *rv )
 	/* Set string. */
 	zstr = rv;
 	ZVAL_STRINGL( zstr, (char*)ustr, UBYTES(ustr_len));
-	//??? 
+	//???
 	efree((char *)ustr);
 
 	return zstr;
@@ -225,12 +212,12 @@ zval* collator_convert_zstr_utf8_to_utf16( zval* utf8_zval, zval *rv )
 /* {{{ collator_convert_object_to_string
  * Convert object to UTF16-encoded string.
  */
-zval* collator_convert_object_to_string( zval* obj, zval *rv TSRMLS_DC )
+zval* collator_convert_object_to_string( zval* obj, zval *rv )
 {
 	zval* zstr        = NULL;
 	UErrorCode status = U_ZERO_ERROR;
 	UChar* ustr       = NULL;
-	int    ustr_len   = 0;
+	int32_t ustr_len  = 0;
 
 	/* Bail out if it's not an object. */
 	if( Z_TYPE_P( obj ) != IS_OBJECT )
@@ -241,7 +228,7 @@ zval* collator_convert_object_to_string( zval* obj, zval *rv TSRMLS_DC )
 	/* Try object's handlers. */
 	if( Z_OBJ_HT_P(obj)->get )
 	{
-		zstr = Z_OBJ_HT_P(obj)->get( obj, rv TSRMLS_CC );
+		zstr = Z_OBJ_HT_P(obj)->get( obj, rv );
 
 		switch( Z_TYPE_P( zstr ) )
 		{
@@ -265,7 +252,7 @@ zval* collator_convert_object_to_string( zval* obj, zval *rv TSRMLS_DC )
 	{
 		zstr = rv;
 
-		if( Z_OBJ_HT_P(obj)->cast_object( obj, zstr, IS_STRING CAST_OBJECT_SHOULD_FREE TSRMLS_CC ) == FAILURE )
+		if( Z_OBJ_HT_P(obj)->cast_object( obj, zstr, IS_STRING ) == FAILURE )
 		{
 			/* cast_object failed => bail out. */
 			zval_ptr_dtor( zstr );
@@ -400,9 +387,8 @@ zval* collator_make_printable_zval( zval* arg, zval *rv)
 
 	if( Z_TYPE_P(arg) != IS_STRING )
 	{
-	    TSRMLS_FETCH();
-	    
-		use_copy = zend_make_printable_zval(arg, &arg_copy TSRMLS_CC);
+
+		use_copy = zend_make_printable_zval(arg, &arg_copy);
 
 		if( use_copy )
 		{

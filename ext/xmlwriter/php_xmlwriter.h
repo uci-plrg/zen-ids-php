@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -25,6 +25,9 @@
 extern zend_module_entry xmlwriter_module_entry;
 #define phpext_xmlwriter_ptr &xmlwriter_module_entry
 
+#include "php_version.h"
+#define PHP_XMLWRITER_VERSION PHP_VERSION
+
 #ifdef ZTS
 #include "TSRM.h"
 #endif
@@ -37,9 +40,6 @@ extern zend_module_entry xmlwriter_module_entry;
 typedef struct _xmlwriter_object {
 	xmlTextWriterPtr ptr;
 	xmlBufferPtr output;
-#ifndef ZEND_ENGINE_2
-	xmlOutputBufferPtr uri_output;
-#endif
 } xmlwriter_object;
 
 

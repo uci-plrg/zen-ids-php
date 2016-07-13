@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 5                                                        |
+   | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -32,13 +32,14 @@ PHPDBG_LIST(class);
 PHPDBG_LIST(method);
 PHPDBG_LIST(func);
 
-void phpdbg_list_function_byname(const char *, size_t TSRMLS_DC);
-void phpdbg_list_function(const zend_function * TSRMLS_DC);
-void phpdbg_list_file(zend_string *, uint, int, uint TSRMLS_DC);
+void phpdbg_list_function_byname(const char *, size_t);
+void phpdbg_list_function(const zend_function *);
+void phpdbg_list_file(zend_string *, uint, int, uint);
 
 extern const phpdbg_command_t phpdbg_list_commands[];
 
-void phpdbg_init_list(TSRMLS_D);
+void phpdbg_init_list(void);
+void phpdbg_list_update(void);
 
 typedef struct {
 	char *filename;
@@ -47,6 +48,8 @@ typedef struct {
 #if HAVE_MMAP
 	void *map;
 #endif
+	zend_op_array op_array;
+	zend_bool destroy_op_array;
 	uint lines;
 	uint line[1];
 } phpdbg_file_source;

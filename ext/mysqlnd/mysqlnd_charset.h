@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2006-2014 The PHP Group                                |
+  | Copyright (c) 2006-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -12,9 +12,9 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Authors: Georg Richter <georg@mysql.com>                             |
-  |          Andrey Hristov <andrey@mysql.com>                           |
-  |          Ulf Wendel <uwendel@mysql.com>                              |
+  | Authors: Andrey Hristov <andrey@php.net>                             |
+  |          Ulf Wendel <uw@php.net>                                     |
+  |          Georg Richter <georg@php.net>                               |
   +----------------------------------------------------------------------+
 */
 
@@ -22,10 +22,10 @@
 #define MYSQLND_CHARSET_H
 
 PHPAPI zend_ulong mysqlnd_cset_escape_quotes(const MYSQLND_CHARSET * const charset, char *newstr,
-										const char *escapestr, size_t escapestr_len TSRMLS_DC);
+										const char *escapestr, size_t escapestr_len);
 
 PHPAPI zend_ulong mysqlnd_cset_escape_slashes(const MYSQLND_CHARSET * const cset, char *newstr,
-										 const char *escapestr, size_t escapestr_len TSRMLS_DC);
+										 const char *escapestr, size_t escapestr_len);
 
 struct st_mysqlnd_plugin_charsets
 {
@@ -34,12 +34,12 @@ struct st_mysqlnd_plugin_charsets
 	{
 		const MYSQLND_CHARSET * (*const find_charset_by_nr)(unsigned int charsetnr);
 		const MYSQLND_CHARSET * (*const find_charset_by_name)(const char * const name);
-		zend_ulong 			(*const escape_quotes)(const MYSQLND_CHARSET * const cset, char * newstr, const char * escapestr, size_t escapestr_len TSRMLS_DC);
-		zend_ulong			(*const escape_slashes)(const MYSQLND_CHARSET * const cset, char * newstr, const char * escapestr, size_t escapestr_len TSRMLS_DC);
+		zend_ulong 			(*const escape_quotes)(const MYSQLND_CHARSET * const cset, char * newstr, const char * escapestr, size_t escapestr_len);
+		zend_ulong			(*const escape_slashes)(const MYSQLND_CHARSET * const cset, char * newstr, const char * escapestr, size_t escapestr_len);
 	} methods;
 };
 
-void mysqlnd_charsets_plugin_register(TSRMLS_D);
+void mysqlnd_charsets_plugin_register(void);
 
 #endif /* MYSQLND_CHARSET_H */
 

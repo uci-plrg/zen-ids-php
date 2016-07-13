@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -35,7 +35,7 @@
 /* Cache of the server supported datatypes, initialized in handle_factory */
 zval* pdo_dblib_datatypes;
 
-static int dblib_fetch_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, zval *info TSRMLS_DC)
+static int dblib_fetch_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, zval *info)
 {
 	pdo_dblib_db_handle *H = (pdo_dblib_db_handle *)dbh->driver_data;
 	pdo_dblib_err *einfo = &H->err;
@@ -73,7 +73,7 @@ static int dblib_fetch_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, zval *info TSRMLS
 }
 
 
-static int dblib_handle_closer(pdo_dbh_t *dbh TSRMLS_DC)
+static int dblib_handle_closer(pdo_dbh_t *dbh)
 {
 	pdo_dblib_db_handle *H = (pdo_dblib_db_handle *)dbh->driver_data;
 
@@ -92,21 +92,22 @@ static int dblib_handle_closer(pdo_dbh_t *dbh TSRMLS_DC)
 	return 0;
 }
 
-static int dblib_handle_preparer(pdo_dbh_t *dbh, const char *sql, zend_long sql_len, pdo_stmt_t *stmt, zval *driver_options TSRMLS_DC)
+static int dblib_handle_preparer(pdo_dbh_t *dbh, const char *sql, size_t sql_len, pdo_stmt_t *stmt, zval *driver_options)
 {
 	pdo_dblib_db_handle *H = (pdo_dblib_db_handle *)dbh->driver_data;
 	pdo_dblib_stmt *S = ecalloc(1, sizeof(*S));
-	
+
 	S->H = H;
 	stmt->driver_data = S;
 	stmt->methods = &dblib_stmt_methods;
 	stmt->supports_placeholders = PDO_PLACEHOLDER_NONE;
+	S->computed_column_name_count = 0;
 	S->err.sqlstate = stmt->error_code;
 
 	return 1;
 }
 
-static zend_long dblib_handle_doer(pdo_dbh_t *dbh, const char *sql, zend_long sql_len TSRMLS_DC)
+static zend_long dblib_handle_doer(pdo_dbh_t *dbh, const char *sql, size_t sql_len)
 {
 	pdo_dblib_db_handle *H = (pdo_dblib_db_handle *)dbh->driver_data;
 	RETCODE ret, resret;
@@ -120,7 +121,7 @@ static zend_long dblib_handle_doer(pdo_dbh_t *dbh, const char *sql, zend_long sq
 	if (FAIL == dbsqlexec(H->link)) {
 		return -1;
 	}
-	
+
 	resret = dbresults(H->link);
 
 	if (resret == FAIL) {
@@ -142,17 +143,17 @@ static zend_long dblib_handle_doer(pdo_dbh_t *dbh, const char *sql, zend_long sq
 	return DBCOUNT(H->link);
 }
 
-static int dblib_handle_quoter(pdo_dbh_t *dbh, const char *unquoted, int unquotedlen, char **quoted, int *quotedlen, enum pdo_param_type paramtype TSRMLS_DC)
+static int dblib_handle_quoter(pdo_dbh_t *dbh, const char *unquoted, size_t unquotedlen, char **quoted, size_t *quotedlen, enum pdo_param_type paramtype)
 {
 
 	int useBinaryEncoding = 0;
 	const char * hex = "0123456789abcdef";
-	int i;
+	size_t i;
 	char * q;
 	*quotedlen = 0;
-	
-	/* 
-	 * Detect quoted length and if we should use binary encoding 
+
+	/*
+	 * Detect quoted length and if we should use binary encoding
 	 */
 	for(i=0;i<unquotedlen;i++) {
 		if( 32 > unquoted[i] || 127 < unquoted[i] ) {
@@ -162,15 +163,15 @@ static int dblib_handle_quoter(pdo_dbh_t *dbh, const char *unquoted, int unquote
 		if(unquoted[i] == '\'') ++*quotedlen;
 		++*quotedlen;
 	}
-	
+
 	if(useBinaryEncoding) {
-		/* 
-		 * Binary safe quoting 
+		/*
+		 * Binary safe quoting
 		 * Will implicitly convert for all data types except Text, DateTime & SmallDateTime
-		 * 
-		 */	
+		 *
+		 */
 		*quotedlen = (unquotedlen * 2) + 2; /* 2 chars per byte +2 for "0x" prefix */
-		q = *quoted = emalloc(*quotedlen);
+		q = *quoted = emalloc(*quotedlen+1); /* Add byte for terminal null */
 
 		*q++ = '0';
 		*q++ = 'x';
@@ -181,7 +182,7 @@ static int dblib_handle_quoter(pdo_dbh_t *dbh, const char *unquoted, int unquote
 	} else {
 		/* Alpha/Numeric Quoting */
 		*quotedlen += 2; /* +2 for opening, closing quotes */
-		q  = *quoted = emalloc(*quotedlen);
+		q  = *quoted = emalloc(*quotedlen+1); /* Add byte for terminal null */
 		*q++ = '\'';
 
 		for (i=0;i<unquotedlen;i++) {
@@ -196,59 +197,59 @@ static int dblib_handle_quoter(pdo_dbh_t *dbh, const char *unquoted, int unquote
 	}
 
 	*q = 0;
-	
+
 	return 1;
 }
 
-static int pdo_dblib_transaction_cmd(const char *cmd, pdo_dbh_t *dbh TSRMLS_DC)
+static int pdo_dblib_transaction_cmd(const char *cmd, pdo_dbh_t *dbh)
 {
 	pdo_dblib_db_handle *H = (pdo_dblib_db_handle *)dbh->driver_data;
-	
+
 	if (FAIL == dbcmd(H->link, cmd)) {
 		return 0;
 	}
-	
+
 	if (FAIL == dbsqlexec(H->link)) {
 		return 0;
 	}
-	
+
 	return 1;
 }
 
-static int dblib_handle_begin(pdo_dbh_t *dbh TSRMLS_DC)
+static int dblib_handle_begin(pdo_dbh_t *dbh)
 {
-	return pdo_dblib_transaction_cmd("BEGIN TRANSACTION", dbh TSRMLS_CC);
+	return pdo_dblib_transaction_cmd("BEGIN TRANSACTION", dbh);
 }
 
-static int dblib_handle_commit(pdo_dbh_t *dbh TSRMLS_DC)
+static int dblib_handle_commit(pdo_dbh_t *dbh)
 {
-	return pdo_dblib_transaction_cmd("COMMIT TRANSACTION", dbh TSRMLS_CC);
+	return pdo_dblib_transaction_cmd("COMMIT TRANSACTION", dbh);
 }
 
-static int dblib_handle_rollback(pdo_dbh_t *dbh TSRMLS_DC)
+static int dblib_handle_rollback(pdo_dbh_t *dbh)
 {
-	return pdo_dblib_transaction_cmd("ROLLBACK TRANSACTION", dbh TSRMLS_CC);
+	return pdo_dblib_transaction_cmd("ROLLBACK TRANSACTION", dbh);
 }
 
-char *dblib_handle_last_id(pdo_dbh_t *dbh, const char *name, unsigned int *len TSRMLS_DC) 
+char *dblib_handle_last_id(pdo_dbh_t *dbh, const char *name, size_t *len)
 {
 	pdo_dblib_db_handle *H = (pdo_dblib_db_handle *)dbh->driver_data;
 
 	RETCODE ret;
 	char *id = NULL;
 
-	/* 
+	/*
 	 * Would use scope_identity() but it's not implemented on Sybase
 	 */
-	
+
 	if (FAIL == dbcmd(H->link, "SELECT @@IDENTITY")) {
 		return NULL;
 	}
-	
+
 	if (FAIL == dbsqlexec(H->link)) {
 		return NULL;
 	}
-	
+
 	ret = dbresults(H->link);
 	if (ret == FAIL || ret == NO_MORE_RESULTS) {
 		dbcancel(H->link);
@@ -256,7 +257,7 @@ char *dblib_handle_last_id(pdo_dbh_t *dbh, const char *name, unsigned int *len T
 	}
 
 	ret = dbnextrow(H->link);
-	
+
 	if (ret == FAIL || ret == NO_MORE_ROWS) {
 		dbcancel(H->link);
 		return NULL;
@@ -269,12 +270,12 @@ char *dblib_handle_last_id(pdo_dbh_t *dbh, const char *name, unsigned int *len T
 
 	id = emalloc(32);
 	*len = dbconvert(NULL, (dbcoltype(H->link, 1)) , (dbdata(H->link, 1)) , (dbdatlen(H->link, 1)), SQLCHAR, (BYTE *)id, (DBINT)-1);
-		
+
 	dbcancel(H->link);
 	return id;
 }
 
-static int dblib_set_attr(pdo_dbh_t *dbh, zend_long attr, zval *val TSRMLS_DC)
+static int dblib_set_attr(pdo_dbh_t *dbh, zend_long attr, zval *val)
 {
 	switch(attr) {
 		case PDO_ATTR_TIMEOUT:
@@ -285,7 +286,7 @@ static int dblib_set_attr(pdo_dbh_t *dbh, zend_long attr, zval *val TSRMLS_DC)
 
 }
 
-static int dblib_get_attribute(pdo_dbh_t *dbh, zend_long attr, zval *return_value TSRMLS_DC)
+static int dblib_get_attribute(pdo_dbh_t *dbh, zend_long attr, zval *return_value)
 {
 	/* dblib_handle *H = (pdo_pgsql_db_handle *)dbh->driver_data; */
 	return 0;
@@ -309,11 +310,11 @@ static struct pdo_dbh_methods dblib_methods = {
 	NULL  /* in transaction */
 };
 
-static int pdo_dblib_handle_factory(pdo_dbh_t *dbh, zval *driver_options TSRMLS_DC)
+static int pdo_dblib_handle_factory(pdo_dbh_t *dbh, zval *driver_options)
 {
 	pdo_dblib_db_handle *H;
 	int i, nvars, nvers, ret = 0;
-	
+
 	const pdo_dblib_keyval tdsver[] = {
 		 {"4.2",DBVERSION_42}
 		,{"4.6",DBVERSION_46}
@@ -329,10 +330,8 @@ static int pdo_dblib_handle_factory(pdo_dbh_t *dbh, zval *driver_options TSRMLS_
 #endif
 		,{"10.0",DBVERSION_100}
 		,{"auto",0} /* Only works with FreeTDS. Other drivers will bork */
-		
+
 	};
-	
-	nvers = sizeof(tdsver)/sizeof(tdsver[0]);
 	
 	struct pdo_data_src_parser vars[] = {
 		{ "charset",	NULL,	0 }
@@ -342,15 +341,26 @@ static int pdo_dblib_handle_factory(pdo_dbh_t *dbh, zval *driver_options TSRMLS_
 		,{ "secure",	NULL,	0 } /* DBSETLSECURE */
 		,{ "version",	NULL,	0 } /* DBSETLVERSION */
 	};
-	
+
 	nvars = sizeof(vars)/sizeof(vars[0]);
+	nvers = sizeof(tdsver)/sizeof(tdsver[0]);
 	
 	php_pdo_parse_data_source(dbh->data_source, dbh->data_source_len, vars, nvars);
 
 	if (driver_options) {
-		int timeout = pdo_attr_lval(driver_options, PDO_ATTR_TIMEOUT, 30 TSRMLS_CC);
-		dbsetlogintime(timeout); /* Connection/Login Timeout */
-		dbsettime(timeout); /* Statement Timeout */
+		int connect_timeout = pdo_attr_lval(driver_options, PDO_DBLIB_ATTR_CONNECTION_TIMEOUT, -1);
+		int query_timeout = pdo_attr_lval(driver_options, PDO_DBLIB_ATTR_QUERY_TIMEOUT, -1);
+		int timeout = pdo_attr_lval(driver_options, PDO_ATTR_TIMEOUT, 30);
+
+		if (connect_timeout == -1) {
+			connect_timeout = timeout;
+		}
+		if (query_timeout == -1) {
+			query_timeout = timeout;
+		}
+
+		dbsetlogintime(connect_timeout); /* Connection/Login Timeout */
+		dbsettime(query_timeout); /* Statement Timeout */
 	}
 
 	H = pecalloc(1, sizeof(*H), dbh->is_persistent);
@@ -363,21 +373,21 @@ static int pdo_dblib_handle_factory(pdo_dbh_t *dbh, zval *driver_options TSRMLS_
 
 	DBERRHANDLE(H->login, (EHANDLEFUNC) pdo_dblib_error_handler);
 	DBMSGHANDLE(H->login, (MHANDLEFUNC) pdo_dblib_msg_handler);
-	
+
 	if(vars[5].optval) {
 		for(i=0;i<nvers;i++) {
 			if(strcmp(vars[5].optval,tdsver[i].key) == 0) {
 				if(FAIL==dbsetlversion(H->login, tdsver[i].value)) {
-					pdo_raise_impl_error(dbh, NULL, "HY000", "PDO_DBLIB: Failed to set version specified in connection string." TSRMLS_CC);		
+					pdo_raise_impl_error(dbh, NULL, "HY000", "PDO_DBLIB: Failed to set version specified in connection string.");
 					goto cleanup;
 				}
 				break;
 			}
 		}
-		
+
 		if (i==nvers) {
 			printf("Invalid version '%s'\n", vars[5].optval);
-			pdo_raise_impl_error(dbh, NULL, "HY000", "PDO_DBLIB: Invalid version specified in connection string." TSRMLS_CC);		
+			pdo_raise_impl_error(dbh, NULL, "HY000", "PDO_DBLIB: Invalid version specified in connection string.");
 			goto cleanup; /* unknown version specified */
 		}
 	}
@@ -393,7 +403,7 @@ static int pdo_dblib_handle_factory(pdo_dbh_t *dbh, zval *driver_options TSRMLS_
 			goto cleanup;
 		}
 	}
-	
+
 #if !PHP_DBLIB_IS_MSSQL
 	if (vars[0].optval) {
 		DBSETLCHARSET(H->login, vars[0].optval);
@@ -451,7 +461,7 @@ cleanup:
 	dbh->driver_data = H;
 
 	if (!ret) {
-		zend_throw_exception_ex(php_pdo_get_exception(), DBLIB_G(err).dberr TSRMLS_CC,
+		zend_throw_exception_ex(php_pdo_get_exception(), DBLIB_G(err).dberr,
 			"SQLSTATE[%s] %s (severity %d)",
 			DBLIB_G(err).sqlstate,
 			DBLIB_G(err).dberrstr,

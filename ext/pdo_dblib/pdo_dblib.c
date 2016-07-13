@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -39,24 +39,18 @@ const zend_function_entry pdo_dblib_functions[] = {
 	PHP_FE_END
 };
 
-#if ZEND_MODULE_API_NO >= 20050922
 static const zend_module_dep pdo_dblib_deps[] = {
 	ZEND_MOD_REQUIRED("pdo")
 	ZEND_MOD_END
 };
-#endif
 
 #if PDO_DBLIB_IS_MSSQL
 zend_module_entry pdo_mssql_module_entry = {
 #else
 zend_module_entry pdo_dblib_module_entry = {
 #endif
-#if ZEND_MODULE_API_NO >= 20050922
 	STANDARD_MODULE_HEADER_EX, NULL,
 	pdo_dblib_deps,
-#else
-	STANDARD_MODULE_HEADER,
-#endif
 #if PDO_DBLIB_IS_MSSQL
 	"pdo_mssql",
 #elif defined(PHP_WIN32)
@@ -70,7 +64,7 @@ zend_module_entry pdo_dblib_module_entry = {
 	NULL,
 	PHP_RSHUTDOWN(pdo_dblib),
 	PHP_MINFO(pdo_dblib),
-	"1.0.1",
+	PHP_PDO_DBLIB_VERSION,
 	PHP_MODULE_GLOBALS(dblib),
 	PHP_GINIT(dblib),
 	NULL,
@@ -91,19 +85,18 @@ int pdo_dblib_error_handler(DBPROCESS *dbproc, int severity, int dberr,
 {
 	pdo_dblib_err *einfo;
 	char *state = "HY000";
-	TSRMLS_FETCH();
 
 	if(dbproc) {
 		einfo = (pdo_dblib_err*)dbgetuserdata(dbproc);
 		if (!einfo) einfo = &DBLIB_G(err);
 	} else {
 		einfo = &DBLIB_G(err);
-	}	
+	}
 
 	einfo->severity = severity;
 	einfo->oserr = oserr;
 	einfo->dberr = dberr;
-	
+
 	if (einfo->oserrstr) {
 		efree(einfo->oserrstr);
 	}
@@ -136,7 +129,6 @@ int pdo_dblib_msg_handler(DBPROCESS *dbproc, DBINT msgno, int msgstate,
 	int severity, char *msgtext, char *srvname, char *procname, DBUSMALLINT line)
 {
 	pdo_dblib_err *einfo;
-	TSRMLS_FETCH();
 
 	if (severity) {
 		einfo = (pdo_dblib_err*)dbgetuserdata(dbproc);
@@ -179,14 +171,17 @@ PHP_RSHUTDOWN_FUNCTION(pdo_dblib)
 
 PHP_MINIT_FUNCTION(pdo_dblib)
 {
+	REGISTER_PDO_CLASS_CONST_LONG("DBLIB_ATTR_CONNECTION_TIMEOUT", (long) PDO_DBLIB_ATTR_CONNECTION_TIMEOUT);
+	REGISTER_PDO_CLASS_CONST_LONG("DBLIB_ATTR_QUERY_TIMEOUT", (long) PDO_DBLIB_ATTR_QUERY_TIMEOUT);
+
 	if (FAIL == dbinit()) {
 		return FAILURE;
 	}
-	
+
 	if (FAILURE == php_pdo_register_driver(&pdo_dblib_driver)) {
 		return FAILURE;
 	}
-	
+
 #if !PHP_DBLIB_IS_MSSQL
 	dberrhandle((EHANDLEFUNC) pdo_dblib_error_handler);
 	dbmsghandle((MHANDLEFUNC) pdo_dblib_msg_handler);

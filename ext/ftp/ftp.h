@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -31,6 +31,7 @@
 
 #define	FTP_DEFAULT_TIMEOUT	90
 #define FTP_DEFAULT_AUTOSEEK 1
+#define FTP_DEFAULT_USEPASVADDRESS	1
 #define PHP_FTP_FAILED			0
 #define PHP_FTP_FINISHED		1
 #define PHP_FTP_MOREDATA		2
@@ -49,7 +50,7 @@ typedef struct databuf
 	php_socket_t		fd;			/* data connection */
 	ftptype_t	type;			/* transfer type */
 	char		buf[FTP_BUFSIZE];	/* data buffer */
-#if HAVE_OPENSSL_EXT
+#ifdef HAVE_FTP_SSL
 	SSL		*ssl_handle;	/* ssl handle */
 	int		ssl_active;		/* flag if ssl is active or not */
 #endif
@@ -69,8 +70,9 @@ typedef struct ftpbuf
 	ftptype_t	type;			/* current transfer type */
 	int		pasv;			/* 0=off; 1=pasv; 2=ready */
 	php_sockaddr_storage	pasvaddr;	/* passive mode address */
-	zend_long	timeout_sec;	/* User configureable timeout (seconds) */
-	int			autoseek;	/* User configureable autoseek flag */
+	zend_long	timeout_sec;	/* User configurable timeout (seconds) */
+	int			autoseek;	/* User configurable autoseek flag */
+	int			usepasvaddress;	/* Use the address returned by the pasv command */
 
 	int				nb;		/* "nonblocking" transfer in progress */
 	databuf_t		*data;	/* Data connection for "nonblocking" transfers */
@@ -78,7 +80,7 @@ typedef struct ftpbuf
 	int				lastch;		/* last char of previous call */
 	int				direction;	/* recv = 0 / send = 1 */
 	int				closestream;/* close or not close stream */
-#if HAVE_OPENSSL_EXT
+#ifdef HAVE_FTP_SSL
 	int				use_ssl; /* enable(1) or disable(0) ssl */
 	int				use_ssl_for_data; /* en/disable ssl for the dataconnection */
 	int				old_ssl;	/* old mode = forced data encryption */
@@ -93,7 +95,7 @@ typedef struct ftpbuf
 /* open a FTP connection, returns ftpbuf (NULL on error)
  * port is the ftp port in network byte order, or 0 for the default
  */
-ftpbuf_t*	ftp_open(const char *host, short port, zend_long timeout_sec TSRMLS_DC);
+ftpbuf_t*	ftp_open(const char *host, short port, zend_long timeout_sec);
 
 /* quits from the ftp session (it still needs to be closed)
  * return true on success, false on error
@@ -107,7 +109,7 @@ void		ftp_gc(ftpbuf_t *ftp);
 ftpbuf_t*	ftp_close(ftpbuf_t *ftp);
 
 /* logs into the FTP server, returns true on success, false on error */
-int		ftp_login(ftpbuf_t *ftp, const char *user, const char *pass TSRMLS_DC);
+int		ftp_login(ftpbuf_t *ftp, const char *user, const char *pass);
 
 /* reinitializes the connection, returns true on success, false on error */
 int		ftp_reinit(ftpbuf_t *ftp);
@@ -143,7 +145,7 @@ int		ftp_chmod(ftpbuf_t *ftp, const int mode, const char *filename, const int fi
 
 /* Allocate space on remote server with ALLO command
  * Many servers will respond with 202 Allocation not necessary,
- * however some servers will not accept STOR or APPE until ALLO is confirmed. 
+ * however some servers will not accept STOR or APPE until ALLO is confirmed.
  * If response is passed, it is estrdup()ed from ftp->inbuf and must be freed
  * or assigned to a zval returned to the user */
 int		ftp_alloc(ftpbuf_t *ftp, const zend_long size, zend_string **response);
@@ -152,14 +154,14 @@ int		ftp_alloc(ftpbuf_t *ftp, const zend_long size, zend_string **response);
  * or NULL on error.  the return array must be freed (but don't
  * free the array elements)
  */
-char**		ftp_nlist(ftpbuf_t *ftp, const char *path TSRMLS_DC);
+char**		ftp_nlist(ftpbuf_t *ftp, const char *path);
 
 /* returns a NULL-terminated array of lines returned by the ftp
  * LIST command for the given path or NULL on error.  the return
  * array must be freed (but don't
  * free the array elements)
  */
-char**		ftp_list(ftpbuf_t *ftp, const char *path, int recursive TSRMLS_DC);
+char**		ftp_list(ftpbuf_t *ftp, const char *path, int recursive);
 
 /* switches passive mode on or off
  * returns true on success, false on error
@@ -169,12 +171,12 @@ int		ftp_pasv(ftpbuf_t *ftp, int pasv);
 /* retrieves a file and saves its contents to outfp
  * returns true on success, false on error
  */
-int		ftp_get(ftpbuf_t *ftp, php_stream *outstream, const char *path, ftptype_t type, zend_long resumepos TSRMLS_DC);
+int		ftp_get(ftpbuf_t *ftp, php_stream *outstream, const char *path, ftptype_t type, zend_long resumepos);
 
 /* stores the data from a file, socket, or process as a file on the remote server
  * returns true on success, false on error
  */
-int		ftp_put(ftpbuf_t *ftp, const char *path, php_stream *instream, ftptype_t type, zend_long startpos TSRMLS_DC);
+int		ftp_put(ftpbuf_t *ftp, const char *path, php_stream *instream, ftptype_t type, zend_long startpos);
 
 /* returns the size of the given file, or -1 on error */
 zend_long		ftp_size(ftpbuf_t *ftp, const char *path);
@@ -194,20 +196,20 @@ int		ftp_site(ftpbuf_t *ftp, const char *cmd);
 /* retrieves part of a file and saves its contents to outfp
  * returns true on success, false on error
  */
-int		ftp_nb_get(ftpbuf_t *ftp, php_stream *outstream, const char *path, ftptype_t type, zend_long resumepos TSRMLS_DC);
+int		ftp_nb_get(ftpbuf_t *ftp, php_stream *outstream, const char *path, ftptype_t type, zend_long resumepos);
 
 /* stores the data from a file, socket, or process as a file on the remote server
  * returns true on success, false on error
  */
-int		ftp_nb_put(ftpbuf_t *ftp, const char *path, php_stream *instream, ftptype_t type, zend_long startpos TSRMLS_DC);
+int		ftp_nb_put(ftpbuf_t *ftp, const char *path, php_stream *instream, ftptype_t type, zend_long startpos);
 
 /* continues a previous nb_(f)get command
  */
-int		ftp_nb_continue_read(ftpbuf_t *ftp TSRMLS_DC);
+int		ftp_nb_continue_read(ftpbuf_t *ftp);
 
 /* continues a previous nb_(f)put command
  */
-int		ftp_nb_continue_write(ftpbuf_t *ftp TSRMLS_DC);
+int		ftp_nb_continue_write(ftpbuf_t *ftp);
 
 
 #endif

@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -50,8 +50,8 @@ static void php_fsockopen_stream(INTERNAL_FUNCTION_PARAMETERS, int persistent)
 	zend_string *errstr = NULL;
 
 	RETVAL_FALSE;
-	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lz/z/d", &host, &host_len, &port, &zerrno, &zerrstr, &timeout) == FAILURE) {
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lz/z/d", &host, &host_len, &port, &zerrno, &zerrstr, &timeout) == FAILURE) {
 		RETURN_FALSE;
 	}
 
@@ -65,7 +65,7 @@ static void php_fsockopen_stream(INTERNAL_FUNCTION_PARAMETERS, int persistent)
 		hostname_len = host_len;
 		hostname = host;
 	}
-	
+
 	/* prepare the timeout value for use */
 #ifndef PHP_WIN32
 	conv = (time_t) (timeout * 1000000.0);
@@ -92,13 +92,13 @@ static void php_fsockopen_stream(INTERNAL_FUNCTION_PARAMETERS, int persistent)
 		efree(hostname);
 	}
 	if (stream == NULL) {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "unable to connect to %s:" ZEND_LONG_FMT " (%s)", host, port, errstr == NULL ? "Unknown error" : errstr->val);
+		php_error_docref(NULL, E_WARNING, "unable to connect to %s:" ZEND_LONG_FMT " (%s)", host, port, errstr == NULL ? "Unknown error" : ZSTR_VAL(errstr));
 	}
 
 	if (hashkey) {
 		efree(hashkey);
 	}
-	
+
 	if (stream == NULL)	{
 		if (zerrno) {
 			zval_dtor(zerrno);
@@ -110,7 +110,7 @@ static void php_fsockopen_stream(INTERNAL_FUNCTION_PARAMETERS, int persistent)
 			ZVAL_STR(zerrstr, errstr);
 		} else if (!zerrstr && errstr) {
 			zend_string_release(errstr);
-		} 
+		}
 
 		RETURN_FALSE;
 	}
@@ -118,7 +118,7 @@ static void php_fsockopen_stream(INTERNAL_FUNCTION_PARAMETERS, int persistent)
 	if (errstr) {
 		zend_string_release(errstr);
 	}
-		
+
 	php_stream_to_zval(stream, return_value);
 }
 

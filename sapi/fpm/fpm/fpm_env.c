@@ -32,7 +32,7 @@ int setenv(char *name, char *value, int clobber) /* {{{ */
 	if (clobber == 0 && getenv(name) != 0) {
 		return 0;
 	}
-	
+
 	if ((cp = malloc(strlen(name) + strlen(value) + 2)) == 0) {
 		return 1;
 	}
@@ -106,11 +106,11 @@ static char * nvmatch(char *s1, char *s2) /* {{{ */
 {
 	while(*s1 == *s2++)
 	{
-		if(*s1++ == '=') { 
+		if(*s1++ == '=') {
 			return s2;
 		}
 	}
-	if(*s1 == '\0' && *(s2-1) == '=') { 
+	if(*s1 == '\0' && *(s2-1) == '=') {
 		return s2;
 	}
 	return NULL;
@@ -212,7 +212,7 @@ int fpm_env_init_main() /* {{{ */
 #ifndef HAVE_SETPROCTITLE
 #ifdef __linux__
 	/*
-	 * This piece of code has been inspirated from nginx and pureftpd code, whic
+	 * This piece of code has been inspirated from nginx and pureftpd code, which
 	 * are under BSD licence.
 	 *
 	 * To change the process title in Linux we have to set argv[1] to NULL
@@ -270,7 +270,7 @@ int fpm_env_init_main() /* {{{ */
 #endif
 
 	spprintf(&title, 0, "master process (%s)", fpm_globals.config);
-	fpm_env_setproctitle(title); 
+	fpm_env_setproctitle(title);
 	efree(title);
 	return 0;
 }

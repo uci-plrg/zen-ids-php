@@ -1,8 +1,8 @@
-/* 
+/*
 	+----------------------------------------------------------------------+
 	| PHP Version 7                                                        |
 	+----------------------------------------------------------------------+
-	| Copyright (c) 1997-2014 The PHP Group                                |
+	| Copyright (c) 1997-2016 The PHP Group                                |
 	+----------------------------------------------------------------------+
 	| This source file is subject to version 3.01 of the PHP license,      |
 	| that is bundled with this package in the file LICENSE, and is        |
@@ -28,10 +28,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#ifndef ZEND_ENGINE_2
-#error HEAD does not work with ZendEngine1 anymore
-#endif
 
 #include "ext/standard/dl.h"
 #include "ext/standard/file.h"
@@ -100,9 +96,6 @@
 #endif
 #if HAVE_XML && HAVE_WDDX
 #include "ext/wddx/php_wddx.h"
-#endif
-#ifdef HAVE_SQLITE
-#include "ext/sqlite/php_sqlite.h"
 #endif
 #include "ext/com_dotnet/php_com_dotnet.h"
 #ifdef HAVE_SPL
@@ -176,9 +169,6 @@ static zend_module_entry *php_builtin_extensions[] = {
 #if HAVE_XML && HAVE_WDDX
 	,phpext_wddx_ptr
 #endif
-#if HAVE_SQLITE
-	,phpext_sqlite_ptr
-#endif
 #if HAVE_SPL
 	,phpext_spl_ptr
 #endif
@@ -192,10 +182,10 @@ static zend_module_entry *php_builtin_extensions[] = {
 /* }}} */
 
 #define EXTCOUNT (sizeof(php_builtin_extensions)/sizeof(zend_module_entry *))
-	
-PHPAPI int php_register_internal_extensions(TSRMLS_D)
+
+PHPAPI int php_register_internal_extensions(void)
 {
-	return php_register_extensions(php_builtin_extensions, EXTCOUNT TSRMLS_CC);
+	return php_register_extensions(php_builtin_extensions, EXTCOUNT);
 }
 
 /*

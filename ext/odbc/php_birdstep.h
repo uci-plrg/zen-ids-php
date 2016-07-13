@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -26,6 +26,9 @@
 #include <sql.h>
 #include <sqlext.h>
 
+#include "php_version.h"
+#define PHP_BIRDSTEP_VERSION PHP_VERSION
+
 typedef struct VConn {
 	HDBC    hdbc;
 	zend_long    index;
@@ -40,7 +43,7 @@ typedef struct {
 
 typedef struct Vresult {
 	HSTMT   hstmt;
-	VConn   *conn; 
+	VConn   *conn;
 	zend_long    index;
 	VResVal *values;
 	zend_long    numcols;

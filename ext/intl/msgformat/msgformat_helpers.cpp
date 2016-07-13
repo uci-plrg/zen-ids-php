@@ -88,7 +88,7 @@ static void arg_types_dtor(zval *el) {
 }
 
 static HashTable *umsg_get_numeric_types(MessageFormatter_object *mfo,
-										 intl_error& err TSRMLS_DC)
+										 intl_error& err)
 {
 	HashTable *ret;
 	int32_t parts_count;
@@ -114,7 +114,7 @@ static HashTable *umsg_get_numeric_types(MessageFormatter_object *mfo,
 		const Formattable::Type t = types[i];
 		if (zend_hash_index_update_mem(ret, (zend_ulong)i, (void*)&t, sizeof(t)) == NULL) {
 			intl_errors_set(&err, U_MEMORY_ALLOCATION_ERROR,
-				"Write to argument types hash table failed", 0 TSRMLS_CC);
+				"Write to argument types hash table failed", 0);
 			break;
 		}
 	}
@@ -134,7 +134,7 @@ static HashTable *umsg_get_numeric_types(MessageFormatter_object *mfo,
 #ifdef HAS_MESSAGE_PATTERN
 static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 									const MessagePattern& mp,
-									intl_error& err TSRMLS_DC)
+									intl_error& err)
 {
 	HashTable *ret;
 	int32_t parts_count;
@@ -144,7 +144,7 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 	}
 
 	if (!((MessageFormat *)mfo->mf_data.umsgf)->usesNamedArguments()) {
-		return umsg_get_numeric_types(mfo, err TSRMLS_CC);
+		return umsg_get_numeric_types(mfo, err);
 	}
 
 	if (mfo->mf_data.arg_types) {
@@ -189,7 +189,7 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 				if ((storedType = (Formattable::Type*)zend_hash_str_update_mem(ret, (char*)argName.getBuffer(), argName.length(),
 						(void*)&bogusType, sizeof(bogusType))) == NULL) {
 					intl_errors_set(&err, U_MEMORY_ALLOCATION_ERROR,
-						"Write to argument types hash table failed", 0 TSRMLS_CC);
+						"Write to argument types hash table failed", 0);
 					continue;
 				}
 			}
@@ -197,7 +197,7 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 			int32_t argNumber = name_part.getValue();
 			if (argNumber < 0) {
 				intl_errors_set(&err, U_INVALID_FORMAT_ERROR,
-					"Found part with negative number", 0 TSRMLS_CC);
+					"Found part with negative number", 0);
 				continue;
 			}
 			if ((storedType = (Formattable::Type*)zend_hash_index_find_ptr(ret, (zend_ulong)argNumber)) == NULL) {
@@ -205,12 +205,12 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 				Formattable::Type bogusType = Formattable::kObject;
 				if ((storedType = (Formattable::Type*)zend_hash_index_update_mem(ret, (zend_ulong)argNumber, (void*)&bogusType, sizeof(bogusType))) == NULL) {
 					intl_errors_set(&err, U_MEMORY_ALLOCATION_ERROR,
-						"Write to argument types hash table failed", 0 TSRMLS_CC);
+						"Write to argument types hash table failed", 0);
 					continue;
 				}
 			}
 		} else {
-			intl_errors_set(&err, U_INVALID_FORMAT_ERROR, "Invalid part type encountered", 0 TSRMLS_CC);
+			intl_errors_set(&err, U_INVALID_FORMAT_ERROR, "Invalid part type encountered", 0);
 			continue;
 		}
 
@@ -255,7 +255,7 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 					 * is broken. */
 					intl_errors_set(&err, U_PARSE_ERROR,
 						"Expected UMSGPAT_PART_TYPE_ARG_TYPE part following "
-						"UMSGPAT_ARG_TYPE_SIMPLE part", 0 TSRMLS_CC);
+						"UMSGPAT_ARG_TYPE_SIMPLE part", 0);
 					continue;
 				}
 			} else if (argType == UMSGPAT_ARG_TYPE_PLURAL) {
@@ -264,6 +264,10 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 				type = Formattable::kDouble;
 			} else if (argType == UMSGPAT_ARG_TYPE_SELECT) {
 				type = Formattable::kString;
+#if U_ICU_VERSION_MAJOR_NUM >= 50
+			} else if (argType == UMSGPAT_ARG_TYPE_SELECTORDINAL) {
+				type = Formattable::kDouble;
+#endif
 			} else {
 				type = Formattable::kString;
 			}
@@ -272,7 +276,7 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 		/* We found a different type for the same arg! */
 		if (*storedType != Formattable::kObject && *storedType != type) {
 			intl_errors_set(&err, U_ARGUMENT_TYPE_MISMATCH,
-				"Inconsistent types declared for an argument", 0 TSRMLS_CC);
+				"Inconsistent types declared for an argument", 0);
 			continue;
 		}
 
@@ -293,27 +297,27 @@ static HashTable *umsg_parse_format(MessageFormatter_object *mfo,
 #endif
 
 static HashTable *umsg_get_types(MessageFormatter_object *mfo,
-								 intl_error& err TSRMLS_DC)
+								 intl_error& err)
 {
 	MessageFormat *mf = (MessageFormat *)mfo->mf_data.umsgf;
 
 #ifdef HAS_MESSAGE_PATTERN
 	const MessagePattern mp = MessageFormatAdapter::getMessagePattern(mf);
 
-	return umsg_parse_format(mfo, mp, err TSRMLS_CC);
+	return umsg_parse_format(mfo, mp, err);
 #else
 	if (mf->usesNamedArguments()) {
 			intl_errors_set(&err, U_UNSUPPORTED_ERROR,
 				"This extension supports named arguments only on ICU 4.8+",
-				0 TSRMLS_CC);
+				0);
 		return NULL;
 	}
-	return umsg_get_numeric_types(mfo, err TSRMLS_CC);
+	return umsg_get_numeric_types(mfo, err);
 #endif
 }
 
 static void umsg_set_timezone(MessageFormatter_object *mfo,
-							  intl_error& err TSRMLS_DC)
+							  intl_error& err)
 {
 	MessageFormat *mf = (MessageFormat *)mfo->mf_data.umsgf;
 	TimeZone	  *used_tz = NULL;
@@ -324,16 +328,16 @@ static void umsg_set_timezone(MessageFormatter_object *mfo,
 	 * appear inside complex formats because ::getFormats() returns NULL
 	 * for all uncached formats, which is the case for complex formats
 	 * unless they were set via one of the ::setFormat() methods */
-	
+
 	if (mfo->mf_data.tz_set) {
 		return; /* already done */
 	}
 
 	formats = mf->getFormats(count);
-	
+
 	if (formats == NULL) {
 		intl_errors_set(&err, U_MEMORY_ALLOCATION_ERROR,
-			"Out of memory retrieving subformats", 0 TSRMLS_CC);
+			"Out of memory retrieving subformats", 0);
 	}
 
 	for (int i = 0; U_SUCCESS(err.code) && i < count; i++) {
@@ -342,16 +346,16 @@ static void umsg_set_timezone(MessageFormatter_object *mfo,
 		if (df == NULL) {
 			continue;
 		}
-		
+
 		if (used_tz == NULL) {
 			zval nullzv, *zvptr = &nullzv;
 			ZVAL_NULL(zvptr);
-			used_tz = timezone_process_timezone_argument(zvptr, &err, "msgfmt_format" TSRMLS_CC);
+			used_tz = timezone_process_timezone_argument(zvptr, &err, "msgfmt_format");
 			if (used_tz == NULL) {
 				continue;
 			}
 		}
-		
+
 		df->setTimeZone(*used_tz);
 	}
 
@@ -363,7 +367,7 @@ static void umsg_set_timezone(MessageFormatter_object *mfo,
 U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 								HashTable *args,
 								UChar **formatted,
-								int *formatted_len TSRMLS_DC)
+								int32_t *formatted_len)
 {
 	int arg_count = zend_hash_num_elements(args);
 	std::vector<Formattable> fargs;
@@ -376,9 +380,9 @@ U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 		return;
 	}
 
-	types = umsg_get_types(mfo, err TSRMLS_CC);
-	
-	umsg_set_timezone(mfo, err TSRMLS_CC);
+	types = umsg_get_types(mfo, err);
+
+	umsg_set_timezone(mfo, err);
 
 	fargs.resize(arg_count);
 	farg_names.resize(arg_count);
@@ -388,7 +392,7 @@ U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 
 	// Key related variables
 	zend_string		*str_index;
-	zend_ulong			num_index;
+	zend_ulong		 num_index;
 
 	ZEND_HASH_FOREACH_KEY_VAL(args, num_index, str_index, elem) {
 		Formattable& formattable = fargs[argNum];
@@ -403,7 +407,7 @@ U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 			/* includes case where index < 0 because it's exposed as unsigned */
 			if (num_index > (zend_ulong)INT32_MAX) {
 				intl_errors_set(&err, U_ILLEGAL_ARGUMENT_ERROR,
-					"Found negative or too large array key", 0 TSRMLS_CC);
+					"Found negative or too large array key", 0);
 				continue;
 			}
 
@@ -413,13 +417,13 @@ U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 
 		   storedArgType = (Formattable::Type*)zend_hash_index_find_ptr(types, (zend_ulong)num_index);
 		} else { //string; assumed to be in UTF-8
-			intl_stringFromChar(key, str_index->val, str_index->len, &err.code);
+			intl_stringFromChar(key, ZSTR_VAL(str_index), ZSTR_LEN(str_index), &err.code);
 
 			if (U_FAILURE(err.code)) {
 				char *message;
 				spprintf(&message, 0,
-					"Invalid UTF-8 data in argument key: '%s'", str_index->val);
-				intl_errors_set(&err, err.code,	message, 1 TSRMLS_CC);
+					"Invalid UTF-8 data in argument key: '%s'", ZSTR_VAL(str_index));
+				intl_errors_set(&err, err.code,	message, 1);
 				efree(message);
 				continue;
 			}
@@ -453,7 +457,7 @@ U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 						char *message;
 						spprintf(&message, 0, "Invalid UTF-8 data in string argument: "
 							"'%s'", Z_STRVAL_P(elem));
-						intl_errors_set(&err, err.code, message, 1 TSRMLS_CC);
+						intl_errors_set(&err, err.code, message, 1);
 						efree(message);
 						delete text;
 						continue;
@@ -470,7 +474,7 @@ U_CFUNC void umsg_format_helper(MessageFormatter_object *mfo,
 						d = (double)Z_LVAL_P(elem);
 					} else {
 						SEPARATE_ZVAL_IF_NOT_REF(elem);
-						convert_scalar_to_number(elem TSRMLS_CC);
+						convert_scalar_to_number(elem);
 						d = (Z_TYPE_P(elem) == IS_DOUBLE)
 							? Z_DVAL_P(elem)
 							: (double)Z_LVAL_P(elem);
@@ -487,7 +491,7 @@ retry_klong:
 								Z_DVAL_P(elem) < (double)INT32_MIN) {
 							intl_errors_set(&err, U_ILLEGAL_ARGUMENT_ERROR,
 								"Found PHP float with absolute value too large for "
-								"32 bit integer argument", 0 TSRMLS_CC);
+								"32 bit integer argument", 0);
 						} else {
 							tInt32 = (int32_t)Z_DVAL_P(elem);
 						}
@@ -496,13 +500,13 @@ retry_klong:
 								Z_LVAL_P(elem) < INT32_MIN) {
 							intl_errors_set(&err, U_ILLEGAL_ARGUMENT_ERROR,
 								"Found PHP integer with absolute value too large "
-								"for 32 bit integer argument", 0 TSRMLS_CC);
+								"for 32 bit integer argument", 0);
 						} else {
 							tInt32 = (int32_t)Z_LVAL_P(elem);
 						}
 					} else {
 						SEPARATE_ZVAL_IF_NOT_REF(elem);
-						convert_scalar_to_number(elem TSRMLS_CC);
+						convert_scalar_to_number(elem);
 						goto retry_klong;
 					}
 					formattable.setLong(tInt32);
@@ -517,7 +521,7 @@ retry_kint64:
 								Z_DVAL_P(elem) < (double)U_INT64_MIN) {
 							intl_errors_set(&err, U_ILLEGAL_ARGUMENT_ERROR,
 								"Found PHP float with absolute value too large for "
-								"64 bit integer argument", 0 TSRMLS_CC);
+								"64 bit integer argument", 0);
 						} else {
 							tInt64 = (int64_t)Z_DVAL_P(elem);
 						}
@@ -526,7 +530,7 @@ retry_kint64:
 						tInt64 = (int64_t)Z_LVAL_P(elem);
 					} else {
 						SEPARATE_ZVAL_IF_NOT_REF(elem);
-						convert_scalar_to_number(elem TSRMLS_CC);
+						convert_scalar_to_number(elem);
 						goto retry_kint64;
 					}
 					formattable.setInt64(tInt64);
@@ -534,17 +538,17 @@ retry_kint64:
 				}
 			case Formattable::kDate:
 				{
-					double dd = intl_zval_to_millis(elem, &err, "msgfmt_format" TSRMLS_CC);
+					double dd = intl_zval_to_millis(elem, &err, "msgfmt_format");
 					if (U_FAILURE(err.code)) {
-						char *message, *key_char;
-						int key_len;
+						char *message;
+						zend_string *u8key;
 						UErrorCode status = UErrorCode();
-						if (intl_charFromString(key, &key_char, &key_len,
-								&status) == SUCCESS) {
+						u8key = intl_charFromString(key, &status);
+						if (u8key) {
 							spprintf(&message, 0, "The argument for key '%s' "
-								"cannot be used as a date or time", key_char);
-							intl_errors_set(&err, err.code, message, 1 TSRMLS_CC);
-							efree(key_char);
+								"cannot be used as a date or time", ZSTR_VAL(u8key));
+							intl_errors_set(&err, err.code, message, 1);
+							zend_string_release(u8key);
 							efree(message);
 						}
 						continue;
@@ -554,7 +558,7 @@ retry_kint64:
 				}
 			default:
 				intl_errors_set(&err, U_ILLEGAL_ARGUMENT_ERROR,
-					"Found unsupported argument type", 0 TSRMLS_CC);
+					"Found unsupported argument type", 0);
 				break;
 			}
 		} else {
@@ -580,17 +584,17 @@ retry_kint64:
 				goto string_arg;
 			default:
 				{
-					char *message, *key_char;
-					int key_len;
+					char *message;
+					zend_string *u8key;
 					UErrorCode status = UErrorCode();
-					if (intl_charFromString(key, &key_char, &key_len,
-							&status) == SUCCESS) {
+					u8key = intl_charFromString(key, &status);
+					if (u8key) {
 						spprintf(&message, 0, "No strategy to convert the "
 							"value given for the argument with key '%s' "
-							"is available", key_char);
+							"is available", ZSTR_VAL(u8key));
 						intl_errors_set(&err,
-							U_ILLEGAL_ARGUMENT_ERROR, message, 1 TSRMLS_CC);
-						efree(key_char);
+							U_ILLEGAL_ARGUMENT_ERROR, message, 1);
+						zend_string_release(u8key);
 						efree(message);
 					}
 				}
@@ -612,7 +616,7 @@ retry_kint64:
 
 	if (U_FAILURE(err.code)) {
 		intl_errors_set(&err, err.code,
-			"Call to ICU MessageFormat::format() has failed", 0 TSRMLS_CC);
+			"Call to ICU MessageFormat::format() has failed", 0);
 		return;
 	}
 
@@ -621,14 +625,14 @@ retry_kint64:
 	resultStr.extract(*formatted, *formatted_len+1, err.code);
 	if (U_FAILURE(err.code)) {
 		intl_errors_set(&err, err.code,
-			"Error copying format() result", 0 TSRMLS_CC);
+			"Error copying format() result", 0);
 		return;
 	}
 }
 
 #define cleanup_zvals() for(int j=i;j>=0;j--) { zval_ptr_dtor((*args)+i); }
 
-U_CFUNC void umsg_parse_helper(UMessageFormat *fmt, int *count, zval **args, UChar *source, int source_len, UErrorCode *status)
+U_CFUNC void umsg_parse_helper(UMessageFormat *fmt, int *count, zval **args, UChar *source, int32_t source_len, UErrorCode *status)
 {
     UnicodeString srcString(source, source_len);
     Formattable *fargs = ((const MessageFormat*)fmt)->parse(srcString, *count, *status);
@@ -644,8 +648,7 @@ U_CFUNC void umsg_parse_helper(UMessageFormat *fmt, int *count, zval **args, UCh
 	    int64_t aInt64;
 		double aDate;
 		UnicodeString temp;
-		char *stmp;
-		int stmp_len;
+		zend_string *u8str;
 
 		switch(fargs[i].getType()) {
         case Formattable::kDate:
@@ -672,14 +675,12 @@ U_CFUNC void umsg_parse_helper(UMessageFormat *fmt, int *count, zval **args, UCh
 
         case Formattable::kString:
             fargs[i].getString(temp);
-			intl_convert_utf16_to_utf8(&stmp, &stmp_len, temp.getBuffer(), temp.length(), status);
-			if(U_FAILURE(*status)) {
+			u8str = intl_convert_utf16_to_utf8(temp.getBuffer(), temp.length(), status);
+			if(!u8str) {
 				cleanup_zvals();
 				return;
 			}
-			ZVAL_STRINGL(&(*args)[i], stmp, stmp_len);
-			//???
-			efree(stmp);
+			ZVAL_NEW_STR(&(*args)[i], u8str);
             break;
 
         case Formattable::kObject:

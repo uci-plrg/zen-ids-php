@@ -18,10 +18,11 @@
 #include "config.h"
 #endif
 
+#include "../php_intl.h"
+
 #include <unicode/ustring.h>
 #include <unicode/ucal.h>
 
-#include "../php_intl.h"
 #include "../intl_convert.h"
 #include "../common/common_date.h"
 #include "dateformat.h"
@@ -29,19 +30,19 @@
 #include "dateformat_format.h"
 #include "dateformat_data.h"
 
-/* {{{ 
+/* {{{
  * Internal function which calls the udat_format
 */
-static void internal_format(IntlDateFormatter_object *dfo, UDate timestamp, zval *return_value TSRMLS_DC)
+static void internal_format(IntlDateFormatter_object *dfo, UDate timestamp, zval *return_value)
 {
 	UChar* 	formatted =  NULL;
 	int32_t	resultlengthneeded =0 ;
-	
+
 	resultlengthneeded=udat_format( DATE_FORMAT_OBJECT(dfo), timestamp, NULL, resultlengthneeded, NULL, &INTL_DATA_ERROR_CODE(dfo));
 	if(INTL_DATA_ERROR_CODE(dfo)==U_BUFFER_OVERFLOW_ERROR)
 	{
 		INTL_DATA_ERROR_CODE(dfo)=U_ZERO_ERROR;
-		formatted=(UChar*)emalloc(sizeof(UChar) * resultlengthneeded); 
+		formatted=(UChar*)emalloc(sizeof(UChar) * resultlengthneeded);
 		udat_format( DATE_FORMAT_OBJECT(dfo), timestamp, formatted, resultlengthneeded, NULL, &INTL_DATA_ERROR_CODE(dfo));
 	}
 
@@ -56,11 +57,11 @@ static void internal_format(IntlDateFormatter_object *dfo, UDate timestamp, zval
 /* }}} */
 
 
-/* {{{ 
- * Internal function which fetches an element from the passed array for the key_name passed 
+/* {{{
+ * Internal function which fetches an element from the passed array for the key_name passed
 */
 static int32_t internal_get_arr_ele(IntlDateFormatter_object *dfo,
-		HashTable* hash_arr, char* key_name, intl_error *err TSRMLS_DC)
+		HashTable* hash_arr, char* key_name, intl_error *err)
 {
 	zval	*ele_value	= NULL;
 	int32_t	result		= 0;
@@ -74,15 +75,15 @@ static int32_t internal_get_arr_ele(IntlDateFormatter_object *dfo,
 		if(Z_TYPE_P(ele_value) != IS_LONG) {
 			spprintf(&message, 0, "datefmt_format: parameter array contains "
 					"a non-integer element for key '%s'", key_name);
-			intl_errors_set(err, U_ILLEGAL_ARGUMENT_ERROR, message, 1 TSRMLS_CC);
+			intl_errors_set(err, U_ILLEGAL_ARGUMENT_ERROR, message, 1);
 			efree(message);
 		} else {
 			if (Z_LVAL_P(ele_value) > INT32_MAX ||
 					Z_LVAL_P(ele_value) < INT32_MIN) {
-				spprintf(&message, 0, "datefmt_format: value %pd is out of "
+				spprintf(&message, 0, "datefmt_format: value " ZEND_LONG_FMT " is out of "
 						"bounds for a 32-bit integer in key '%s'",
 						Z_LVAL_P(ele_value), key_name);
-				intl_errors_set(err, U_ILLEGAL_ARGUMENT_ERROR, message, 1 TSRMLS_CC);
+				intl_errors_set(err, U_ILLEGAL_ARGUMENT_ERROR, message, 1);
 				efree(message);
 			} else {
 				result = Z_LVAL_P(ele_value);
@@ -94,11 +95,11 @@ static int32_t internal_get_arr_ele(IntlDateFormatter_object *dfo,
 }
 /* }}} */
 
-/* {{{ 
+/* {{{
  * Internal function which sets UCalendar  from the passed array and retrieves timestamp
 */
 static UDate internal_get_timestamp(IntlDateFormatter_object *dfo,
-		HashTable *hash_arr TSRMLS_DC)
+		HashTable *hash_arr)
 {
 	int32_t		year,
 				month,
@@ -111,7 +112,7 @@ static UDate internal_get_timestamp(IntlDateFormatter_object *dfo,
 	intl_error	*err = &dfo->datef_data.error;
 
 #define INTL_GET_ELEM(elem) \
-	internal_get_arr_ele(dfo, hash_arr, (elem), err TSRMLS_CC)
+	internal_get_arr_ele(dfo, hash_arr, (elem), err)
 
 	/* Fetch  values from the incoming array */
 	year	= INTL_GET_ELEM(CALENDAR_YEAR) + 1900; /* tm_year is years since 1900 */
@@ -130,7 +131,7 @@ static UDate internal_get_timestamp(IntlDateFormatter_object *dfo,
 
 	if (INTL_DATA_ERROR_CODE(dfo) != U_ZERO_ERROR) {
 		intl_errors_set(err, INTL_DATA_ERROR_CODE(dfo), "datefmt_format: "
-				"error cloning calendar", 0 TSRMLS_CC);
+				"error cloning calendar", 0);
 		return 0;
 	}
 
@@ -149,7 +150,7 @@ static UDate internal_get_timestamp(IntlDateFormatter_object *dfo,
  * Format the time value as a string. }}}*/
 /* {{{ proto string datefmt_format( [mixed]int $args or array $args )
  * Format the time value as a string. }}}*/
-PHP_FUNCTION(datefmt_format) 
+PHP_FUNCTION(datefmt_format)
 {
 	UDate 		timestamp	= 0;
 	HashTable	*hash_arr	= NULL;
@@ -158,10 +159,10 @@ PHP_FUNCTION(datefmt_format)
 	DATE_FORMAT_METHOD_INIT_VARS;
 
 	/* Parse parameters. */
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Oz",
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Oz",
 			&object, IntlDateFormatter_ce_ptr, &zarg) == FAILURE) {
 		intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR, "datefmt_format: unable "
-				"to parse input params", 0 TSRMLS_CC );
+				"to parse input params", 0 );
 		RETURN_FALSE;
 	}
 
@@ -173,17 +174,17 @@ PHP_FUNCTION(datefmt_format)
 			RETURN_FALSE;
 		}
 
-		timestamp = internal_get_timestamp(dfo, hash_arr TSRMLS_CC);
+		timestamp = internal_get_timestamp(dfo, hash_arr);
 		INTL_METHOD_CHECK_STATUS(dfo, "datefmt_format: date formatting failed")
 	} else {
 		timestamp = intl_zval_to_millis(zarg, INTL_DATA_ERROR_P(dfo),
-				"datefmt_format" TSRMLS_CC);
+				"datefmt_format");
 		if (U_FAILURE(INTL_DATA_ERROR_CODE(dfo))) {
 			RETURN_FALSE;
 		}
 	}
-	
-	internal_format( dfo, timestamp, return_value TSRMLS_CC);
+
+	internal_format( dfo, timestamp, return_value);
 }
 
 /* }}} */

@@ -1,8 +1,8 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 5                                                        |
+   | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -21,22 +21,22 @@
 #include "ext/standard/php_var.h"
 #include "ext/standard/basic_functions.h"
 
-ZEND_EXTERN_MODULE_GLOBALS(phpdbg);
+ZEND_EXTERN_MODULE_GLOBALS(phpdbg)
 
-static void phpdbg_rebuild_http_globals_array(int type, const char *name TSRMLS_DC) {
+static void phpdbg_rebuild_http_globals_array(int type, const char *name) {
 	zval *zvp;
 	if (Z_TYPE(PG(http_globals)[type]) != IS_UNDEF) {
 		zval_dtor(&PG(http_globals)[type]);
 	}
-	if ((zvp = zend_hash_str_find(&EG(symbol_table).ht, name, strlen(name)))) {
+	if ((zvp = zend_hash_str_find(&EG(symbol_table), name, strlen(name)))) {
 		Z_ADDREF_P(zvp);
 		PG(http_globals)[type] = *zvp;
 	}
 }
 
 
-static int phpdbg_dearm_autoglobals(zend_auto_global *auto_global TSRMLS_DC) {
-	if (auto_global->name->len != sizeof("GLOBALS") - 1 || memcmp(auto_global->name->val, "GLOBALS", sizeof("GLOBALS") - 1)) {
+static int phpdbg_dearm_autoglobals(zend_auto_global *auto_global) {
+	if (ZSTR_LEN(auto_global->name) != sizeof("GLOBALS") - 1 || memcmp(ZSTR_VAL(auto_global->name), "GLOBALS", sizeof("GLOBALS") - 1)) {
 		auto_global->armed = 0;
 	}
 
@@ -48,9 +48,9 @@ typedef struct {
 	HashPosition pos[2];
 } phpdbg_intersect_ptr;
 
-static int phpdbg_array_data_compare(const void *a, const void *b TSRMLS_DC) {
+static int phpdbg_array_data_compare(const void *a, const void *b) {
 	Bucket *f, *s;
-	zval result;
+	int result;
 	zval *first, *second;
 
 	f = *((Bucket **) a);
@@ -59,25 +59,23 @@ static int phpdbg_array_data_compare(const void *a, const void *b TSRMLS_DC) {
 	first = &f->val;
 	second = &s->val;
 
-	if (string_compare_function(&result, first, second TSRMLS_CC) == FAILURE) {
-		return 0;
-	}
+	result = string_compare_function(first, second);
 
-	if (Z_LVAL(result) < 0) {
+	if (result < 0) {
 		return -1;
-	} else if (Z_LVAL(result) > 0) {
+	} else if (result > 0) {
 		return 1;
 	}
 
 	return 0;
 }
 
-static void phpdbg_array_intersect_init(phpdbg_intersect_ptr *info, HashTable *ht1, HashTable *ht2 TSRMLS_DC) {
+static void phpdbg_array_intersect_init(phpdbg_intersect_ptr *info, HashTable *ht1, HashTable *ht2) {
 	info->ht[0] = ht1;
 	info->ht[1] = ht2;
 
-	zend_hash_sort(info->ht[0], zend_qsort, (compare_func_t) phpdbg_array_data_compare, 0 TSRMLS_CC);
-	zend_hash_sort(info->ht[1], zend_qsort, (compare_func_t) phpdbg_array_data_compare, 0 TSRMLS_CC);
+	zend_hash_sort(info->ht[0], (compare_func_t) phpdbg_array_data_compare, 0);
+	zend_hash_sort(info->ht[1], (compare_func_t) phpdbg_array_data_compare, 0);
 
 	zend_hash_internal_pointer_reset_ex(info->ht[0], &info->pos[0]);
 	zend_hash_internal_pointer_reset_ex(info->ht[1], &info->pos[1]);
@@ -124,14 +122,14 @@ static int phpdbg_array_intersect(phpdbg_intersect_ptr *info, zval **ptr) {
 	return ret;
 }
 
-void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
+void phpdbg_webdata_decompress(char *msg, int len) {
 	zval *free_zv = NULL;
 	zval zv, *zvp;
 	HashTable *ht;
 	php_unserialize_data_t var_hash;
 
 	PHP_VAR_UNSERIALIZE_INIT(var_hash);
-	if (!php_var_unserialize(&zv, (const unsigned char **) &msg, (unsigned char *) msg + len, &var_hash TSRMLS_CC)) {
+	if (!php_var_unserialize(&zv, (const unsigned char **) &msg, (unsigned char *) msg + len, &var_hash)) {
 		PHP_VAR_UNSERIALIZE_DESTROY(var_hash);
 		phpdbg_error("wait", "type=\"invaliddata\" import=\"fail\"", "Malformed serialized was sent to this socket, arborting");
 		return;
@@ -149,24 +147,24 @@ void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
 				if ((script = zend_hash_str_find(Z_ARRVAL_P(srv), ZEND_STRL("SCRIPT_FILENAME"))) && Z_TYPE_P(script) == IS_STRING) {
 					phpdbg_param_t param;
 					param.str = Z_STRVAL_P(script);
-					PHPDBG_COMMAND_HANDLER(exec)(&param TSRMLS_CC);
+					PHPDBG_COMMAND_HANDLER(exec)(&param);
 				}
 			}
 		}
 
 		PG(auto_globals_jit) = 0;
-		zend_hash_apply(CG(auto_globals), (apply_func_t) phpdbg_dearm_autoglobals TSRMLS_CC);
+		zend_hash_apply(CG(auto_globals), (apply_func_t) phpdbg_dearm_autoglobals);
 
-		zend_hash_clean(&EG(symbol_table).ht);
+		zend_hash_clean(&EG(symbol_table));
 		EG(symbol_table) = *Z_ARR_P(zvp);
 
 		/* Rebuild cookies, env vars etc. from GLOBALS (PG(http_globals)) */
-		phpdbg_rebuild_http_globals_array(TRACK_VARS_POST, "_POST" TSRMLS_CC);
-		phpdbg_rebuild_http_globals_array(TRACK_VARS_GET, "_GET" TSRMLS_CC);
-		phpdbg_rebuild_http_globals_array(TRACK_VARS_COOKIE, "_COOKIE" TSRMLS_CC);
-		phpdbg_rebuild_http_globals_array(TRACK_VARS_SERVER, "_SERVER" TSRMLS_CC);
-		phpdbg_rebuild_http_globals_array(TRACK_VARS_ENV, "_ENV" TSRMLS_CC);
-		phpdbg_rebuild_http_globals_array(TRACK_VARS_FILES, "_FILES" TSRMLS_CC);
+		phpdbg_rebuild_http_globals_array(TRACK_VARS_POST, "_POST");
+		phpdbg_rebuild_http_globals_array(TRACK_VARS_GET, "_GET");
+		phpdbg_rebuild_http_globals_array(TRACK_VARS_COOKIE, "_COOKIE");
+		phpdbg_rebuild_http_globals_array(TRACK_VARS_SERVER, "_SERVER");
+		phpdbg_rebuild_http_globals_array(TRACK_VARS_ENV, "_ENV");
+		phpdbg_rebuild_http_globals_array(TRACK_VARS_FILES, "_FILES");
 
 		Z_ADDREF_P(zvp);
 		free_zv = zvp;
@@ -222,7 +220,7 @@ void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
 			}
 		} ZEND_HASH_FOREACH_END();
 
-		phpdbg_array_intersect_init(&pos, &zv_registry, Z_ARRVAL_P(zvp) TSRMLS_CC);
+		phpdbg_array_intersect_init(&pos, &zv_registry, Z_ARRVAL_P(zvp));
 		do {
 			int mode = phpdbg_array_intersect(&pos, &module);
 			if (mode < 0) {
@@ -233,7 +231,7 @@ void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
 			} else if (mode > 0) {
 				// not loaded module
 				if (!sapi_module.name || strcmp(sapi_module.name, Z_STRVAL_P(module))) {
-					phpdbg_notice("wait", "missingmodule=\"%.*s\"", "The module %.*s isn't present in " PHPDBG_NAME ", you still can load via dl /path/to/module/%.*s.so", Z_STRLEN_P(module), Z_STRVAL_P(module), Z_STRLEN_P(module), Z_STRVAL_P(module));
+					phpdbg_notice("wait", "missingmodule=\"%.*s\"", "The module %.*s isn't present in " PHPDBG_NAME ", you still can load via dl /path/to/module/%.*s.so", (int) Z_STRLEN_P(module), Z_STRVAL_P(module), (int) Z_STRLEN_P(module), Z_STRVAL_P(module));
 				}
 			}
 		} while (module);
@@ -283,23 +281,18 @@ void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
 				pefree(elm, zend_extensions.persistent);
 				zend_extensions.count--;
 			} else {
-/*				zend_hash_get_current_key_zval_ex(Z_ARRVAL_PP(zvpp), &key, &hpos);
-				if (Z_TYPE(key) == IS_LONG) {
-					zend_hash_index_del(Z_ARRVAL_PP(zvpp), Z_LVAL(key));
-				}
-*/
 				zend_hash_del(Z_ARRVAL_P(zvp), strkey);
 			}
 		}
 
 		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(zvp), name) {
 			if (Z_TYPE_P(name) == IS_STRING) {
-				phpdbg_notice("wait", "missingextension=\"%.*s\"", "The Zend extension %.*s isn't present in " PHPDBG_NAME ", you still can load via dl /path/to/extension.so", Z_STRLEN_P(name), Z_STRVAL_P(name));
+				phpdbg_notice("wait", "missingextension=\"%.*s\"", "The Zend extension %.*s isn't present in " PHPDBG_NAME ", you still can load via dl /path/to/extension.so", (int) Z_STRLEN_P(name), Z_STRVAL_P(name));
 			}
 		} ZEND_HASH_FOREACH_END();
 	}
 
-	zend_ini_deactivate(TSRMLS_C);
+	zend_ini_deactivate();
 
 	if ((zvp = zend_hash_str_find(ht, ZEND_STRL("systemini"))) && Z_TYPE_P(zvp) == IS_ARRAY) {
 		zval *ini_entry;
@@ -309,7 +302,7 @@ void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(zvp), key, ini_entry) {
 			if (key && Z_TYPE_P(ini_entry) == IS_STRING) {
 				if ((original_ini = zend_hash_find_ptr(EG(ini_directives), key))) {
-					if (!original_ini->on_modify || original_ini->on_modify(original_ini, Z_STR_P(ini_entry), original_ini->mh_arg1, original_ini->mh_arg2, original_ini->mh_arg3, ZEND_INI_STAGE_ACTIVATE TSRMLS_CC) == SUCCESS) {
+					if (!original_ini->on_modify || original_ini->on_modify(original_ini, Z_STR_P(ini_entry), original_ini->mh_arg1, original_ini->mh_arg2, original_ini->mh_arg3, ZEND_INI_STAGE_ACTIVATE) == SUCCESS) {
 						if (original_ini->modified && original_ini->orig_value != original_ini->value) {
 							efree(original_ini->value);
 						}
@@ -327,7 +320,7 @@ void phpdbg_webdata_decompress(char *msg, int len TSRMLS_DC) {
 
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(zvp), key, ini_entry) {
 			if (key && Z_TYPE_P(ini_entry) == IS_STRING) {
-				zend_alter_ini_entry_ex(key, Z_STR_P(ini_entry), ZEND_INI_PERDIR, ZEND_INI_STAGE_HTACCESS, 1 TSRMLS_CC);
+				zend_alter_ini_entry_ex(key, Z_STR_P(ini_entry), ZEND_INI_PERDIR, ZEND_INI_STAGE_HTACCESS, 1);
 			}
 		} ZEND_HASH_FOREACH_END();
 	}
@@ -384,7 +377,7 @@ PHPDBG_COMMAND(wait) /* {{{ */
 		recvd -= recv(sr, &(data[(*(int *) msglen) - recvd]), recvd, 0);
 	} while (recvd > 0);
 
-	phpdbg_webdata_decompress(data, *(int *) msglen TSRMLS_CC);
+	phpdbg_webdata_decompress(data, *(int *) msglen);
 
 	if (PHPDBG_G(socket_fd) != -1) {
 		close(PHPDBG_G(socket_fd));

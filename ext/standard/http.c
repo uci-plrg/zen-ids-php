@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -29,14 +29,14 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 				const char *num_prefix, size_t num_prefix_len,
 				const char *key_prefix, size_t key_prefix_len,
 				const char *key_suffix, size_t key_suffix_len,
-			  zval *type, char *arg_sep, int enc_type TSRMLS_DC)
+			  zval *type, char *arg_sep, int enc_type)
 {
 	zend_string *key = NULL;
 	char *newprefix, *p;
 	const char *prop_name;
 	size_t arg_sep_len, newprefix_len, prop_len;
 	zend_ulong idx;
-	zval *zdata = NULL, copyzval;
+	zval *zdata = NULL;
 
 	if (!ht) {
 		return FAILURE;
@@ -58,24 +58,25 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 	ZEND_HASH_FOREACH_KEY_VAL_IND(ht, idx, key, zdata) {
 		/* handling for private & protected object properties */
 		if (key) {
-			if (key->val[0] == '\0' && type != NULL) {
+			if (ZSTR_VAL(key)[0] == '\0' && type != NULL) {
 				const char *tmp;
 
 				zend_object *zobj = Z_OBJ_P(type);
-				if (zend_check_property_access(zobj, key TSRMLS_CC) != SUCCESS) {
+				if (zend_check_property_access(zobj, key) != SUCCESS) {
 					/* private or protected property access outside of the class */
 					continue;
 				}
 				zend_unmangle_property_name_ex(key, &tmp, &prop_name, &prop_len);
 			} else {
-				prop_name = key->val;
-				prop_len = key->len;
+				prop_name = ZSTR_VAL(key);
+				prop_len = ZSTR_LEN(key);
 			}
 		} else {
 			prop_name = NULL;
 			prop_len = 0;
 		}
 
+		ZVAL_DEREF(zdata);
 		if (Z_TYPE_P(zdata) == IS_ARRAY || Z_TYPE_P(zdata) == IS_OBJECT) {
 			if (key) {
 				zend_string *ekey;
@@ -84,7 +85,7 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 				} else {
 					ekey = php_url_encode(prop_name, prop_len);
 				}
-				newprefix_len = key_suffix_len + ekey->len + key_prefix_len + 3 /* %5B */;
+				newprefix_len = key_suffix_len + ZSTR_LEN(ekey) + key_prefix_len + 3 /* %5B */;
 				newprefix = emalloc(newprefix_len + 1);
 				p = newprefix;
 
@@ -93,8 +94,8 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 					p += key_prefix_len;
 				}
 
-				memcpy(p, ekey->val, ekey->len);
-				p += ekey->len;
+				memcpy(p, ZSTR_VAL(ekey), ZSTR_LEN(ekey));
+				p += ZSTR_LEN(ekey);
 				zend_string_free(ekey);
 
 				if (key_suffix) {
@@ -109,7 +110,7 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 				char *ekey;
 				size_t ekey_len;
 				/* Is an integer key */
-				ekey_len = spprintf(&ekey, 0, "%pd", idx);
+				ekey_len = spprintf(&ekey, 0, ZEND_LONG_FMT, idx);
 				newprefix_len = key_prefix_len + num_prefix_len + ekey_len + key_suffix_len + 3 /* %5B */;
 				newprefix = emalloc(newprefix_len + 1);
 				p = newprefix;
@@ -138,7 +139,7 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 			if (ZEND_HASH_APPLY_PROTECTION(ht)) {
 				ht->u.v.nApplyCount++;
 			}
-			php_url_encode_hash_ex(HASH_OF(zdata), formstr, NULL, 0, newprefix, newprefix_len, "%5D", 3, (Z_TYPE_P(zdata) == IS_OBJECT ? zdata : NULL), arg_sep, enc_type TSRMLS_CC);
+			php_url_encode_hash_ex(HASH_OF(zdata), formstr, NULL, 0, newprefix, newprefix_len, "%5D", 3, (Z_TYPE_P(zdata) == IS_OBJECT ? zdata : NULL), arg_sep, enc_type);
 			if (ZEND_HASH_APPLY_PROTECTION(ht)) {
 				ht->u.v.nApplyCount--;
 			}
@@ -176,7 +177,7 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 						if (enc_type == PHP_QUERY_RFC3986) {
 							ekey = php_raw_url_encode(Z_STRVAL_P(zdata), Z_STRLEN_P(zdata));
 						} else {
-							ekey = php_url_encode(Z_STRVAL_P(zdata), Z_STRLEN_P(zdata));						
+							ekey = php_url_encode(Z_STRVAL_P(zdata), Z_STRLEN_P(zdata));
 						}
 						smart_str_append(formstr, ekey);
 						zend_string_free(ekey);
@@ -203,16 +204,14 @@ PHPAPI int php_url_encode_hash_ex(HashTable *ht, smart_str *formstr,
 				default:
 					{
 						zend_string *ekey;
-						/* fall back on convert to string */
-						ZVAL_DUP(&copyzval, zdata);
-						convert_to_string_ex(&copyzval);
+						zend_string *tmp = zval_get_string(zdata);
 						if (enc_type == PHP_QUERY_RFC3986) {
-							ekey = php_raw_url_encode(Z_STRVAL(copyzval), Z_STRLEN(copyzval));
+							ekey = php_raw_url_encode(ZSTR_VAL(tmp), ZSTR_LEN(tmp));
 						} else {
-							ekey = php_url_encode(Z_STRVAL(copyzval), Z_STRLEN(copyzval));
+							ekey = php_url_encode(ZSTR_VAL(tmp), ZSTR_LEN(tmp));
 						}
 						smart_str_append(formstr, ekey);
-						zval_ptr_dtor(&copyzval);
+						zend_string_release(tmp);
 						zend_string_free(ekey);
 					}
 			}
@@ -233,16 +232,16 @@ PHP_FUNCTION(http_build_query)
 	smart_str formstr = {0};
 	zend_long enc_type = PHP_QUERY_RFC1738;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|ssl", &formdata, &prefix, &prefix_len, &arg_sep, &arg_sep_len, &enc_type) != SUCCESS) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|ssl", &formdata, &prefix, &prefix_len, &arg_sep, &arg_sep_len, &enc_type) != SUCCESS) {
 		RETURN_FALSE;
 	}
 
 	if (Z_TYPE_P(formdata) != IS_ARRAY && Z_TYPE_P(formdata) != IS_OBJECT) {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Parameter 1 expected to be Array or Object.  Incorrect value given");
+		php_error_docref(NULL, E_WARNING, "Parameter 1 expected to be Array or Object.  Incorrect value given");
 		RETURN_FALSE;
 	}
 
-	if (php_url_encode_hash_ex(HASH_OF(formdata), &formstr, prefix, prefix_len, NULL, 0, NULL, 0, (Z_TYPE_P(formdata) == IS_OBJECT ? formdata : NULL), arg_sep, (int)enc_type TSRMLS_CC) == FAILURE) {
+	if (php_url_encode_hash_ex(HASH_OF(formdata), &formstr, prefix, prefix_len, NULL, 0, NULL, 0, (Z_TYPE_P(formdata) == IS_OBJECT ? formdata : NULL), arg_sep, (int)enc_type) == FAILURE) {
 		if (formstr.s) {
 			smart_str_free(&formstr);
 		}
@@ -254,8 +253,8 @@ PHP_FUNCTION(http_build_query)
 	}
 
 	smart_str_0(&formstr);
-	
-	RETURN_STR(formstr.s);
+
+	RETURN_NEW_STR(formstr.s);
 }
 /* }}} */
 

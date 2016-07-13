@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend Engine                                                          |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2014 Zend Technologies Ltd. (http://www.zend.com) |
+   | Copyright (c) 1998-2016 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -23,6 +23,7 @@
 #define ZEND_OBJECTS_API_H
 
 #include "zend.h"
+#include "zend_compile.h"
 
 #define OBJ_BUCKET_INVALID			(1<<0)
 
@@ -37,7 +38,7 @@
 	} while (0)
 
 
-#define OBJ_RELEASE(obj) zend_object_release(obj TSRMLS_CC)
+#define OBJ_RELEASE(obj) zend_object_release(obj)
 
 typedef struct _zend_objects_store {
 	zend_object **object_buckets;
@@ -49,35 +50,42 @@ typedef struct _zend_objects_store {
 /* Global store handling functions */
 BEGIN_EXTERN_C()
 ZEND_API void zend_objects_store_init(zend_objects_store *objects, uint32_t init_size);
-ZEND_API void zend_objects_store_call_destructors(zend_objects_store *objects TSRMLS_DC);
-ZEND_API void zend_objects_store_mark_destructed(zend_objects_store *objects TSRMLS_DC);
+ZEND_API void zend_objects_store_call_destructors(zend_objects_store *objects);
+ZEND_API void zend_objects_store_mark_destructed(zend_objects_store *objects);
 ZEND_API void zend_objects_store_destroy(zend_objects_store *objects);
 
 /* Store API functions */
-ZEND_API void zend_objects_store_put(zend_object *object TSRMLS_DC);
-ZEND_API void zend_objects_store_del(zend_object *object TSRMLS_DC);
-ZEND_API void zend_objects_store_free(zend_object *object TSRMLS_DC);
+ZEND_API void zend_objects_store_put(zend_object *object);
+ZEND_API void zend_objects_store_del(zend_object *object);
+ZEND_API void zend_objects_store_free(zend_object *object);
 
 /* See comment in zend_objects_API.c before you use this */
-ZEND_API void zend_object_store_set_object(zval *zobject, zend_object *object TSRMLS_DC);
-ZEND_API void zend_object_store_ctor_failed(zend_object *object TSRMLS_DC);
+ZEND_API void zend_object_store_set_object(zval *zobject, zend_object *object);
+ZEND_API void zend_object_store_ctor_failed(zend_object *object);
 
-ZEND_API void zend_objects_store_free_object_storage(zend_objects_store *objects TSRMLS_DC);
+ZEND_API void zend_objects_store_free_object_storage(zend_objects_store *objects);
 
 #define ZEND_OBJECTS_STORE_HANDLERS 0, zend_object_std_dtor, zend_objects_destroy_object, zend_objects_clone_obj
 
-ZEND_API zend_object *zend_object_create_proxy(zval *object, zval *member TSRMLS_DC);
+ZEND_API zend_object *zend_object_create_proxy(zval *object, zval *member);
 
 ZEND_API zend_object_handlers *zend_get_std_object_handlers(void);
 END_EXTERN_C()
 
-static zend_always_inline void zend_object_release(zend_object *obj TSRMLS_DC)
+static zend_always_inline void zend_object_release(zend_object *obj)
 {
 	if (--GC_REFCOUNT(obj) == 0) {
-		zend_objects_store_del(obj TSRMLS_CC);
+		zend_objects_store_del(obj);
 	} else if (UNEXPECTED(!GC_INFO(obj))) {
-		gc_possible_root(&obj->gc TSRMLS_CC);
+		gc_possible_root((zend_refcounted*)obj);
 	}
+}
+
+static zend_always_inline size_t zend_object_properties_size(zend_class_entry *ce)
+{
+	return sizeof(zval) *
+		(ce->default_properties_count -
+			((ce->ce_flags & ZEND_ACC_USE_GUARDS) ? 0 : 1));
 }
 
 #endif /* ZEND_OBJECTS_H */

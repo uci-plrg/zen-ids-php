@@ -7,7 +7,7 @@ include "skipif.inc";
 --FILE--
 <?php
 include "php_cli_server.inc";
-php_cli_server_start(NULL, TRUE);
+php_cli_server_start(NULL, NULL);
 
 list($host, $port) = explode(':', PHP_CLI_SERVER_ADDRESS);
 $port = intval($port)?:80;
@@ -83,6 +83,7 @@ fclose($fp);
 
 HTTP/1.1 404 Not Found
 Host: %s
+Date: %s
 Connection: close
 Content-Type: text/html; charset=UTF-8
 Content-Length: %d
@@ -91,6 +92,7 @@ Content-Length: %d
 </head><body><h1>Not Found</h1><p>The requested resource <code class="url">/</code> was not found on this server.</p></body></html>
 HTTP/1.1 404 Not Found
 Host: %s
+Date: %s
 Connection: close
 Content-Type: text/html; charset=UTF-8
 Content-Length: %d
@@ -99,6 +101,7 @@ Content-Length: %d
 </head><body><h1>Not Found</h1><p>The requested resource <code class="url">/main/style.css</code> was not found on this server.</p></body></html>
 HTTP/1.1 404 Not Found
 Host: %s
+Date: %s
 Connection: close
 Content-Type: text/html; charset=UTF-8
 Content-Length: %d

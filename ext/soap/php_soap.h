@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -35,9 +35,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 
-#ifndef PHP_HAVE_STREAMS
-# error You lose - must be compiled against PHP 4.3.0 or later
-#endif
+#define PHP_SOAP_VERSION PHP_VERSION
 
 #ifndef PHP_WIN32
 # define TRUE 1
@@ -92,7 +90,7 @@ struct _soapService {
 		zend_class_entry *ce;
 		zval *argv;
 		int argc;
-		int persistance;
+		int persistence;
 	} soap_class;
 
 	zval soap_object;
@@ -191,16 +189,15 @@ extern zend_module_entry soap_module_entry;
 #define phpext_soap_ptr soap_module_ptr
 
 ZEND_EXTERN_MODULE_GLOBALS(soap)
+#define SOAP_GLOBAL(v) ZEND_MODULE_GLOBALS_ACCESSOR(soap, v)
 
-#ifdef ZTS
-# define SOAP_GLOBAL(v) TSRMG(soap_globals_id, zend_soap_globals *, v)
-#else
-# define SOAP_GLOBAL(v) (soap_globals.v)
+#if defined(ZTS) && defined(COMPILE_DL_SOAP)
+ZEND_TSRMLS_CACHE_EXTERN()
 #endif
 
 extern zend_class_entry* soap_var_class_entry;
 
-void add_soap_fault(zval *obj, char *fault_code, char *fault_string, char *fault_actor, zval *fault_detail TSRMLS_DC);
+void add_soap_fault(zval *obj, char *fault_code, char *fault_string, char *fault_actor, zval *fault_detail);
 
 #define soap_error0(severity, format) \
 	php_error(severity, "SOAP-ERROR: " format)

@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -47,12 +47,8 @@ static const zend_module_dep xsl_deps[] = {
 /* {{{ xsl_module_entry
  */
 zend_module_entry xsl_module_entry = {
-#if ZEND_MODULE_API_NO >= 20050617
 	STANDARD_MODULE_HEADER_EX, NULL,
 	xsl_deps,
-#elif ZEND_MODULE_API_NO >= 20010901
-	STANDARD_MODULE_HEADER,
-#endif
 	"xsl",
 	xsl_functions,
 	PHP_MINIT(xsl),
@@ -60,9 +56,7 @@ zend_module_entry xsl_module_entry = {
 	NULL,
 	NULL,
 	PHP_MINFO(xsl),
-#if ZEND_MODULE_API_NO >= 20010901
-	"0.1", /* Replace with version number for your extension */
-#endif
+	PHP_XSL_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
@@ -72,32 +66,32 @@ ZEND_GET_MODULE(xsl)
 #endif
 
 /* {{{ xsl_objects_free_storage */
-void xsl_objects_free_storage(zend_object *object TSRMLS_DC)
+void xsl_objects_free_storage(zend_object *object)
 {
 	xsl_object *intern = php_xsl_fetch_object(object);
 
-	zend_object_std_dtor(&intern->std TSRMLS_CC);
+	zend_object_std_dtor(&intern->std);
 
 	zend_hash_destroy(intern->parameter);
 	FREE_HASHTABLE(intern->parameter);
-	
+
 	zend_hash_destroy(intern->registered_phpfunctions);
 	FREE_HASHTABLE(intern->registered_phpfunctions);
-	
+
 	if (intern->node_list) {
 		zend_hash_destroy(intern->node_list);
 		FREE_HASHTABLE(intern->node_list);
 	}
 
 	if (intern->doc) {
-		php_libxml_decrement_doc_ref(intern->doc TSRMLS_CC);
+		php_libxml_decrement_doc_ref(intern->doc);
 		efree(intern->doc);
 	}
 
 	if (intern->ptr) {
 		/* free wrapper */
 		if (((xsltStylesheetPtr) intern->ptr)->_private != NULL) {
-			((xsltStylesheetPtr) intern->ptr)->_private = NULL;   
+			((xsltStylesheetPtr) intern->ptr)->_private = NULL;
 		}
 
 		xsltFreeStylesheet((xsltStylesheetPtr) intern->ptr);
@@ -110,14 +104,14 @@ void xsl_objects_free_storage(zend_object *object TSRMLS_DC)
 /* }}} */
 
 /* {{{ xsl_objects_new */
-zend_object *xsl_objects_new(zend_class_entry *class_type TSRMLS_DC)
+zend_object *xsl_objects_new(zend_class_entry *class_type)
 {
 	xsl_object *intern;
 
-	intern = ecalloc(1, sizeof(xsl_object) + sizeof(zval) * (class_type->default_properties_count - 1));
+	intern = ecalloc(1, sizeof(xsl_object) + zend_object_properties_size(class_type));
 	intern->securityPrefs = XSL_SECPREF_DEFAULT;
 
-	zend_object_std_init(&intern->std, class_type TSRMLS_CC);
+	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
 	ALLOC_HASHTABLE(intern->parameter);
 	zend_hash_init(intern->parameter, 0, NULL, ZVAL_PTR_DTOR, 0);
@@ -129,20 +123,13 @@ zend_object *xsl_objects_new(zend_class_entry *class_type TSRMLS_DC)
 }
 /* }}} */
 
-PHP_INI_BEGIN()
-/* Default is not allowing any write operations. 
-   XSL_SECPREF_CREATE_DIRECTORY | XSL_SECPREF_WRITE_NETWORK | XSL_SECPREF_WRITE_FILE == 44 
-*/
-PHP_INI_ENTRY("xsl.security_prefs", "44", PHP_INI_ALL, NULL)
-PHP_INI_END()
-
 /* {{{ PHP_MINIT_FUNCTION
  */
 PHP_MINIT_FUNCTION(xsl)
 {
-	
+
 	zend_class_entry ce;
-	
+
 	memcpy(&xsl_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	xsl_object_handlers.offset = XtOffsetOf(xsl_object, std);
 	xsl_object_handlers.clone_obj = NULL;
@@ -152,7 +139,7 @@ PHP_MINIT_FUNCTION(xsl)
 #if HAVE_XSL_EXSLT
 	exsltRegisterAll();
 #endif
- 
+
 	xsltRegisterExtModuleFunction ((const xmlChar *) "functionString",
 				   (const xmlChar *) "http://php.net/xsl",
 				   xsl_ext_function_string_php);
@@ -181,8 +168,6 @@ PHP_MINIT_FUNCTION(xsl)
 	REGISTER_STRING_CONSTANT("LIBEXSLT_DOTTED_VERSION",  LIBEXSLT_DOTTED_VERSION,     CONST_CS | CONST_PERSISTENT);
 #endif
 
-    REGISTER_INI_ENTRIES();
-
 	return SUCCESS;
 }
 /* }}} */
@@ -197,25 +182,25 @@ zval *xsl_object_get_data(void *obj)
 /* }}} */
 
 /* {{{ xsl_object_set_data */
-static void xsl_object_set_data(void *obj, zval *wrapper TSRMLS_DC)
+static void xsl_object_set_data(void *obj, zval *wrapper)
 {
 	((xsltStylesheetPtr) obj)->_private = wrapper;
 }
 /* }}} */
 
 /* {{{ php_xsl_set_object */
-void php_xsl_set_object(zval *wrapper, void *obj TSRMLS_DC)
+void php_xsl_set_object(zval *wrapper, void *obj)
 {
 	xsl_object *object;
 
 	object = Z_XSL_P(wrapper);
 	object->ptr = obj;
-	xsl_object_set_data(obj, wrapper TSRMLS_CC);
+	xsl_object_set_data(obj, wrapper);
 }
 /* }}} */
 
 /* {{{ php_xsl_create_object */
-void php_xsl_create_object(xsltStylesheetPtr obj, zval *wrapper_in, zval *return_value  TSRMLS_DC)
+void php_xsl_create_object(xsltStylesheetPtr obj, zval *wrapper_in, zval *return_value )
 {
 	zval *wrapper;
 	zend_class_entry *ce;
@@ -237,13 +222,13 @@ void php_xsl_create_object(xsltStylesheetPtr obj, zval *wrapper_in, zval *return
 		wrapper = wrapper_in;
 	}
 
-	
+
 	ce = xsl_xsltprocessor_class_entry;
 
 	if (!wrapper_in) {
 		object_init_ex(wrapper, ce);
 	}
-	php_xsl_set_object(wrapper, (void *) obj TSRMLS_CC);
+	php_xsl_set_object(wrapper, (void *) obj);
 
 	return;
 }
@@ -259,8 +244,6 @@ PHP_MSHUTDOWN_FUNCTION(xsl)
 				   (const xmlChar *) "http://php.net/xsl");
 	xsltSetGenericErrorFunc(NULL, NULL);
 	xsltCleanupGlobals();
-
-	UNREGISTER_INI_ENTRIES();
 
 	return SUCCESS;
 }

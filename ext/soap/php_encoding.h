@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -183,23 +183,23 @@ struct _encodeType {
 
 struct _encode {
 	encodeType details;
-	zval *(*to_zval)(zval *ret, encodeTypePtr type, xmlNodePtr data TSRMLS_DC);
-	xmlNodePtr (*to_xml)(encodeTypePtr type, zval *data, int style, xmlNodePtr parent TSRMLS_DC);
+	zval *(*to_zval)(zval *ret, encodeTypePtr type, xmlNodePtr data);
+	xmlNodePtr (*to_xml)(encodeTypePtr type, zval *data, int style, xmlNodePtr parent);
 };
 
 /* Master functions all encode/decode should be called thur these functions */
-xmlNodePtr master_to_xml(encodePtr encode, zval *data, int style, xmlNodePtr parent TSRMLS_DC);
-zval *master_to_zval(zval *ret, encodePtr encode, xmlNodePtr data TSRMLS_DC);
+xmlNodePtr master_to_xml(encodePtr encode, zval *data, int style, xmlNodePtr parent);
+zval *master_to_zval(zval *ret, encodePtr encode, xmlNodePtr data);
 
 /* user defined mapping */
-xmlNodePtr to_xml_user(encodeTypePtr type, zval *data, int style, xmlNodePtr parent TSRMLS_DC);
-zval *to_zval_user(zval *ret, encodeTypePtr type, xmlNodePtr node TSRMLS_DC);
+xmlNodePtr to_xml_user(encodeTypePtr type, zval *data, int style, xmlNodePtr parent);
+zval *to_zval_user(zval *ret, encodeTypePtr type, xmlNodePtr node);
 
 void whiteSpace_replace(xmlChar* str);
 void whiteSpace_collapse(xmlChar* str);
 
-xmlNodePtr sdl_guess_convert_xml(encodeTypePtr enc, zval* data, int style, xmlNodePtr parent TSRMLS_DC);
-zval *sdl_guess_convert_zval(zval *ret, encodeTypePtr enc, xmlNodePtr data TSRMLS_DC);
+xmlNodePtr sdl_guess_convert_xml(encodeTypePtr enc, zval* data, int style, xmlNodePtr parent);
+zval *sdl_guess_convert_zval(zval *ret, encodeTypePtr enc, xmlNodePtr data);
 
 void encode_finish();
 void encode_reset_ns();

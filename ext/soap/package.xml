@@ -34,7 +34,7 @@
     <date>2002-07-07</date>
     <state>alpha</state>
     <notes>
-	- First offical PEAR/PECL release
+	- First official PEAR/PECL release
     </notes>
   </release>
   <filelist>
@@ -58,7 +58,6 @@
       <file role="src">php_xml.c</file>
       <file role="src">php_xml.h</file>
       <file role="src">soap.c</file>
-      <file role="src">php_soap.dsp</file>
     </dir>
   </filelist>
 </package>

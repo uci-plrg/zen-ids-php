@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -35,39 +35,35 @@ ZEND_END_ARG_INFO();
 /* }}} */
 
 /*
-* class DOMComment extends DOMCharacterData 
+* class DOMComment extends DOMCharacterData
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ID-1728279322
-* Since: 
+* Since:
 */
 
 const zend_function_entry php_dom_comment_class_functions[] = {
 	PHP_ME(domcomment, __construct, arginfo_dom_comment_construct, ZEND_ACC_PUBLIC)
-	{NULL, NULL, NULL}
+	PHP_FE_END
 };
 
 /* {{{ proto void DOMComment::__construct([string value]); */
 PHP_METHOD(domcomment, __construct)
 {
 
-	zval *id;
+	zval *id = getThis();
 	xmlNodePtr nodep = NULL, oldnode = NULL;
 	dom_object *intern;
 	char *value = NULL;
 	size_t value_len;
-	zend_error_handling error_handling;
 
-	zend_replace_error_handling(EH_THROW, dom_domexception_class_entry, &error_handling TSRMLS_CC);
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O|s", &id, dom_comment_class_entry, &value, &value_len) == FAILURE) {
-		zend_restore_error_handling(&error_handling TSRMLS_CC);
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "|s", &value, &value_len) == FAILURE) {
 		return;
 	}
 
-	zend_restore_error_handling(&error_handling TSRMLS_CC);
 	nodep = xmlNewComment((xmlChar *) value);
 
 	if (!nodep) {
-		php_dom_throw_error(INVALID_STATE_ERR, 1 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 1);
 		RETURN_FALSE;
 	}
 
@@ -75,9 +71,9 @@ PHP_METHOD(domcomment, __construct)
 	if (intern != NULL) {
 		oldnode = dom_object_get_node(intern);
 		if (oldnode != NULL) {
-			php_libxml_node_free_resource(oldnode  TSRMLS_CC);
+			php_libxml_node_free_resource(oldnode );
 		}
-		php_libxml_increment_node_ptr((php_libxml_node_object *)intern, (xmlNodePtr)nodep, (void *)intern TSRMLS_CC);
+		php_libxml_increment_node_ptr((php_libxml_node_object *)intern, (xmlNodePtr)nodep, (void *)intern);
 	}
 }
 /* }}} end DOMComment::__construct */

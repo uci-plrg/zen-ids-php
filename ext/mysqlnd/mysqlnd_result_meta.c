@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2006-2014 The PHP Group                                |
+  | Copyright (c) 2006-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -12,15 +12,15 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Authors: Andrey Hristov <andrey@mysql.com>                           |
-  |          Ulf Wendel <uwendel@mysql.com>                              |
-  |          Georg Richter <georg@mysql.com>                             |
+  | Authors: Andrey Hristov <andrey@php.net>                             |
+  |          Ulf Wendel <uw@php.net>                                     |
   +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
 #include "php.h"
 #include "mysqlnd.h"
+#include "mysqlnd_connection.h"
+#include "mysqlnd_ps.h"
 #include "mysqlnd_priv.h"
 #include "mysqlnd_result.h"
 #include "mysqlnd_wireprotocol.h"
@@ -30,7 +30,7 @@
 
 /* {{{ php_mysqlnd_free_field_metadata */
 static void
-php_mysqlnd_free_field_metadata(MYSQLND_FIELD *meta, zend_bool persistent TSRMLS_DC)
+php_mysqlnd_free_field_metadata(MYSQLND_FIELD *meta, zend_bool persistent)
 {
 	if (meta) {
 		if (meta->root) {
@@ -50,16 +50,16 @@ php_mysqlnd_free_field_metadata(MYSQLND_FIELD *meta, zend_bool persistent TSRMLS
 
 /* {{{ mysqlnd_res_meta::read_metadata */
 static enum_func_status
-MYSQLND_METHOD(mysqlnd_res_meta, read_metadata)(MYSQLND_RES_METADATA * const meta, MYSQLND_CONN_DATA * conn TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, read_metadata)(MYSQLND_RES_METADATA * const meta, MYSQLND_CONN_DATA * conn)
 {
 	unsigned int i = 0;
 	MYSQLND_PACKET_RES_FIELD * field_packet;
 
 	DBG_ENTER("mysqlnd_res_meta::read_metadata");
 
-	field_packet = conn->protocol->m.get_result_field_packet(conn->protocol, FALSE TSRMLS_CC);
+	field_packet = conn->payload_decoder_factory->m.get_result_field_packet(conn->payload_decoder_factory, FALSE);
 	if (!field_packet) {
-		SET_OOM_ERROR(*conn->error_info);
+		SET_OOM_ERROR(conn->error_info);
 		DBG_RETURN(FAIL);
 	}
 	field_packet->persistent_alloc = meta->persistent;
@@ -73,29 +73,20 @@ MYSQLND_METHOD(mysqlnd_res_meta, read_metadata)(MYSQLND_RES_METADATA * const met
 		}
 
 		field_packet->metadata = &(meta->fields[i]);
-		if (FAIL == PACKET_READ(field_packet, conn)) {
+		if (FAIL == PACKET_READ(field_packet)) {
 			PACKET_FREE(field_packet);
 			DBG_RETURN(FAIL);
 		}
 		if (field_packet->error_info.error_no) {
-			COPY_CLIENT_ERROR(*conn->error_info, field_packet->error_info);
+			COPY_CLIENT_ERROR(conn->error_info, field_packet->error_info);
 			/* Return back from CONN_QUERY_SENT */
 			PACKET_FREE(field_packet);
 			DBG_RETURN(FAIL);
 		}
 
-		if (field_packet->stupid_list_fields_eof == TRUE) {
-			meta->field_count = i;
-			break;
-		}
-
 		if (mysqlnd_ps_fetch_functions[meta->fields[i].type].func == NULL) {
-			DBG_ERR_FMT("Unknown type %u sent by the server.  Please send a report to the developers",
-						meta->fields[i].type);
-			php_error_docref(NULL TSRMLS_CC, E_WARNING,
-							 "Unknown type %u sent by the server. "
-							 "Please send a report to the developers",
-							 meta->fields[i].type);
+			DBG_ERR_FMT("Unknown type %u sent by the server.  Please send a report to the developers", meta->fields[i].type);
+			php_error_docref(NULL, E_WARNING, "Unknown type %u sent by the server. Please send a report to the developers", meta->fields[i].type);
 			PACKET_FREE(field_packet);
 			DBG_RETURN(FAIL);
 		}
@@ -137,7 +128,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, read_metadata)(MYSQLND_RES_METADATA * const met
 		/* For BC we have to check whether the key is numeric and use it like this */
 		if ((meta->zend_hash_keys[i].is_numeric = ZEND_HANDLE_NUMERIC(field_packet->metadata->sname, idx))) {
 			meta->zend_hash_keys[i].key = idx;
-		} 
+		}
 	}
 	PACKET_FREE(field_packet);
 
@@ -148,7 +139,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, read_metadata)(MYSQLND_RES_METADATA * const met
 
 /* {{{ mysqlnd_res_meta::free */
 static void
-MYSQLND_METHOD(mysqlnd_res_meta, free)(MYSQLND_RES_METADATA * meta TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, free)(MYSQLND_RES_METADATA * meta)
 {
 	int i;
 	MYSQLND_FIELD *fields;
@@ -159,7 +150,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, free)(MYSQLND_RES_METADATA * meta TSRMLS_DC)
 		DBG_INF("Freeing fields metadata");
 		i = meta->field_count;
 		while (i--) {
-			php_mysqlnd_free_field_metadata(fields++, meta->persistent TSRMLS_CC);
+			php_mysqlnd_free_field_metadata(fields++, meta->persistent);
 		}
 		mnd_pefree(meta->fields, meta->persistent);
 		meta->fields = NULL;
@@ -180,7 +171,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, free)(MYSQLND_RES_METADATA * meta TSRMLS_DC)
 
 /* {{{ mysqlnd_res::clone_metadata */
 static MYSQLND_RES_METADATA *
-MYSQLND_METHOD(mysqlnd_res_meta, clone_metadata)(const MYSQLND_RES_METADATA * const meta, zend_bool persistent TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, clone_metadata)(const MYSQLND_RES_METADATA * const meta, const zend_bool persistent)
 {
 	unsigned int i;
 	/* +1 is to have empty marker at the end */
@@ -227,8 +218,8 @@ MYSQLND_METHOD(mysqlnd_res_meta, clone_metadata)(const MYSQLND_RES_METADATA * co
 
 		if (orig_fields[i].sname) {
 			new_fields[i].sname = zend_string_copy(orig_fields[i].sname);
-			new_fields[i].name = new_fields[i].sname->val;
-			new_fields[i].name_length = new_fields[i].sname->len;
+			new_fields[i].name = ZSTR_VAL(new_fields[i].sname);
+			new_fields[i].name_length = ZSTR_LEN(new_fields[i].sname);
 		}
 
 		if (orig_fields[i].org_name && orig_fields[i].org_name != mysqlnd_empty_string) {
@@ -267,7 +258,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, clone_metadata)(const MYSQLND_RES_METADATA * co
 	DBG_RETURN(new_meta);
 oom:
 	if (new_meta) {
-		new_meta->m->free_metadata(new_meta TSRMLS_CC);
+		new_meta->m->free_metadata(new_meta);
 		new_meta = NULL;
 	}
 	DBG_RETURN(NULL);
@@ -277,7 +268,7 @@ oom:
 
 /* {{{ mysqlnd_res_meta::fetch_field */
 static const MYSQLND_FIELD *
-MYSQLND_METHOD(mysqlnd_res_meta, fetch_field)(MYSQLND_RES_METADATA * const meta TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, fetch_field)(MYSQLND_RES_METADATA * const meta)
 {
 	DBG_ENTER("mysqlnd_res_meta::fetch_field");
 	if (meta->current_field >= meta->field_count) {
@@ -294,7 +285,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, fetch_field)(MYSQLND_RES_METADATA * const meta 
 
 /* {{{ mysqlnd_res_meta::fetch_field_direct */
 static const MYSQLND_FIELD *
-MYSQLND_METHOD(mysqlnd_res_meta, fetch_field_direct)(const MYSQLND_RES_METADATA * const meta, const MYSQLND_FIELD_OFFSET fieldnr TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, fetch_field_direct)(const MYSQLND_RES_METADATA * const meta, const MYSQLND_FIELD_OFFSET fieldnr)
 {
 	DBG_ENTER("mysqlnd_res_meta::fetch_field_direct");
 	DBG_INF_FMT("fieldnr=%u", fieldnr);
@@ -308,7 +299,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, fetch_field_direct)(const MYSQLND_RES_METADATA 
 
 /* {{{ mysqlnd_res_meta::fetch_fields */
 static const MYSQLND_FIELD *
-MYSQLND_METHOD(mysqlnd_res_meta, fetch_fields)(MYSQLND_RES_METADATA * const meta TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, fetch_fields)(MYSQLND_RES_METADATA * const meta)
 {
 	DBG_ENTER("mysqlnd_res_meta::fetch_fields");
 	DBG_RETURN(meta->fields);
@@ -318,7 +309,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, fetch_fields)(MYSQLND_RES_METADATA * const meta
 
 /* {{{ mysqlnd_res_meta::field_tell */
 static MYSQLND_FIELD_OFFSET
-MYSQLND_METHOD(mysqlnd_res_meta, field_tell)(const MYSQLND_RES_METADATA * const meta TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, field_tell)(const MYSQLND_RES_METADATA * const meta)
 {
 	return meta->current_field;
 }
@@ -327,7 +318,7 @@ MYSQLND_METHOD(mysqlnd_res_meta, field_tell)(const MYSQLND_RES_METADATA * const 
 
 /* {{{ mysqlnd_res_meta::field_seek */
 static MYSQLND_FIELD_OFFSET
-MYSQLND_METHOD(mysqlnd_res_meta, field_seek)(MYSQLND_RES_METADATA * const meta, const MYSQLND_FIELD_OFFSET field_offset TSRMLS_DC)
+MYSQLND_METHOD(mysqlnd_res_meta, field_seek)(MYSQLND_RES_METADATA * const meta, const MYSQLND_FIELD_OFFSET field_offset)
 {
 	MYSQLND_FIELD_OFFSET return_value = 0;
 	DBG_ENTER("mysqlnd_res_meta::fetch_fields");
@@ -352,7 +343,7 @@ MYSQLND_CLASS_METHODS_END;
 
 /* {{{ mysqlnd_result_meta_init */
 PHPAPI MYSQLND_RES_METADATA *
-mysqlnd_result_meta_init(unsigned int field_count, zend_bool persistent TSRMLS_DC)
+mysqlnd_result_meta_init(unsigned int field_count, zend_bool persistent)
 {
 	size_t alloc_size = sizeof(MYSQLND_RES_METADATA) + mysqlnd_plugin_count() * sizeof(void *);
 	MYSQLND_RES_METADATA *ret = mnd_pecalloc(1, alloc_size, persistent);
@@ -377,7 +368,7 @@ mysqlnd_result_meta_init(unsigned int field_count, zend_bool persistent TSRMLS_D
 		DBG_RETURN(ret);
 	} while (0);
 	if (ret) {
-		ret->m->free_metadata(ret TSRMLS_CC);
+		ret->m->free_metadata(ret);
 	}
 	DBG_RETURN(NULL);
 }
@@ -395,7 +386,7 @@ mysqlnd_result_metadata_get_methods()
 
 /* {{{ _mysqlnd_plugin_get_plugin_result_metadata_data */
 PHPAPI void **
-_mysqlnd_plugin_get_plugin_result_metadata_data(const MYSQLND_RES_METADATA * meta, unsigned int plugin_id TSRMLS_DC)
+_mysqlnd_plugin_get_plugin_result_metadata_data(const MYSQLND_RES_METADATA * meta, unsigned int plugin_id)
 {
 	DBG_ENTER("_mysqlnd_plugin_get_plugin_result_metadata_data");
 	DBG_INF_FMT("plugin_id=%u", plugin_id);

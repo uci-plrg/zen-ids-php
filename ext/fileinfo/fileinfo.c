@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.0 of the PHP license,       |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -24,7 +24,7 @@
 #include "php.h"
 
 #include <magic.h>
-/* 
+/*
  * HOWMANY specifies the maximum offset libmagic will look at
  * this is currently hardcoded in the libmagic source but not exported
  */
@@ -37,10 +37,7 @@
 #include "ext/standard/file.h" /* needed for context stuff */
 #include "php_fileinfo.h"
 #include "fopen_wrappers.h" /* needed for is_url */
-
-#ifndef _S_IFDIR
-# define _S_IFDIR		S_IFDIR
-#endif
+#include "Zend/zend_exceptions.h"
 
 /* {{{ macros and type definitions */
 typedef struct _php_fileinfo {
@@ -77,14 +74,14 @@ static inline finfo_object *php_finfo_fetch_object(zend_object *obj) {
 	finfo_object *obj = Z_FINFO_P(object); \
 	finfo = obj->ptr; \
 	if (!finfo) { \
-        	php_error_docref(NULL TSRMLS_CC, E_WARNING, "The invalid fileinfo object."); \
+        	php_error_docref(NULL, E_WARNING, "The invalid fileinfo object."); \
 		RETURN_FALSE; \
 	} \
 }
 
 /* {{{ finfo_objects_free
  */
-static void finfo_objects_free(zend_object *object TSRMLS_DC)
+static void finfo_objects_free(zend_object *object)
 {
 	finfo_object *intern = php_finfo_fetch_object(object);
 
@@ -93,19 +90,19 @@ static void finfo_objects_free(zend_object *object TSRMLS_DC)
 		efree(intern->ptr);
 	}
 
-	zend_object_std_dtor(&intern->zo TSRMLS_CC);
+	zend_object_std_dtor(&intern->zo);
 }
 /* }}} */
 
 /* {{{ finfo_objects_new
  */
-PHP_FILEINFO_API zend_object *finfo_objects_new(zend_class_entry *class_type TSRMLS_DC)
+PHP_FILEINFO_API zend_object *finfo_objects_new(zend_class_entry *class_type)
 {
 	finfo_object *intern;
 
-	intern = ecalloc(1, sizeof(finfo_object) + sizeof(zval) * (class_type->default_properties_count - 1));
+	intern = ecalloc(1, sizeof(finfo_object) + zend_object_properties_size(class_type));
 
-	zend_object_std_init(&intern->zo, class_type TSRMLS_CC);
+	zend_object_std_init(&intern->zo, class_type);
 	object_properties_init(&intern->zo, class_type);
 	intern->zo.handlers = &finfo_object_handlers;
 
@@ -176,7 +173,7 @@ zend_function_entry finfo_class_functions[] = {
 
 #define FINFO_SET_OPTION(magic, options) \
 	if (magic_setflags(magic, options) == -1) { \
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to set option '%pd' %d:%s", \
+		php_error_docref(NULL, E_WARNING, "Failed to set option '" ZEND_LONG_FMT "' %d:%s", \
 				options, magic_errno(magic), magic_error(magic)); \
 		RETURN_FALSE; \
 	}
@@ -185,7 +182,7 @@ zend_function_entry finfo_class_functions[] = {
 static int le_fileinfo;
 /* }}} */
 
-void finfo_resource_destructor(zend_resource *rsrc TSRMLS_DC) /* {{{ */
+void finfo_resource_destructor(zend_resource *rsrc) /* {{{ */
 {
 	if (rsrc->ptr) {
 		php_fileinfo *finfo = (php_fileinfo *) rsrc->ptr;
@@ -206,7 +203,7 @@ zend_function_entry fileinfo_functions[] = {
 	PHP_FE(finfo_file,		arginfo_finfo_file)
 	PHP_FE(finfo_buffer,	arginfo_finfo_buffer)
 	PHP_FE(mime_content_type, arginfo_mime_content_type)
-	{NULL, NULL, NULL}
+	PHP_FE_END
 };
 /* }}} */
 
@@ -217,7 +214,7 @@ PHP_MINIT_FUNCTION(finfo)
 	zend_class_entry _finfo_class_entry;
 	INIT_CLASS_ENTRY(_finfo_class_entry, "finfo", finfo_class_functions);
 	_finfo_class_entry.create_object = finfo_objects_new;
-	finfo_class_entry = zend_register_internal_class(&_finfo_class_entry TSRMLS_CC);
+	finfo_class_entry = zend_register_internal_class(&_finfo_class_entry);
 
 	/* copy the standard object handlers to you handler table */
 	memcpy(&finfo_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
@@ -253,7 +250,7 @@ zend_module_entry fileinfo_module_entry = {
 	fileinfo_functions,
 	PHP_MINIT(finfo),
 	NULL,
-	NULL,	
+	NULL,
 	NULL,
 	PHP_MINFO(fileinfo),
 	PHP_FILEINFO_VERSION,
@@ -282,15 +279,6 @@ PHP_MINFO_FUNCTION(fileinfo)
 }
 /* }}} */
 
-#define FILEINFO_DESTROY_OBJECT(object)									\
-	do {																\
-		if (object) {													\
-			zend_object_store_ctor_failed(Z_OBJ_P(object) TSRMLS_CC);	\
-			Z_OBJ_P(object) = NULL;										\
-			ZEND_CTOR_MAKE_NULL();										\
-		}																\
-	} while (0)
-
 /* {{{ proto resource finfo_open([int options [, string arg]])
    Create a new fileinfo resource. */
 PHP_FUNCTION(finfo_open)
@@ -301,14 +289,17 @@ PHP_FUNCTION(finfo_open)
 	php_fileinfo *finfo;
 	FILEINFO_DECLARE_INIT_OBJECT(object)
 	char resolved_path[MAXPATHLEN];
+	zend_error_handling zeh;
+	int flags = object ? ZEND_PARSE_PARAMS_THROW : 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|lp", &options, &file, &file_len) == FAILURE) {
-		FILEINFO_DESTROY_OBJECT(object);
+	if (zend_parse_parameters_ex(flags, ZEND_NUM_ARGS(), "|lp", &options, &file, &file_len) == FAILURE) {
 		RETURN_FALSE;
 	}
 
 	if (object) {
 		finfo_object *finfo_obj = Z_FINFO_P(object);
+
+		zend_replace_error_handling(EH_THROW, NULL, &zeh);
 
 		if (finfo_obj->ptr) {
 			magic_close(finfo_obj->ptr->magic);
@@ -321,12 +312,22 @@ PHP_FUNCTION(finfo_open)
 		file = NULL;
 	} else if (file && *file) { /* user specified file, perform open_basedir checks */
 
-		if (php_check_open_basedir(file TSRMLS_CC)) {
-			FILEINFO_DESTROY_OBJECT(object);
+		if (php_check_open_basedir(file)) {
+			if (object) {
+				zend_restore_error_handling(&zeh);
+				if (!EG(exception)) {
+					zend_throw_exception(NULL, "Constructor failed", 0);
+				}
+			}
 			RETURN_FALSE;
 		}
-		if (!expand_filepath_with_mode(file, resolved_path, NULL, 0, CWD_EXPAND TSRMLS_CC)) {
-			FILEINFO_DESTROY_OBJECT(object);
+		if (!expand_filepath_with_mode(file, resolved_path, NULL, 0, CWD_EXPAND)) {
+			if (object) {
+				zend_restore_error_handling(&zeh);
+				if (!EG(exception)) {
+					zend_throw_exception(NULL, "Constructor failed", 0);
+				}
+			}
 			RETURN_FALSE;
 		}
 		file = resolved_path;
@@ -339,23 +340,34 @@ PHP_FUNCTION(finfo_open)
 
 	if (finfo->magic == NULL) {
 		efree(finfo);
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid mode '%pd'.", options);
-		FILEINFO_DESTROY_OBJECT(object);
+		php_error_docref(NULL, E_WARNING, "Invalid mode '" ZEND_LONG_FMT "'.", options);
+		if (object) {
+			zend_restore_error_handling(&zeh);
+			if (!EG(exception)) {
+				zend_throw_exception(NULL, "Constructor failed", 0);
+			}
+		}
 		RETURN_FALSE;
 	}
 
 	if (magic_load(finfo->magic, file) == -1) {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to load magic database at '%s'.", file);
+		php_error_docref(NULL, E_WARNING, "Failed to load magic database at '%s'.", file);
 		magic_close(finfo->magic);
 		efree(finfo);
-		FILEINFO_DESTROY_OBJECT(object);
+		if (object) {
+			zend_restore_error_handling(&zeh);
+			if (!EG(exception)) {
+				zend_throw_exception(NULL, "Constructor failed", 0);
+			}
+		}
 		RETURN_FALSE;
 	}
 
 	if (object) {
+		zend_restore_error_handling(&zeh);
 		FILEINFO_REGISTER_OBJECT(object, finfo);
 	} else {
-		ZEND_REGISTER_RESOURCE(return_value, finfo, le_fileinfo);
+		RETURN_RES(zend_register_resource(finfo, le_fileinfo));
 	}
 }
 /* }}} */
@@ -367,10 +379,13 @@ PHP_FUNCTION(finfo_close)
 	php_fileinfo *finfo;
 	zval *zfinfo;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zfinfo) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zfinfo) == FAILURE) {
 		RETURN_FALSE;
 	}
-	ZEND_FETCH_RESOURCE(finfo, php_fileinfo *, zfinfo, -1, "file_info", le_fileinfo);
+
+	if ((finfo = (php_fileinfo *)zend_fetch_resource(Z_RES_P(zfinfo), "file_info", le_fileinfo)) == NULL) {
+		RETURN_FALSE;
+	}
 
 	zend_list_close(Z_RES_P(zfinfo));
 
@@ -388,15 +403,17 @@ PHP_FUNCTION(finfo_set_flags)
 	FILEINFO_DECLARE_INIT_OBJECT(object)
 
 	if (object) {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &options) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &options) == FAILURE) {
 			RETURN_FALSE;
 		}
 		FILEINFO_FROM_OBJECT(finfo, object);
 	} else {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zfinfo, &options) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zfinfo, &options) == FAILURE) {
 			RETURN_FALSE;
 		}
-		ZEND_FETCH_RESOURCE(finfo, php_fileinfo *, zfinfo, -1, "file_info", le_fileinfo);
+		if ((finfo = (php_fileinfo *)zend_fetch_resource(Z_RES_P(zfinfo), "file_info", le_fileinfo)) == NULL) {
+			RETURN_FALSE;
+		}
 	}
 
 	FINFO_SET_OPTION(finfo->magic, options)
@@ -426,7 +443,7 @@ static void _php_finfo_get_type(INTERNAL_FUNCTION_PARAMETERS, int mode, int mime
 	if (mimetype_emu) {
 
 		/* mime_content_type(..) emulation */
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &what) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &what) == FAILURE) {
 			return;
 		}
 
@@ -442,28 +459,30 @@ static void _php_finfo_get_type(INTERNAL_FUNCTION_PARAMETERS, int mode, int mime
 				break;
 
 			default:
-				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Can only process string or stream arguments");
+				php_error_docref(NULL, E_WARNING, "Can only process string or stream arguments");
 				RETURN_FALSE;
 		}
 
 		magic = magic_open(MAGIC_MIME_TYPE);
 		if (magic_load(magic, NULL) == -1) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to load magic database.");
+			php_error_docref(NULL, E_WARNING, "Failed to load magic database.");
 			goto common;
 		}
 	} else if (object) {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lr", &buffer, &buffer_len, &options, &zcontext) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lr", &buffer, &buffer_len, &options, &zcontext) == FAILURE) {
 			RETURN_FALSE;
 		}
 		FILEINFO_FROM_OBJECT(finfo, object);
 		magic = finfo->magic;
 	} else {
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs|lr", &zfinfo, &buffer, &buffer_len, &options, &zcontext) == FAILURE) {
+		if (zend_parse_parameters(ZEND_NUM_ARGS(), "rs|lr", &zfinfo, &buffer, &buffer_len, &options, &zcontext) == FAILURE) {
 			RETURN_FALSE;
 		}
-		ZEND_FETCH_RESOURCE(finfo, php_fileinfo *, zfinfo, -1, "file_info", le_fileinfo);
+		if ((finfo = (php_fileinfo *)zend_fetch_resource(Z_RES_P(zfinfo), "file_info", le_fileinfo)) == NULL) {
+			RETURN_FALSE;
+		}
 		magic = finfo->magic;
-	}	
+	}
 
 	/* Set options for the current file/buffer. */
 	if (options) {
@@ -504,12 +523,17 @@ static void _php_finfo_get_type(INTERNAL_FUNCTION_PARAMETERS, int mode, int mime
 			php_stream_statbuf ssb;
 
 			if (buffer == NULL || !*buffer) {
-				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Empty filename or path");
+				php_error_docref(NULL, E_WARNING, "Empty filename or path");
+				RETVAL_FALSE;
+				goto clean;
+			}
+			if (CHECK_NULL_PATH(buffer, buffer_len)) {
+				php_error_docref(NULL, E_WARNING, "Invalid path");
 				RETVAL_FALSE;
 				goto clean;
 			}
 
-			wrap = php_stream_locate_url_wrapper(buffer, &tmp2, 0 TSRMLS_CC);
+			wrap = php_stream_locate_url_wrapper(buffer, &tmp2, 0);
 
 			if (wrap) {
 				php_stream *stream;
@@ -524,11 +548,7 @@ static void _php_finfo_get_type(INTERNAL_FUNCTION_PARAMETERS, int mode, int mime
 				}
 #endif
 
-#if PHP_API_VERSION < 20100412
-				stream = php_stream_open_wrapper_ex(buffer, "rb", ENFORCE_SAFE_MODE | REPORT_ERRORS, NULL, context);
-#else
 				stream = php_stream_open_wrapper_ex(buffer, "rb", REPORT_ERRORS, NULL, context);
-#endif
 
 				if (!stream) {
 					RETVAL_FALSE;
@@ -549,14 +569,14 @@ static void _php_finfo_get_type(INTERNAL_FUNCTION_PARAMETERS, int mode, int mime
 		}
 
 		default:
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Can only process string or stream arguments");
+			php_error_docref(NULL, E_WARNING, "Can only process string or stream arguments");
 	}
 
 common:
 	if (ret_val) {
 		RETVAL_STRING(ret_val);
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed identify data %d:%s", magic_errno(magic), magic_error(magic));
+		php_error_docref(NULL, E_WARNING, "Failed identify data %d:%s", magic_errno(magic), magic_error(magic));
 		RETVAL_FALSE;
 	}
 

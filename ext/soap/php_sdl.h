@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -87,7 +87,7 @@ struct _sdlBinding {
 	void           *bindingAttributes; /* sdlSoapBindingPtr */
 };
 
-/* Soap Binding Specfic stuff */
+/* Soap Binding Specific stuff */
 struct _sdlSoapBinding {
 	sdlEncodingStyle  style;
 	sdlTransport      transport; /* not implemented yet */
@@ -254,19 +254,19 @@ struct _sdlAttribute {
 };
 
 
-sdlPtr get_sdl(zval *this_ptr, char *uri, zend_long cache_wsdl TSRMLS_DC);
+sdlPtr get_sdl(zval *this_ptr, char *uri, zend_long cache_wsdl);
 
 encodePtr get_encoder_from_prefix(sdlPtr sdl, xmlNodePtr data, const xmlChar *type);
 encodePtr get_encoder(sdlPtr sdl, const char *ns, const char *type);
 encodePtr get_encoder_ex(sdlPtr sdl, const char *nscat, int len);
 
-sdlBindingPtr get_binding_from_type(sdlPtr sdl, int type);
+sdlBindingPtr get_binding_from_type(sdlPtr sdl, sdlBindingType type);
 sdlBindingPtr get_binding_from_name(sdlPtr sdl, char *name, char *ns);
 
 void delete_sdl(void *handle);
 void delete_sdl_impl(void *handle);
 
-void sdl_set_uri_credentials(sdlCtx *ctx, char *uri TSRMLS_DC);
-void sdl_restore_uri_credentials(sdlCtx *ctx TSRMLS_DC);
+void sdl_set_uri_credentials(sdlCtx *ctx, char *uri);
+void sdl_restore_uri_credentials(sdlCtx *ctx);
 
 #endif

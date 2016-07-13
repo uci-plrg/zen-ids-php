@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -53,12 +53,6 @@
 
 #include "php_apache.h"
 
-#ifdef PHP_WIN32
-# if _MSC_VER <= 1300
-#  include "win32/php_strtoi64.h"
-# endif
-#endif
-
 /* UnixWare and Netware define shutdown to _shutdown, which causes problems later
  * on when using a structure member named shutdown. Since this source
  * file does not use the system call shutdown, it is safe to #undef it.K
@@ -75,9 +69,12 @@
 
 /* A way to specify the location of the php.ini dir in an apache directive */
 char *apache2_php_ini_path_override = NULL;
+#if defined(PHP_WIN32) && defined(ZTS)
+ZEND_TSRMLS_CACHE_DEFINE()
+#endif
 
 static size_t
-php_apache_sapi_ub_write(const char *str, size_t str_length TSRMLS_DC)
+php_apache_sapi_ub_write(const char *str, size_t str_length)
 {
 	request_rec *r;
 	php_struct *ctx;
@@ -93,7 +90,7 @@ php_apache_sapi_ub_write(const char *str, size_t str_length TSRMLS_DC)
 }
 
 static int
-php_apache_sapi_header_handler(sapi_header_struct *sapi_header, sapi_header_op_enum op, sapi_headers_struct *sapi_headers TSRMLS_DC)
+php_apache_sapi_header_handler(sapi_header_struct *sapi_header, sapi_header_op_enum op, sapi_headers_struct *sapi_headers)
 {
 	php_struct *ctx;
 	char *val, *ptr;
@@ -130,15 +127,15 @@ php_apache_sapi_header_handler(sapi_header_struct *sapi_header, sapi_header_op_e
 				}
 				ctx->content_type = estrdup(val);
 			} else if (!strcasecmp(sapi_header->header, "content-length")) {
-#ifdef PHP_WIN32
-# ifdef APR_HAS_LARGE_FILES
-				ap_set_content_length(ctx->r, (apr_off_t) _strtoui64(val, (char **)NULL, 10));
-# else
-				ap_set_content_length(ctx->r, (apr_off_t) strtol(val, (char **)NULL, 10));
-# endif
-#else
-				ap_set_content_length(ctx->r, (apr_off_t) strtol(val, (char **)NULL, 10));
-#endif
+				apr_off_t clen = 0;
+
+				if (APR_SUCCESS != apr_strtoff(&clen, val, (char **) NULL, 10)) {
+					/* We'll fall back to strtol, since that's what we used to
+					 * do anyway. */
+					clen = (apr_off_t) strtol(val, (char **) NULL, 10);
+				}
+
+				ap_set_content_length(ctx->r, clen);
 			} else if (op == SAPI_HEADER_REPLACE) {
 				apr_table_set(ctx->r->headers_out, sapi_header->header, val);
 			} else {
@@ -155,7 +152,7 @@ php_apache_sapi_header_handler(sapi_header_struct *sapi_header, sapi_header_op_e
 }
 
 static int
-php_apache_sapi_send_headers(sapi_headers_struct *sapi_headers TSRMLS_DC)
+php_apache_sapi_send_headers(sapi_headers_struct *sapi_headers)
 {
 	php_struct *ctx = SG(server_context);
 	const char *sline = SG(sapi_headers).http_status_line;
@@ -175,7 +172,7 @@ php_apache_sapi_send_headers(sapi_headers_struct *sapi_headers TSRMLS_DC)
 	/*	call ap_set_content_type only once, else each time we call it,
 		configured output filters for that content type will be added */
 	if (!ctx->content_type) {
-		ctx->content_type = sapi_get_default_content_type(TSRMLS_C);
+		ctx->content_type = sapi_get_default_content_type();
 	}
 	ap_set_content_type(ctx->r, apr_pstrdup(ctx->r->pool, ctx->content_type));
 	efree(ctx->content_type);
@@ -185,7 +182,7 @@ php_apache_sapi_send_headers(sapi_headers_struct *sapi_headers TSRMLS_DC)
 }
 
 static apr_size_t
-php_apache_sapi_read_post(char *buf, size_t count_bytes TSRMLS_DC)
+php_apache_sapi_read_post(char *buf, size_t count_bytes)
 {
 	apr_size_t len, tlen=0;
 	php_struct *ctx = SG(server_context);
@@ -217,12 +214,17 @@ php_apache_sapi_read_post(char *buf, size_t count_bytes TSRMLS_DC)
 }
 
 static zend_stat_t*
-php_apache_sapi_get_stat(TSRMLS_D)
+php_apache_sapi_get_stat(void)
 {
 	php_struct *ctx = SG(server_context);
 
+#ifdef PHP_WIN32
+	ctx->finfo.st_uid = 0;
+	ctx->finfo.st_gid = 0;
+#else
 	ctx->finfo.st_uid = ctx->r->finfo.user;
 	ctx->finfo.st_gid = ctx->r->finfo.group;
+#endif
 	ctx->finfo.st_dev = ctx->r->finfo.device;
 	ctx->finfo.st_ino = ctx->r->finfo.inode;
 #if defined(NETWARE) && defined(CLIB_STAT_PATCH)
@@ -242,7 +244,7 @@ php_apache_sapi_get_stat(TSRMLS_D)
 }
 
 static char *
-php_apache_sapi_read_cookies(TSRMLS_D)
+php_apache_sapi_read_cookies(void)
 {
 	php_struct *ctx = SG(server_context);
 	const char *http_cookie;
@@ -254,7 +256,7 @@ php_apache_sapi_read_cookies(TSRMLS_D)
 }
 
 static char *
-php_apache_sapi_getenv(char *name, size_t name_len TSRMLS_DC)
+php_apache_sapi_getenv(char *name, size_t name_len)
 {
 	php_struct *ctx = SG(server_context);
 	const char *env_var;
@@ -269,7 +271,7 @@ php_apache_sapi_getenv(char *name, size_t name_len TSRMLS_DC)
 }
 
 static void
-php_apache_sapi_register_variables(zval *track_vars_array TSRMLS_DC)
+php_apache_sapi_register_variables(zval *track_vars_array)
 {
 	php_struct *ctx = SG(server_context);
 	const apr_array_header_t *arr = apr_table_elts(ctx->r->subprocess_env);
@@ -280,18 +282,18 @@ php_apache_sapi_register_variables(zval *track_vars_array TSRMLS_DC)
 		if (!val) {
 			val = "";
 		}
-		if (sapi_module.input_filter(PARSE_SERVER, key, &val, strlen(val), (size_t *)&new_val_len TSRMLS_CC)) {
-			php_register_variable_safe(key, val, new_val_len, track_vars_array TSRMLS_CC);
+		if (sapi_module.input_filter(PARSE_SERVER, key, &val, strlen(val), &new_val_len)) {
+			php_register_variable_safe(key, val, new_val_len, track_vars_array);
 		}
 	APR_ARRAY_FOREACH_CLOSE()
 
-	if (sapi_module.input_filter(PARSE_SERVER, "PHP_SELF", &ctx->r->uri, strlen(ctx->r->uri), (size_t *)&new_val_len TSRMLS_CC)) {
-		php_register_variable_safe("PHP_SELF", ctx->r->uri, new_val_len, track_vars_array TSRMLS_CC);
+	if (sapi_module.input_filter(PARSE_SERVER, "PHP_SELF", &ctx->r->uri, strlen(ctx->r->uri), &new_val_len)) {
+		php_register_variable_safe("PHP_SELF", ctx->r->uri, new_val_len, track_vars_array);
 	}
 }
 
 static void
-php_apache_sapi_flush(void *server_context TSRMLS_DC)
+php_apache_sapi_flush(void *server_context)
 {
 	php_struct *ctx;
 	request_rec *r;
@@ -306,7 +308,7 @@ php_apache_sapi_flush(void *server_context TSRMLS_DC)
 
 	r = ctx->r;
 
-	sapi_send_headers(TSRMLS_C);
+	sapi_send_headers();
 
 	r->status = SG(sapi_headers).http_response_code;
 	SG(headers_sent) = 1;
@@ -316,7 +318,7 @@ php_apache_sapi_flush(void *server_context TSRMLS_DC)
 	}
 }
 
-static void php_apache_sapi_log_message(char *msg TSRMLS_DC)
+static void php_apache_sapi_log_message(char *msg)
 {
 	php_struct *ctx;
 
@@ -329,16 +331,16 @@ static void php_apache_sapi_log_message(char *msg TSRMLS_DC)
 	}
 }
 
-static void php_apache_sapi_log_message_ex(char *msg, request_rec *r TSRMLS_DC)
+static void php_apache_sapi_log_message_ex(char *msg, request_rec *r)
 {
 	if (r) {
 		ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, msg, r->filename);
 	} else {
-		php_apache_sapi_log_message(msg TSRMLS_CC);
+		php_apache_sapi_log_message(msg);
 	}
 }
 
-static double php_apache_sapi_get_request_time(TSRMLS_D)
+static double php_apache_sapi_get_request_time(void)
 {
 	php_struct *ctx = SG(server_context);
 	return ((double) apr_time_as_msec(ctx->r->request_time)) / 1000.0;
@@ -407,7 +409,6 @@ static apr_status_t php_apache_child_shutdown(void *tmp)
 
 static void php_apache_add_version(apr_pool_t *p)
 {
-	TSRMLS_FETCH();
 	if (PG(expose_php)) {
 		ap_add_version_component(p, "PHP/" PHP_VERSION);
 	}
@@ -455,7 +456,12 @@ php_apache_server_startup(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *ptemp
 	}
 #ifdef ZTS
 	tsrm_startup(1, 1, 0, NULL);
+	(void)ts_resource(0);
+	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
+
+	zend_signal_startup();
+
 	sapi_startup(&apache2_sapi_module);
 	apache2_sapi_module.startup(&apache2_sapi_module);
 	apr_pool_cleanup_register(pconf, NULL, php_apache_server_shutdown, apr_pool_cleanup_null);
@@ -471,7 +477,7 @@ static apr_status_t php_server_context_cleanup(void *data_)
 	return APR_SUCCESS;
 }
 
-static int php_apache_request_ctor(request_rec *r, php_struct *ctx TSRMLS_DC)
+static int php_apache_request_ctor(request_rec *r, php_struct *ctx)
 {
 	char *content_length;
 	const char *auth;
@@ -498,7 +504,7 @@ static int php_apache_request_ctor(request_rec *r, php_struct *ctx TSRMLS_DC)
 	apr_table_unset(r->headers_out, "ETag");
 
 	auth = apr_table_get(r->headers_in, "Authorization");
-	php_handle_auth_data(auth TSRMLS_CC);
+	php_handle_auth_data(auth);
 
 	if (SG(request_info).auth_user == NULL && r->user) {
 		SG(request_info).auth_user = estrdup(r->user);
@@ -506,18 +512,18 @@ static int php_apache_request_ctor(request_rec *r, php_struct *ctx TSRMLS_DC)
 
 	ctx->r->user = apr_pstrdup(ctx->r->pool, SG(request_info).auth_user);
 
-	return php_request_startup(TSRMLS_C);
+	return php_request_startup();
 }
 
-static void php_apache_request_dtor(request_rec *r TSRMLS_DC)
+static void php_apache_request_dtor(request_rec *r)
 {
 	php_request_shutdown(NULL);
 }
 
-static void php_apache_ini_dtor(request_rec *r, request_rec *p TSRMLS_DC)
+static void php_apache_ini_dtor(request_rec *r, request_rec *p)
 {
 	if (strcmp(r->protocol, "INCLUDED")) {
-		zend_try { zend_ini_deactivate(TSRMLS_C); } zend_end_try();
+		zend_try { zend_ini_deactivate(); } zend_end_try();
 	} else {
 typedef struct {
 	HashTable config;
@@ -548,9 +554,13 @@ static int php_handler(request_rec *r)
   zend_bool opmon_notified = 0;
   extern zend_opcode_monitor_t *opcode_monitor;
 #endif
-	TSRMLS_FETCH();
+#ifdef ZTS
+	/* initial resource fetch */
+	(void)ts_resource(0);
+	ZEND_TSRMLS_CACHE_UPDATE();
+#endif
 
-#define PHPAP_INI_OFF php_apache_ini_dtor(r, parent_req TSRMLS_CC);
+#define PHPAP_INI_OFF php_apache_ini_dtor(r, parent_req);
 
 	conf = ap_get_module_config(r->per_dir_config, &php7_module);
 
@@ -595,12 +605,12 @@ normal:
 	}
 
 	if (r->finfo.filetype == 0) {
-		php_apache_sapi_log_message_ex("script '%s' not found or unable to stat", r TSRMLS_CC);
+		php_apache_sapi_log_message_ex("script '%s' not found or unable to stat", r);
 		PHPAP_INI_OFF;
 		return HTTP_NOT_FOUND;
 	}
 	if (r->finfo.filetype == APR_DIR) {
-		php_apache_sapi_log_message_ex("attempt to invoke directory '%s' as script", r TSRMLS_CC);
+		php_apache_sapi_log_message_ex("attempt to invoke directory '%s' as script", r);
 		PHPAP_INI_OFF;
 		return HTTP_FORBIDDEN;
 	}
@@ -622,7 +632,7 @@ zend_first_try {
 		ctx = SG(server_context);
 		ctx->brigade = brigade;
 
-		if (php_apache_request_ctor(r, ctx TSRMLS_CC)!=SUCCESS) {
+		if (php_apache_request_ctor(r, ctx)!=SUCCESS) {
 			zend_bailout();
 		}
 	} else {
@@ -633,7 +643,7 @@ zend_first_try {
 				strcmp(parent_req->handler, PHP_MAGIC_TYPE) &&
 				strcmp(parent_req->handler, PHP_SOURCE_MAGIC_TYPE) &&
 				strcmp(parent_req->handler, PHP_SCRIPT)) {
-			if (php_apache_request_ctor(r, ctx TSRMLS_CC)!=SUCCESS) {
+			if (php_apache_request_ctor(r, ctx)!=SUCCESS) {
 				zend_bailout();
 			}
 		}
@@ -661,7 +671,7 @@ zend_first_try {
 	if (strncmp(r->handler, PHP_SOURCE_MAGIC_TYPE, sizeof(PHP_SOURCE_MAGIC_TYPE) - 1) == 0) {
 		zend_syntax_highlighter_ini syntax_highlighter_ini;
 		php_get_highlight_struct(&syntax_highlighter_ini);
-		highlight_file((char *)r->filename, &syntax_highlighter_ini TSRMLS_CC);
+		highlight_file((char *)r->filename, &syntax_highlighter_ini);
 	} else {
 		zend_file_handle zfd;
 
@@ -675,19 +685,19 @@ zend_first_try {
     opcode_monitor->notify_http_request(1);
 #endif
 		if (!parent_req) {
-			php_execute_script(&zfd TSRMLS_CC);
+			php_execute_script(&zfd);
 		} else {
-			zend_execute_scripts(ZEND_INCLUDE TSRMLS_CC, NULL, 1, &zfd);
+			zend_execute_scripts(ZEND_INCLUDE, NULL, 1, &zfd);
 		}
 
 		apr_table_set(r->notes, "mod_php_memory_usage",
-			apr_psprintf(ctx->r->pool, "%" APR_SIZE_T_FMT, zend_memory_peak_usage(1 TSRMLS_CC)));
+			apr_psprintf(ctx->r->pool, "%" APR_SIZE_T_FMT, zend_memory_peak_usage(1)));
 	}
 
 } zend_end_try();
 
 	if (!parent_req) {
-		php_apache_request_dtor(r TSRMLS_CC);
+		php_apache_request_dtor(r);
 		ctx->request_processed = 1;
 		bucket = apr_bucket_eos_create(r->connection->bucket_alloc);
 		APR_BRIGADE_INSERT_TAIL(brigade, bucket);
@@ -699,6 +709,7 @@ zend_first_try {
 } zend_end_try();
 		}
 		apr_brigade_cleanup(brigade);
+		apr_pool_cleanup_run(r->pool, (void *)&SG(server_context), php_server_context_cleanup);
 	} else {
 		ctx->r = parent_req;
 	}
@@ -724,6 +735,9 @@ void php_ap2_register_hook(apr_pool_t *p)
 	ap_hook_pre_config(php_pre_config, NULL, NULL, APR_HOOK_MIDDLE);
 	ap_hook_post_config(php_apache_server_startup, NULL, NULL, APR_HOOK_MIDDLE);
 	ap_hook_handler(php_handler, NULL, NULL, APR_HOOK_MIDDLE);
+#ifdef ZEND_SIGNALS
+	ap_hook_child_init(zend_signal_init, NULL, NULL, APR_HOOK_MIDDLE);
+#endif
 	ap_hook_child_init(php_apache_child_init, NULL, NULL, APR_HOOK_MIDDLE);
 }
 

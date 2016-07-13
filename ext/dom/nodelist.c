@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -35,10 +35,10 @@ ZEND_END_ARG_INFO();
 /* }}} */
 
 /*
-* class DOMNodeList 
+* class DOMNodeList
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ID-536297177
-* Since: 
+* Since:
 */
 
 const zend_function_entry php_dom_nodelist_class_functions[] = {
@@ -46,12 +46,12 @@ const zend_function_entry php_dom_nodelist_class_functions[] = {
 	PHP_FE_END
 };
 
-/* {{{ length	int	
-readonly=yes 
+/* {{{ length	int
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ID-203510337
-Since: 
+Since:
 */
-int dom_nodelist_length_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_nodelist_length_read(dom_object *obj, zval *retval)
 {
 	dom_nnodemap_object *objmap;
 	xmlNodePtr nodep, curnode;
@@ -100,7 +100,7 @@ int dom_nodelist_length_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* {{{ proto DOMNode dom_nodelist_item(int index);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ID-844377136
-Since: 
+Since:
 */
 PHP_FUNCTION(dom_nodelist_item)
 {
@@ -114,7 +114,7 @@ PHP_FUNCTION(dom_nodelist_item)
 	xmlNodePtr nodep, curnode;
 	int count = 0;
 
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Ol", &id, dom_nodelist_class_entry, &index) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Ol", &id, dom_nodelist_class_entry, &index) == FAILURE) {
 		return;
 	}
 
@@ -153,7 +153,7 @@ PHP_FUNCTION(dom_nodelist_item)
 							} else {
 								nodep = nodep->children;
 							}
-							itemnode = dom_get_elements_by_tag_name_ns_raw(nodep, objmap->ns, objmap->local, &count, index);
+							itemnode = dom_get_elements_by_tag_name_ns_raw(nodep, (char *) objmap->ns, (char *) objmap->local, &count, index);
 						}
 					}
 				}

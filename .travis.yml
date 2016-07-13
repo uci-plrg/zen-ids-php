@@ -1,16 +1,33 @@
-language: php
-
-php:
-    # We only specify one version so we only get one worker
-    - 5.4
-
-branches:
-    except:
-        - phpng
+language: c
+sudo: false
+addons:
+  apt:
+    packages:
+      - locales
+      - language-pack-de
+      - re2c
+      - libgmp-dev
+      - libicu-dev
+      - libmcrypt-dev
+      - libtidy-dev
+      - libenchant-dev
+      - libaspell-dev
+      - libpspell-dev
+      - librecode-dev
+      - libsasl2-dev
+      - libxpm-dev
+      - libt1-dev
 
 notifications:
     email: 
        on_failure: change
+    irc:
+      template:
+        - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message} -  Change view : %{compare_url} - Build details : %{build_url}"
+      channels:
+        - "irc.efnet.org#php.pecl"
+      on_success: change
+      on_failure: always
 
 cache: 
     - apt
@@ -28,12 +45,6 @@ env:
       - ENABLE_MAINTAINER_ZTS=0 ENABLE_DEBUG=0
       - ENABLE_MAINTAINER_ZTS=1 ENABLE_DEBUG=1
 
-before_install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -y libenchant-dev libaspell-dev libpspell-dev librecode-dev
-    - sudo cp ./travis/de /var/lib/locales/supported.d/de
-    - sudo dpkg-reconfigure locales
-
 before_script:
     # Compile PHP
     - ./travis/compile.sh
@@ -46,5 +57,4 @@ before_script:
 
 # Run PHPs run-tests.php 
 script:
-    - ./sapi/cli/php run-tests.php -p `pwd`/sapi/cli/php -g "FAIL,XFAIL,BORK,WARN,LEAK,SKIP" --show-diff --set-timeout 120 -s
-    - ./sapi/cli/php sapi/phpdbg/tests/run-tests.php -diff2stdout --phpdbg sapi/phpdbg/phpdbg
+    - ./sapi/cli/php run-tests.php -p `pwd`/sapi/cli/php $(if [ $ENABLE_DEBUG == 1 ]; then echo "-d opcache.enable_cli=1 -d zend_extension=`pwd`/modules/opcache.so"; fi) -g "FAIL,XFAIL,BORK,WARN,LEAK,SKIP" --offline --show-diff --set-timeout 120

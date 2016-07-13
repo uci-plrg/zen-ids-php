@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -76,12 +76,12 @@ PHP_FUNCTION(set_time_limit);
 PHP_FUNCTION(header_register_callback);
 
 PHP_FUNCTION(get_cfg_var);
-PHP_FUNCTION(set_magic_quotes_runtime);
 PHP_FUNCTION(get_magic_quotes_runtime);
 PHP_FUNCTION(get_magic_quotes_gpc);
 
 PHP_FUNCTION(error_log);
 PHP_FUNCTION(error_get_last);
+PHP_FUNCTION(error_clear_last);
 
 PHP_FUNCTION(call_user_func);
 PHP_FUNCTION(call_user_func_array);
@@ -133,6 +133,13 @@ PHP_FUNCTION(parse_ini_string);
 PHP_FUNCTION(config_get_hash);
 #endif
 
+#if defined(PHP_WIN32)
+PHP_FUNCTION(sapi_windows_cp_set);
+PHP_FUNCTION(sapi_windows_cp_get);
+PHP_FUNCTION(sapi_windows_cp_is_utf8);
+PHP_FUNCTION(sapi_windows_cp_conv);
+#endif
+
 PHP_FUNCTION(str_rot13);
 PHP_FUNCTION(stream_get_filters);
 PHP_FUNCTION(stream_filter_register);
@@ -145,30 +152,23 @@ PHP_RSHUTDOWN_FUNCTION(user_filters);
 PHP_RSHUTDOWN_FUNCTION(browscap);
 
 /* Left for BC (not binary safe!) */
-PHPAPI int _php_error_log(int opt_err, char *message, char *opt, char *headers TSRMLS_DC);
-PHPAPI int _php_error_log_ex(int opt_err, char *message, size_t message_len, char *opt, char *headers TSRMLS_DC);
-PHPAPI int php_prefix_varname(zval *result, zval *prefix, char *var_name, size_t var_name_len, zend_bool add_underscore TSRMLS_DC);
-
-#if SIZEOF_INT == 4
-/* Most 32-bit and 64-bit systems have 32-bit ints */
-typedef unsigned int php_uint32;
-typedef signed int php_int32;
-#elif SIZEOF_LONG == 4
-/* 16-bit systems? */
-typedef unsigned long php_uint32;
-typedef signed long php_int32;
-#else
-#error Need type which holds 32 bits
-#endif
+PHPAPI int _php_error_log(int opt_err, char *message, char *opt, char *headers);
+PHPAPI int _php_error_log_ex(int opt_err, char *message, size_t message_len, char *opt, char *headers);
+PHPAPI int php_prefix_varname(zval *result, zval *prefix, char *var_name, size_t var_name_len, zend_bool add_underscore);
 
 #define MT_N (624)
+
+/* Deprecated type aliases -- use the standard types instead */
+typedef uint32_t php_uint32;
+typedef int32_t php_int32;
 
 typedef struct _php_basic_globals {
 	HashTable *user_shutdown_function_names;
 	HashTable putenv_ht;
 	zval  strtok_zval;
 	char *strtok_string;
-	char *locale_string;
+	zend_string *locale_string; /* current LC_CTYPE locale (or NULL for 'C') */
+	zend_bool locale_changed;   /* locale was changed and has to be restored */
 	char *strtok_last;
 	char strtok_table[256];
 	zend_ulong strtok_len;
@@ -180,7 +180,7 @@ typedef struct _php_basic_globals {
 	zend_llist *user_tick_functions;
 
 	zval active_ini_file_section;
-	
+
 	/* pageinfo.c */
 	zend_long page_uid;
 	zend_long page_gid;
@@ -192,15 +192,15 @@ typedef struct _php_basic_globals {
 	php_stream_statbuf ssb, lssb;
 
 	/* rand.c */
-	php_uint32   state[MT_N+1];  /* state vector + 1 extra to not violate ANSI C */
-	php_uint32   *next;       /* next random value is computed from here */
+	uint32_t state[MT_N+1];  /* state vector + 1 extra to not violate ANSI C */
+	uint32_t *next;       /* next random value is computed from here */
 	int      left;        /* can *next++ this many times before reloading */
 
 	unsigned int rand_seed; /* Seed for rand(), in ts version */
 
 	zend_bool rand_is_seeded; /* Whether rand() has been seeded */
 	zend_bool mt_rand_is_seeded; /* Whether mt_rand() has been seeded */
-    
+
 	/* syslog.c */
 	char *syslog_device;
 
@@ -235,7 +235,7 @@ typedef struct _php_basic_globals {
 } php_basic_globals;
 
 #ifdef ZTS
-#define BG(v) TSRMG(basic_globals_id, php_basic_globals *, v)
+#define BG(v) ZEND_TSRMG(basic_globals_id, php_basic_globals *, v)
 PHPAPI extern int basic_globals_id;
 #else
 #define BG(v) (basic_globals.v)
@@ -259,12 +259,12 @@ typedef struct _php_shutdown_function_entry {
 	int arg_count;
 } php_shutdown_function_entry;
 
-PHPAPI extern zend_bool register_user_shutdown_function(char *function_name, size_t function_len, php_shutdown_function_entry *shutdown_function_entry TSRMLS_DC);
-PHPAPI extern zend_bool remove_user_shutdown_function(char *function_name, size_t function_len TSRMLS_DC);
-PHPAPI extern zend_bool append_user_shutdown_function(php_shutdown_function_entry shutdown_function_entry TSRMLS_DC);
+PHPAPI extern zend_bool register_user_shutdown_function(char *function_name, size_t function_len, php_shutdown_function_entry *shutdown_function_entry);
+PHPAPI extern zend_bool remove_user_shutdown_function(char *function_name, size_t function_len);
+PHPAPI extern zend_bool append_user_shutdown_function(php_shutdown_function_entry shutdown_function_entry);
 
-PHPAPI void php_call_shutdown_functions(TSRMLS_D);
-PHPAPI void php_free_shutdown_functions(TSRMLS_D);
+PHPAPI void php_call_shutdown_functions(void);
+PHPAPI void php_free_shutdown_functions(void);
 
 
 #endif /* BASIC_FUNCTIONS_H */

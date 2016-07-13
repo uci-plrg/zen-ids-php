@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -30,71 +30,71 @@
 #include "mysqli_fe.h"
 
 #define MAP_PROPERTY_MYG_BOOL_READ(name, value) \
-static zval *name(mysqli_object *obj, zval *retval TSRMLS_DC) \
+static zval *name(mysqli_object *obj, zval *retval) \
 { \
 	ZVAL_BOOL(retval, MyG(value)); \
 	return retval; \
 } \
 
 #define MAP_PROPERTY_MYG_BOOL_WRITE(name, value) \
-static int name(mysqli_object *obj, zval *value TSRMLS_DC) \
+static int name(mysqli_object *obj, zval *value) \
 { \
 	MyG(value) = Z_LVAL_P(value) > 0; \
 	return SUCCESS; \
 } \
 
 #define MAP_PROPERTY_MYG_LONG_READ(name, value) \
-static zval *name(mysqli_object *obj, zval *retval TSRMLS_DC) \
+static zval *name(mysqli_object *obj, zval *retval) \
 { \
 	ZVAL_LONG(retval, MyG(value)); \
 	return retval; \
 } \
 
 #define MAP_PROPERTY_MYG_LONG_WRITE(name, value) \
-static int name(mysqli_object *obj, zval *value TSRMLS_DC) \
+static int name(mysqli_object *obj, zval *value) \
 { \
 	MyG(value) = Z_LVAL_P(value); \
 	return SUCCESS; \
 } \
 
 #define MAP_PROPERTY_MYG_STRING_READ(name, value) \
-static zval *name(mysqli_object *obj, zval *retval TSRMLS_DC) \
+static zval *name(mysqli_object *obj, zval *retval) \
 { \
 	ZVAL_STRING(retval, MyG(value)); \
 	return retval; \
 } \
 
 #define MAP_PROPERTY_MYG_STRING_WRITE(name, value) \
-static int name(mysqli_object *obj, zval *value TSRMLS_DC) \
+static int name(mysqli_object *obj, zval *value) \
 { \
 	MyG(value) = Z_STRVAL_P(value); \
 	return SUCCESS; \
 } \
 
 /* {{{ property driver_report_write */
-static int driver_report_write(mysqli_object *obj, zval *value TSRMLS_DC)
+static int driver_report_write(mysqli_object *obj, zval *value)
 {
 	MyG(report_mode) = Z_LVAL_P(value);
 	/*FIXME*/
-	/* zend_replace_error_handling(MyG(report_mode) & MYSQLI_REPORT_STRICT ? EH_THROW : EH_NORMAL, NULL, NULL TSRMLS_CC); */
+	/* zend_replace_error_handling(MyG(report_mode) & MYSQLI_REPORT_STRICT ? EH_THROW : EH_NORMAL, NULL, NULL); */
 	return SUCCESS;
 }
 /* }}} */
 
 /* {{{ property driver_embedded_read */
-static zval *driver_embedded_read(mysqli_object *obj, zval *retval TSRMLS_DC)
+static zval *driver_embedded_read(mysqli_object *obj, zval *retval)
 {
 #ifdef HAVE_EMBEDDED_MYSQLI
-	ZVAL_BOOL(retval, 1);
+	ZVAL_TRUE(retval);
 #else
-	ZVAL_BOOL(retval, 0);
+	ZVAL_FALSE(retval);
 #endif
 	return retval;
 }
 /* }}} */
 
 /* {{{ property driver_client_version_read */
-static zval *driver_client_version_read(mysqli_object *obj, zval *retval TSRMLS_DC)
+static zval *driver_client_version_read(mysqli_object *obj, zval *retval)
 {
 	ZVAL_LONG(retval, MYSQL_VERSION_ID);
 	return retval;
@@ -102,7 +102,7 @@ static zval *driver_client_version_read(mysqli_object *obj, zval *retval TSRMLS_
 /* }}} */
 
 /* {{{ property driver_client_info_read */
-static zval *driver_client_info_read(mysqli_object *obj, zval *retval TSRMLS_DC)
+static zval *driver_client_info_read(mysqli_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, (char *)mysql_get_client_info());
 	return retval;
@@ -110,7 +110,7 @@ static zval *driver_client_info_read(mysqli_object *obj, zval *retval TSRMLS_DC)
 /* }}} */
 
 /* {{{ property driver_driver_version_read */
-static zval *driver_driver_version_read(mysqli_object *obj, zval *retval TSRMLS_DC)
+static zval *driver_driver_version_read(mysqli_object *obj, zval *retval)
 {
 	ZVAL_LONG(retval, MYSQLI_VERSION_ID);
 	return retval;
@@ -150,7 +150,7 @@ const zend_function_entry mysqli_driver_methods[] = {
 	PHP_FALIAS(embedded_server_start, mysqli_embedded_server_start, NULL)
 	PHP_FALIAS(embedded_server_end, mysqli_embedded_server_end, NULL)
 #endif
-	{NULL, NULL, NULL}
+	PHP_FE_END
 };
 /* }}} */
 

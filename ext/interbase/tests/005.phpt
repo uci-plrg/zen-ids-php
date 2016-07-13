@@ -3,7 +3,7 @@ InterBase: transactions
 --SKIPIF--
 <?php include("skipif.inc"); ?>
 --FILE--
-<?php /* $Id$ */
+<?php
 
     require("interbase.inc");
     
@@ -63,7 +63,7 @@ simple default transaction test without ibase_trans()
 /*
 default transaction on default link
 First open transaction on link will be default.
-$tr_def_l1 may be ommited. All queryes without link and trans
+$tr_def_l1 may be omitted. All queryes without link and trans
 parameters run in this context
 */
     
@@ -207,7 +207,7 @@ transactions on second link
 
     echo "end of test\n";
 ?>
---EXPECT--
+--EXPECTF--
 default transaction:
 empty table
 --- test5 ---
@@ -264,7 +264,7 @@ three rows in fourth transaction with deadlock
 2	
 3	
 4	
-errmsg [lock conflict on no wait transaction deadlock ]	
+errmsg [lock conflict on no wait transaction deadlock %a]
 ---
 three rows
 --- test5 ---

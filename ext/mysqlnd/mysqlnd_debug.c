@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2006-2014 The PHP Group                                |
+  | Copyright (c) 2006-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -12,13 +12,10 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Authors: Georg Richter <georg@mysql.com>                             |
-  |          Andrey Hristov <andrey@mysql.com>                           |
-  |          Ulf Wendel <uwendel@mysql.com>                              |
+  | Authors: Andrey Hristov <andrey@php.net>                             |
+  |          Ulf Wendel <uw@php.net>                                     |
   +----------------------------------------------------------------------+
 */
-
-/* $Id$ */
 
 #include "php.h"
 #include "mysqlnd.h"
@@ -28,19 +25,11 @@
 static const char * const mysqlnd_debug_default_trace_file = "/tmp/mysqlnd.trace";
 static const char * const mysqlnd_debug_empty_string = "";
 
-#ifdef ZTS 
-#define MYSQLND_ZTS(self) TSRMLS_D = (self)->TSRMLS_C
-#else
-#define MYSQLND_ZTS(self)
-#endif
-
 
 /* {{{ mysqlnd_debug::open */
 static enum_func_status
 MYSQLND_METHOD(mysqlnd_debug, open)(MYSQLND_DEBUG * self, zend_bool reopen)
 {
-	MYSQLND_ZTS(self);
-
 	if (!self->file_name) {
 		return FAIL;
 	}
@@ -67,7 +56,6 @@ MYSQLND_METHOD(mysqlnd_debug, log)(MYSQLND_DEBUG * self,
 	unsigned int flags = self->flags;
 	char pid_buffer[10], time_buffer[30], file_buffer[200],
 		 line_buffer[6], level_buffer[7];
-	MYSQLND_ZTS(self);
 
 	if (!self->stream && FAIL == self->m->open(self, FALSE)) {
 		return FAIL;
@@ -165,7 +153,6 @@ MYSQLND_METHOD(mysqlnd_debug, log_va)(MYSQLND_DEBUG *self,
 	unsigned int flags = self->flags;
 	char pid_buffer[10], time_buffer[30], file_buffer[200],
 		 line_buffer[6], level_buffer[7];
-	MYSQLND_ZTS(self);
 
 	if (!self->stream && FAIL == self->m->open(self, FALSE)) {
 		return FAIL;
@@ -315,7 +302,7 @@ struct st_mysqlnd_dbg_function_profile {
 	uint64_t in_calls_underporm_calls;
 	uint64_t min_total;
 	uint64_t max_total;
-	uint64_t avg_total;	
+	uint64_t avg_total;
 	uint64_t total_underporm_calls;
 };
 #define PROFILE_UNDERPERFORM_THRESHOLD 10
@@ -436,14 +423,13 @@ MYSQLND_METHOD(mysqlnd_debug, func_leave)(MYSQLND_DEBUG * self, unsigned int lin
 static enum_func_status
 MYSQLND_METHOD(mysqlnd_debug, close)(MYSQLND_DEBUG * self)
 {
-	MYSQLND_ZTS(self);
 	if (self->stream) {
 #ifndef MYSQLND_PROFILING_DISABLED
 		if (!(self->flags & MYSQLND_DEBUG_FLUSH) && (self->flags & MYSQLND_DEBUG_PROFILE_CALLS)) {
 			struct st_mysqlnd_dbg_function_profile * f_profile;
 			zend_string	*string_key = NULL;
 
-			self->m->log_va(self, __LINE__, __FILE__, 0, "info : ",	
+			self->m->log_va(self, __LINE__, __FILE__, 0, "info : ",
 					"number of functions: %d", zend_hash_num_elements(&self->function_profiles));
 			ZEND_HASH_FOREACH_STR_KEY_PTR(&self->function_profiles, string_key, f_profile) {
 				self->m->log_va(self, __LINE__, __FILE__, -1, "info : ",
@@ -451,7 +437,7 @@ MYSQLND_METHOD(mysqlnd_debug, close)(MYSQLND_DEBUG * self)
 						"   min_own=%5llu  max_own=%7llu  avg_own=%7llu   "
 						"   min_in_calls=%5llu  max_in_calls=%7llu  avg_in_calls=%7llu"
 						"   min_total=%5llu  max_total=%7llu  avg_total=%7llu"
-						,string_key->val
+						,ZSTR_VAL(string_key)
 						,(uint64_t) f_profile->calls
 						,(uint64_t) f_profile->own_underporm_calls
 						,(uint64_t) f_profile->in_calls_underporm_calls
@@ -469,9 +455,9 @@ MYSQLND_METHOD(mysqlnd_debug, close)(MYSQLND_DEBUG * self)
 						);
 			} ZEND_HASH_FOREACH_END();
 		}
-#endif	
+#endif
 
-		php_stream_free(self->stream, PHP_STREAM_FREE_CLOSE);
+		php_stream_close(self->stream);
 		self->stream = NULL;
 	}
 	/* no DBG_RETURN please */
@@ -561,7 +547,7 @@ MYSQLND_METHOD(mysqlnd_debug, set_mode)(MYSQLND_DEBUG * self, const char * const
 			case ':':
 #if 0
 				if (state != PARSER_WAIT_COLON) {
-					php_error_docref(NULL TSRMLS_CC, E_WARNING, "Consecutive semicolons at position %u", i);
+					php_error_docref(NULL, E_WARNING, "Consecutive semicolons at position %u", i);
 				}
 #endif
 				state = PARSER_WAIT_MODIFIER;
@@ -583,7 +569,7 @@ MYSQLND_METHOD(mysqlnd_debug, set_mode)(MYSQLND_DEBUG * self, const char * const
 								char func_name[1024];
 								unsigned int func_name_len = MIN(sizeof(func_name) - 1, j - i - 1);
 								memcpy(func_name, mode + i + 1, func_name_len);
-								func_name[func_name_len] = '\0'; 
+								func_name[func_name_len] = '\0';
 
 								zend_hash_str_add_empty_element(&self->not_filtered_functions,
 															func_name, func_name_len);
@@ -598,7 +584,7 @@ MYSQLND_METHOD(mysqlnd_debug, set_mode)(MYSQLND_DEBUG * self, const char * const
 					i = j;
 				} else {
 #if 0
-					php_error_docref(NULL TSRMLS_CC, E_WARNING,
+					php_error_docref(NULL, E_WARNING,
 									 "Expected list of functions for '%c' found none", mode[i]);
 #endif
 				}
@@ -674,11 +660,11 @@ MYSQLND_METHOD(mysqlnd_debug, set_mode)(MYSQLND_DEBUG * self, const char * const
 			case 'x': /* mysqlnd extension - profile calls */
 				self->flags |= MYSQLND_DEBUG_PROFILE_CALLS;
 				state = PARSER_WAIT_COLON;
-				break;				
+				break;
 			default:
 				if (state == PARSER_WAIT_MODIFIER) {
 #if 0
-					php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unrecognized format '%c'", mode[i]);
+					php_error_docref(NULL, E_WARNING, "Unrecognized format '%c'", mode[i]);
 #endif
 					if (i+1 < mode_len && mode[i+1] == ',') {
 						i+= 2;
@@ -692,7 +678,7 @@ MYSQLND_METHOD(mysqlnd_debug, set_mode)(MYSQLND_DEBUG * self, const char * const
 					state = PARSER_WAIT_COLON;
 				} else if (state == PARSER_WAIT_COLON) {
 #if 0
-					php_error_docref(NULL TSRMLS_CC, E_WARNING, "Colon expected, '%c' found", mode[i]);
+					php_error_docref(NULL, E_WARNING, "Colon expected, '%c' found", mode[i]);
 #endif
 				}
 				break;
@@ -715,12 +701,10 @@ MYSQLND_CLASS_METHODS_END;
 
 /* {{{ mysqlnd_debug_init */
 PHPAPI MYSQLND_DEBUG *
-mysqlnd_debug_init(const char * skip_functions[] TSRMLS_DC)
+mysqlnd_debug_init(const char * skip_functions[])
 {
 	MYSQLND_DEBUG *ret = calloc(1, sizeof(MYSQLND_DEBUG));
-#ifdef ZTS
-	ret->TSRMLS_C = TSRMLS_C;
-#endif
+
 	ret->nest_level_limit = 0;
 	ret->pid = getpid();
 	zend_stack_init(&ret->call_stack, sizeof(char *));
@@ -736,15 +720,15 @@ mysqlnd_debug_init(const char * skip_functions[] TSRMLS_DC)
 /* }}} */
 
 
-/* {{{ _mysqlnd_debug */
-PHPAPI void _mysqlnd_debug(const char * mode TSRMLS_DC)
+/* {{{ mysqlnd_debug */
+PHPAPI void mysqlnd_debug(const char * mode)
 {
 #if PHP_DEBUG
 	MYSQLND_DEBUG * dbg = MYSQLND_G(dbg);
 	if (!dbg) {
 		struct st_mysqlnd_plugin_trace_log * trace_log_plugin = mysqlnd_plugin_find("debug_trace");
 		if (trace_log_plugin) {
-			dbg = trace_log_plugin->methods.trace_instance_init(mysqlnd_debug_std_no_trace_funcs TSRMLS_CC);
+			dbg = trace_log_plugin->methods.trace_instance_init(mysqlnd_debug_std_no_trace_funcs);
 			if (!dbg) {
 				return;
 			}
@@ -772,9 +756,9 @@ static struct st_mysqlnd_plugin_trace_log mysqlnd_plugin_trace_log_plugin =
 		MYSQLND_PLUGIN_API_VERSION,
 		"debug_trace",
 		MYSQLND_VERSION_ID,
-		MYSQLND_VERSION,
+		PHP_MYSQLND_VERSION,
 		"PHP License 3.01",
-		"Andrey Hristov <andrey@mysql.com>,  Ulf Wendel <uwendel@mysql.com>, Georg Richter <georg@mysql.com>",
+		"Andrey Hristov <andrey@php.net>,  Ulf Wendel <uw@php.net>, Georg Richter <georg@php.net>",
 		{
 			NULL, /* no statistics , will be filled later if there are some */
 			NULL, /* no statistics */
@@ -791,9 +775,9 @@ static struct st_mysqlnd_plugin_trace_log mysqlnd_plugin_trace_log_plugin =
 
 /* {{{ mysqlnd_debug_trace_plugin_register */
 void
-mysqlnd_debug_trace_plugin_register(TSRMLS_D)
+mysqlnd_debug_trace_plugin_register(void)
 {
-	mysqlnd_plugin_register_ex((struct st_mysqlnd_plugin_header *) &mysqlnd_plugin_trace_log_plugin TSRMLS_CC);
+	mysqlnd_plugin_register_ex((struct st_mysqlnd_plugin_header *) &mysqlnd_plugin_trace_log_plugin);
 }
 /* }}} */
 

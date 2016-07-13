@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend Engine                                                          |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2014 Zend Technologies Ltd. (http://www.zend.com) |
+   | Copyright (c) 1998-2016 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -22,19 +22,7 @@
 #ifndef ZEND_MULTIPLY_H
 #define ZEND_MULTIPLY_H
 
-#if defined(__i386__) && defined(__GNUC__)
-
-#define ZEND_SIGNED_MULTIPLY_LONG(a, b, lval, dval, usedval) do {	\
-	zend_long __tmpvar; 													\
-	__asm__ ("imul %3,%0\n"											\
-		"adc $0,%1" 												\
-			: "=r"(__tmpvar),"=r"(usedval) 							\
-			: "0"(a), "r"(b), "1"(0));								\
-	if (usedval) (dval) = (double) (a) * (double) (b);				\
-	else (lval) = __tmpvar;											\
-} while (0)
-
-#elif defined(__x86_64__) && defined(__GNUC__)
+#if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
 
 #define ZEND_SIGNED_MULTIPLY_LONG(a, b, lval, dval, usedval) do {	\
 	zend_long __tmpvar; 													\
@@ -82,6 +70,23 @@
 	} else {														\
 		(lval) = __lres;											\
 	}																\
+} while (0)
+
+#elif defined(__powerpc64__) && defined(__GNUC__)
+
+#define ZEND_SIGNED_MULTIPLY_LONG(a, b, lval, dval, usedval) do {	\
+	long __low, __high;						\
+	__asm__("mulld %0,%2,%3\n\t"					\
+		"mulhd %1,%2,%3\n"					\
+		: "=&r"(__low), "=&r"(__high)				\
+		: "r"(a), "r"(b));					\
+	if ((__low >> 63) != __high) {					\
+		(dval) = (double) (a) * (double) (b);			\
+		(usedval) = 1;						\
+	} else {							\
+		(lval) = __low;						\
+		(usedval) = 0;						\
+	}								\
 } while (0)
 
 #elif SIZEOF_ZEND_LONG == 4
@@ -204,6 +209,30 @@ static zend_always_inline size_t zend_safe_address(size_t nmemb, size_t size, si
 	}
 	*overflow = 0;
 	return res;
+}
+
+#elif defined(__GNUC__) && defined(__powerpc64__)
+
+static zend_always_inline size_t zend_safe_address(size_t nmemb, size_t size, size_t offset, int *overflow)
+{
+        size_t res;
+        unsigned long m_overflow;
+
+        __asm__ ("mulld %0,%2,%3\n\t"
+                 "mulhdu %1,%2,%3\n\t"
+                 "addc %0,%0,%4\n\t"
+                 "addze %1,%1\n"
+             : "=&r"(res), "=&r"(m_overflow)
+             : "r"(nmemb),
+               "r"(size),
+               "r"(offset));
+
+        if (UNEXPECTED(m_overflow)) {
+                *overflow = 1;
+                return 0;
+        }
+        *overflow = 0;
+        return res;
 }
 
 #elif SIZEOF_SIZE_T == 4

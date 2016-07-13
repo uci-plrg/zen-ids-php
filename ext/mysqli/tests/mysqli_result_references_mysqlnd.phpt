@@ -48,7 +48,7 @@ if ((version_compare(PHP_VERSION, '6.0', '==') == 1))
 		$references[$idx]['row_copy'] 	= $rows[$i];
 		$references[$idx]['id_ref'] 		= &$rows[$i]['id'];
 		$references[$idx]['id_copy']		= $rows[$i]['id'];
-		/* enforce seperation */
+		/* enforce separation */
 		$references[$idx]['id_copy_mod']= $rows[$i]['id'] + 0;
 	}
 	mysqli_free_result($res);
@@ -113,7 +113,7 @@ array(2) refcount(%d){
     [%u|b%"id_copy"]=>
     %unicode|string%(1) "2" refcount(%d)
     [%u|b%"id_copy_mod"]=>
-    long(2)
+    int(2)
   }
 }
 done!

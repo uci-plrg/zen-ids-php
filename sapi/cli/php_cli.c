@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -39,6 +39,7 @@
 #include "win32/time.h"
 #include "win32/signal.h"
 #include <process.h>
+#include <shellapi.h>
 #endif
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -77,7 +78,6 @@
 #include "zend_compile.h"
 #include "zend_execute.h"
 #include "zend_highlight.h"
-#include "zend_indent.h"
 #include "zend_exceptions.h"
 
 #include "php_getopt.h"
@@ -95,9 +95,20 @@
 # include "win32/select.h"
 #endif
 
+#if defined(PHP_WIN32) && defined(HAVE_OPENSSL)
+# include "openssl/applink.c"
+#endif
+
 PHPAPI extern char *php_ini_opened_path;
 PHPAPI extern char *php_ini_scanned_path;
 PHPAPI extern char *php_ini_scanned_files;
+
+#if defined(PHP_WIN32)
+#if defined(ZTS)
+ZEND_TSRMLS_CACHE_DEFINE()
+#endif
+static DWORD orig_cp = 0;
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -105,7 +116,6 @@ PHPAPI extern char *php_ini_scanned_files;
 
 #define PHP_MODE_STANDARD      1
 #define PHP_MODE_HIGHLIGHT     2
-#define PHP_MODE_INDENT        3
 #define PHP_MODE_LINT          4
 #define PHP_MODE_STRIP         5
 #define PHP_MODE_CLI_DIRECT    6
@@ -183,7 +193,7 @@ const opt_struct OPTIONS[] = {
 	{'-', 0, NULL} /* end of args */
 };
 
-static int print_module_info(zval *element TSRMLS_DC) /* {{{ */
+static int print_module_info(zval *element) /* {{{ */
 {
 	zend_module_entry *module = (zend_module_entry*)Z_PTR_P(element);
 	php_printf("%s\n", module->name);
@@ -191,7 +201,7 @@ static int print_module_info(zval *element TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
-static int module_name_cmp(const void *a, const void *b TSRMLS_DC) /* {{{ */
+static int module_name_cmp(const void *a, const void *b) /* {{{ */
 {
 	Bucket *f = (Bucket *) a;
 	Bucket *s = (Bucket *) b;
@@ -201,40 +211,41 @@ static int module_name_cmp(const void *a, const void *b TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
-static void print_modules(TSRMLS_D) /* {{{ */
+static void print_modules(void) /* {{{ */
 {
 	HashTable sorted_registry;
 
 	zend_hash_init(&sorted_registry, 50, NULL, NULL, 0);
 	zend_hash_copy(&sorted_registry, &module_registry, NULL);
-	zend_hash_sort(&sorted_registry, zend_qsort, module_name_cmp, 0 TSRMLS_CC);
-	zend_hash_apply(&sorted_registry, print_module_info TSRMLS_CC);
+	zend_hash_sort(&sorted_registry, module_name_cmp, 0);
+	zend_hash_apply(&sorted_registry, print_module_info);
 	zend_hash_destroy(&sorted_registry);
 }
 /* }}} */
 
-static int print_extension_info(zend_extension *ext, void *arg TSRMLS_DC) /* {{{ */
+static int print_extension_info(zend_extension *ext, void *arg) /* {{{ */
 {
 	php_printf("%s\n", ext->name);
 	return ZEND_HASH_APPLY_KEEP;
 }
 /* }}} */
 
-static int extension_name_cmp(const zend_llist_element **f, const zend_llist_element **s TSRMLS_DC) /* {{{ */
+static int extension_name_cmp(const zend_llist_element **f, const zend_llist_element **s) /* {{{ */
 {
-	return strcmp(((zend_extension *)(*f)->data)->name,
-				  ((zend_extension *)(*s)->data)->name);
+	zend_extension *fe = (zend_extension*)(*f)->data;
+	zend_extension *se = (zend_extension*)(*s)->data;
+	return strcmp(fe->name, se->name);
 }
 /* }}} */
 
-static void print_extensions(TSRMLS_D) /* {{{ */
+static void print_extensions(void) /* {{{ */
 {
 	zend_llist sorted_exts;
 
 	zend_llist_copy(&sorted_exts, &zend_extensions);
 	sorted_exts.dtor = NULL;
-	zend_llist_sort(&sorted_exts, extension_name_cmp TSRMLS_CC);
-	zend_llist_apply(&sorted_exts, (llist_apply_func_t) print_extension_info TSRMLS_CC);
+	zend_llist_sort(&sorted_exts, extension_name_cmp);
+	zend_llist_apply(&sorted_exts, (llist_apply_func_t) print_extension_info);
 	zend_llist_destroy(&sorted_exts);
 }
 /* }}} */
@@ -243,7 +254,7 @@ static void print_extensions(TSRMLS_D) /* {{{ */
 #define STDOUT_FILENO 1
 #endif
 
-static inline int sapi_cli_select(int fd TSRMLS_DC)
+static inline int sapi_cli_select(int fd)
 {
 	fd_set wfd, dfd;
 	struct timeval tv;
@@ -262,7 +273,7 @@ static inline int sapi_cli_select(int fd TSRMLS_DC)
 	return ret != -1;
 }
 
-PHP_CLI_API size_t sapi_cli_single_write(const char *str, size_t str_length TSRMLS_DC) /* {{{ */
+PHP_CLI_API size_t sapi_cli_single_write(const char *str, size_t str_length) /* {{{ */
 {
 #ifdef PHP_WRITE_STDOUT
 	zend_long ret;
@@ -271,17 +282,13 @@ PHP_CLI_API size_t sapi_cli_single_write(const char *str, size_t str_length TSRM
 #endif
 
 	if (cli_shell_callbacks.cli_shell_write) {
-		size_t shell_wrote;
-		shell_wrote = cli_shell_callbacks.cli_shell_write(str, str_length TSRMLS_CC);
-		if (shell_wrote > -1) {
-			return shell_wrote;
-		}
+		cli_shell_callbacks.cli_shell_write(str, str_length);
 	}
 
 #ifdef PHP_WRITE_STDOUT
 	do {
 		ret = write(STDOUT_FILENO, str, str_length);
-	} while (ret <= 0 && errno == EAGAIN && sapi_cli_select(STDOUT_FILENO TSRMLS_CC));
+	} while (ret <= 0 && errno == EAGAIN && sapi_cli_select(STDOUT_FILENO));
 
 	if (ret <= 0) {
 		return 0;
@@ -295,7 +302,7 @@ PHP_CLI_API size_t sapi_cli_single_write(const char *str, size_t str_length TSRM
 }
 /* }}} */
 
-static size_t sapi_cli_ub_write(const char *str, size_t str_length TSRMLS_DC) /* {{{ */
+static size_t sapi_cli_ub_write(const char *str, size_t str_length) /* {{{ */
 {
 	const char *ptr = str;
 	size_t remaining = str_length;
@@ -307,15 +314,15 @@ static size_t sapi_cli_ub_write(const char *str, size_t str_length TSRMLS_DC) /*
 
 	if (cli_shell_callbacks.cli_shell_ub_write) {
 		size_t ub_wrote;
-		ub_wrote = cli_shell_callbacks.cli_shell_ub_write(str, str_length TSRMLS_CC);
-		if (ub_wrote > -1) {
+		ub_wrote = cli_shell_callbacks.cli_shell_ub_write(str, str_length);
+		if (ub_wrote != (size_t) -1) {
 			return ub_wrote;
 		}
 	}
 
 	while (remaining > 0)
 	{
-		ret = sapi_cli_single_write(ptr, remaining TSRMLS_CC);
+		ret = sapi_cli_single_write(ptr, remaining);
 		if (!ret) {
 #ifndef PHP_CLI_WIN32_NO_CONSOLE
 			php_handle_aborted_connection();
@@ -330,7 +337,7 @@ static size_t sapi_cli_ub_write(const char *str, size_t str_length TSRMLS_DC) /*
 }
 /* }}} */
 
-static void sapi_cli_flush(void *server_context TSRMLS_DC) /* {{{ */
+static void sapi_cli_flush(void *server_context) /* {{{ */
 {
 	/* Ignore EBADF here, it's caused by the fact that STDIN/STDOUT/STDERR streams
 	 * are/could be closed before fflush() is called.
@@ -346,7 +353,7 @@ static void sapi_cli_flush(void *server_context TSRMLS_DC) /* {{{ */
 static char *php_self = "";
 static char *script_filename = "";
 
-static void sapi_cli_register_variables(zval *track_vars_array TSRMLS_DC) /* {{{ */
+static void sapi_cli_register_variables(zval *track_vars_array) /* {{{ */
 {
 	size_t len;
 	char   *docroot = "";
@@ -354,39 +361,39 @@ static void sapi_cli_register_variables(zval *track_vars_array TSRMLS_DC) /* {{{
 	/* In CGI mode, we consider the environment to be a part of the server
 	 * variables
 	 */
-	php_import_environment_variables(track_vars_array TSRMLS_CC);
+	php_import_environment_variables(track_vars_array);
 
 	/* Build the special-case PHP_SELF variable for the CLI version */
 	len = strlen(php_self);
-	if (sapi_module.input_filter(PARSE_SERVER, "PHP_SELF", &php_self, len, &len TSRMLS_CC)) {
-		php_register_variable("PHP_SELF", php_self, track_vars_array TSRMLS_CC);
+	if (sapi_module.input_filter(PARSE_SERVER, "PHP_SELF", &php_self, len, &len)) {
+		php_register_variable("PHP_SELF", php_self, track_vars_array);
 	}
-	if (sapi_module.input_filter(PARSE_SERVER, "SCRIPT_NAME", &php_self, len, &len TSRMLS_CC)) {
-		php_register_variable("SCRIPT_NAME", php_self, track_vars_array TSRMLS_CC);
+	if (sapi_module.input_filter(PARSE_SERVER, "SCRIPT_NAME", &php_self, len, &len)) {
+		php_register_variable("SCRIPT_NAME", php_self, track_vars_array);
 	}
 	/* filenames are empty for stdin */
 	len = strlen(script_filename);
-	if (sapi_module.input_filter(PARSE_SERVER, "SCRIPT_FILENAME", &script_filename, len, &len TSRMLS_CC)) {
-		php_register_variable("SCRIPT_FILENAME", script_filename, track_vars_array TSRMLS_CC);
+	if (sapi_module.input_filter(PARSE_SERVER, "SCRIPT_FILENAME", &script_filename, len, &len)) {
+		php_register_variable("SCRIPT_FILENAME", script_filename, track_vars_array);
 	}
-	if (sapi_module.input_filter(PARSE_SERVER, "PATH_TRANSLATED", &script_filename, len, &len TSRMLS_CC)) {
-		php_register_variable("PATH_TRANSLATED", script_filename, track_vars_array TSRMLS_CC);
+	if (sapi_module.input_filter(PARSE_SERVER, "PATH_TRANSLATED", &script_filename, len, &len)) {
+		php_register_variable("PATH_TRANSLATED", script_filename, track_vars_array);
 	}
 	/* just make it available */
 	len = 0U;
-	if (sapi_module.input_filter(PARSE_SERVER, "DOCUMENT_ROOT", &docroot, len, &len TSRMLS_CC)) {
-		php_register_variable("DOCUMENT_ROOT", docroot, track_vars_array TSRMLS_CC);
+	if (sapi_module.input_filter(PARSE_SERVER, "DOCUMENT_ROOT", &docroot, len, &len)) {
+		php_register_variable("DOCUMENT_ROOT", docroot, track_vars_array);
 	}
 }
 /* }}} */
 
-static void sapi_cli_log_message(char *message TSRMLS_DC) /* {{{ */
+static void sapi_cli_log_message(char *message) /* {{{ */
 {
 	fprintf(stderr, "%s\n", message);
 }
 /* }}} */
 
-static int sapi_cli_deactivate(TSRMLS_D) /* {{{ */
+static int sapi_cli_deactivate(void) /* {{{ */
 {
 	fflush(stdout);
 	if(SG(request_info).argv0) {
@@ -397,19 +404,19 @@ static int sapi_cli_deactivate(TSRMLS_D) /* {{{ */
 }
 /* }}} */
 
-static char* sapi_cli_read_cookies(TSRMLS_D) /* {{{ */
+static char* sapi_cli_read_cookies(void) /* {{{ */
 {
 	return NULL;
 }
 /* }}} */
 
-static int sapi_cli_header_handler(sapi_header_struct *h, sapi_header_op_enum op, sapi_headers_struct *s TSRMLS_DC) /* {{{ */
+static int sapi_cli_header_handler(sapi_header_struct *h, sapi_header_op_enum op, sapi_headers_struct *s) /* {{{ */
 {
 	return 0;
 }
 /* }}} */
 
-static int sapi_cli_send_headers(sapi_headers_struct *sapi_headers TSRMLS_DC) /* {{{ */
+static int sapi_cli_send_headers(sapi_headers_struct *sapi_headers) /* {{{ */
 {
 	/* We do nothing here, this function is needed to prevent that the fallback
 	 * header handling is called. */
@@ -417,7 +424,7 @@ static int sapi_cli_send_headers(sapi_headers_struct *sapi_headers TSRMLS_DC) /*
 }
 /* }}} */
 
-static void sapi_cli_send_header(sapi_header_struct *sapi_header, void *server_context TSRMLS_DC) /* {{{ */
+static void sapi_cli_send_header(sapi_header_struct *sapi_header, void *server_context) /* {{{ */
 {
 }
 /* }}} */
@@ -491,7 +498,7 @@ static const zend_function_entry additional_functions[] = {
 	ZEND_FE(dl, arginfo_dl)
 	PHP_FE(cli_set_process_title,        arginfo_cli_set_process_title)
 	PHP_FE(cli_get_process_title,        arginfo_cli_get_process_title)
-	{NULL, NULL, NULL}
+	PHP_FE_END
 };
 
 /* {{{ php_cli_usage
@@ -521,7 +528,7 @@ static void php_cli_usage(char *argv0)
 				"  -a               Run interactively\n"
 #endif
 				"  -c <path>|<file> Look for php.ini file in this directory\n"
-				"  -n               No php.ini file will be used\n"
+				"  -n               No configuration (ini) files will be used\n"
 				"  -d foo[=bar]     Define INI entry foo with value 'bar'\n"
 				"  -e               Generate extended information for debugger/profiler\n"
 				"  -f <file>        Parse and execute <file>.\n"
@@ -559,9 +566,8 @@ static void php_cli_usage(char *argv0)
 
 static php_stream *s_in_process = NULL;
 
-static void cli_register_file_handles(TSRMLS_D) /* {{{ */
+static void cli_register_file_handles(void) /* {{{ */
 {
-	zval zin, zout, zerr;
 	php_stream *s_in, *s_out, *s_err;
 	php_stream_context *sc_in=NULL, *sc_out=NULL, *sc_err=NULL;
 	zend_constant ic, oc, ec;
@@ -585,27 +591,24 @@ static void cli_register_file_handles(TSRMLS_D) /* {{{ */
 
 	s_in_process = s_in;
 
-	php_stream_to_zval(s_in,  &zin);
-	php_stream_to_zval(s_out, &zout);
-	php_stream_to_zval(s_err, &zerr);
+	php_stream_to_zval(s_in,  &ic.value);
+	php_stream_to_zval(s_out, &oc.value);
+	php_stream_to_zval(s_err, &ec.value);
 
-	ZVAL_COPY_VALUE(&ic.value, &zin);
 	ic.flags = CONST_CS;
 	ic.name = zend_string_init("STDIN", sizeof("STDIN")-1, 1);
 	ic.module_number = 0;
-	zend_register_constant(&ic TSRMLS_CC);
+	zend_register_constant(&ic);
 
-	ZVAL_COPY_VALUE(&oc.value, &zout);
 	oc.flags = CONST_CS;
 	oc.name = zend_string_init("STDOUT", sizeof("STDOUT")-1, 1);
 	oc.module_number = 0;
-	zend_register_constant(&oc TSRMLS_CC);
+	zend_register_constant(&oc);
 
-	ZVAL_COPY_VALUE(&ec.value, &zerr);
 	ec.flags = CONST_CS;
 	ec.name = zend_string_init("STDERR", sizeof("STDERR")-1, 1);
 	ec.module_number = 0;
-	zend_register_constant(&ec TSRMLS_CC);
+	zend_register_constant(&ec);
 }
 /* }}} */
 
@@ -613,7 +616,7 @@ static const char *param_mode_conflict = "Either execute direct code, process st
 
 /* {{{ cli_seek_file_begin
  */
-static int cli_seek_file_begin(zend_file_handle *file_handle, char *script_file, int *lineno TSRMLS_DC)
+static int cli_seek_file_begin(zend_file_handle *file_handle, char *script_file, int *lineno)
 {
 	int c;
 
@@ -650,7 +653,18 @@ static int cli_seek_file_begin(zend_file_handle *file_handle, char *script_file,
 }
 /* }}} */
 
-static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
+/*{{{ php_cli_win32_ctrl_handler */
+#if defined(PHP_WIN32) && !defined(PHP_CLI_WIN32_NO_CONSOLE)
+BOOL WINAPI php_cli_win32_ctrl_handler(DWORD sig)
+{
+	(void)php_win32_cp_cli_do_restore(orig_cp);
+
+	return FALSE;
+}
+#endif
+/*}}}*/
+
+static int do_cli(int argc, char **argv) /* {{{ */
 {
 	int c;
 	zend_file_handle file_handle;
@@ -667,7 +681,6 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 	int lineno = 0;
 	const char *param_error=NULL;
 	int hide_argv = 0;
-	zend_string *key;
 #ifdef ZEND_MONITOR
   extern zend_opcode_monitor_t *opcode_monitor;
 #endif
@@ -680,43 +693,54 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			switch (c) {
 
 			case 'i': /* php info & quit */
-				if (php_request_startup(TSRMLS_C)==FAILURE) {
+				if (php_request_startup()==FAILURE) {
 					goto err;
 				}
 				request_started = 1;
-				php_print_info(0xFFFFFFFF TSRMLS_CC);
-				php_output_end_all(TSRMLS_C);
+				php_print_info(0xFFFFFFFF);
+				php_output_end_all();
 				exit_status = (c == '?' && argc > 1 && !strchr(argv[1],  c));
 				goto out;
 
 			case 'v': /* show php version & quit */
-				php_printf("PHP %s (%s) (built: %s %s) %s\nCopyright (c) 1997-2014 The PHP Group\n%s",
+				php_printf("PHP %s (%s) (built: %s %s) ( %s)\nCopyright (c) 1997-2016 The PHP Group\n%s",
 					PHP_VERSION, cli_sapi_module.name, __DATE__, __TIME__,
-#if ZEND_DEBUG && defined(HAVE_GCOV)
-					"(DEBUG GCOV)",
-#elif ZEND_DEBUG
-					"(DEBUG)",
-#elif defined(HAVE_GCOV)
-					"(GCOV)",
+#if ZTS
+					"ZTS "
 #else
-					"",
+					"NTS "
 #endif
+#ifdef COMPILER
+					COMPILER
+					" "
+#endif
+#ifdef ARCHITECTURE
+					ARCHITECTURE
+					" "
+#endif
+#if ZEND_DEBUG
+					"DEBUG "
+#endif
+#ifdef HAVE_GCOV
+					"GCOV "
+#endif
+					,
 					get_zend_version()
 				);
-				sapi_deactivate(TSRMLS_C);
+				sapi_deactivate();
 				goto out;
 
 			case 'm': /* list compiled in modules */
-				if (php_request_startup(TSRMLS_C)==FAILURE) {
+				if (php_request_startup()==FAILURE) {
 					goto err;
 				}
 				request_started = 1;
 				php_printf("[PHP Modules]\n");
-				print_modules(TSRMLS_C);
+				print_modules();
 				php_printf("\n[Zend Modules]\n");
-				print_extensions(TSRMLS_C);
+				print_extensions();
 				php_printf("\n");
-				php_output_end_all(TSRMLS_C);
+				php_output_end_all();
 				exit_status=0;
 				goto out;
 
@@ -779,16 +803,6 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 				}
 				behavior=PHP_MODE_LINT;
 				break;
-
-#if 0 /* not yet operational, see also below ... */
-			case '': /* generate indented source mode*/
-				if (behavior == PHP_MODE_CLI_DIRECT || behavior == PHP_MODE_PROCESS_STDIN) {
-					param_error = "Source indenting only works for files.\n";
-					break;
-				}
-				behavior=PHP_MODE_INDENT;
-				break;
-#endif
 
 			case 'q': /* do not generate HTTP headers */
 				/* This is default so NOP */
@@ -877,7 +891,7 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 #endif
 
 			case 'z': /* load extension file */
-				zend_load_extension(php_optarg TSRMLS_CC);
+				zend_load_extension(php_optarg);
 				break;
 			case 'H':
 				hide_argv = 1;
@@ -936,7 +950,7 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			php_optind++;
 		}
 		if (script_file) {
-			if (cli_seek_file_begin(&file_handle, script_file, &lineno TSRMLS_CC) != SUCCESS) {
+			if (cli_seek_file_begin(&file_handle, script_file, &lineno) != SUCCESS) {
 				goto err;
 			} else {
 				char real_path[MAXPATHLEN];
@@ -970,7 +984,7 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 		argv[php_optind-1] = (char*)file_handle.filename;
 		SG(request_info).argv=argv+php_optind-1;
 
-		if (php_request_startup(TSRMLS_C)==FAILURE) {
+		if (php_request_startup()==FAILURE) {
 			*arg_excp = arg_free;
 			fclose(file_handle.handle.fp);
 			PUTS("Could not startup.\n");
@@ -987,26 +1001,24 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			}
 		}
 
-		key = zend_string_init("_SERVER", sizeof("_SERVER")-1, 0);
-		zend_is_auto_global(key TSRMLS_CC);
-		zend_string_release(key);
+		zend_is_auto_global_str(ZEND_STRL("_SERVER"));
 
 		PG(during_request_startup) = 0;
 		switch (behavior) {
 		case PHP_MODE_STANDARD:
 			if (strcmp(file_handle.filename, "-")) {
-				cli_register_file_handles(TSRMLS_C);
+				cli_register_file_handles();
 			}
 
 			if (interactive && cli_shell_callbacks.cli_shell_run) {
-				exit_status = cli_shell_callbacks.cli_shell_run(TSRMLS_C);
+				exit_status = cli_shell_callbacks.cli_shell_run();
 			} else {
-				php_execute_script(&file_handle TSRMLS_CC);
+				php_execute_script(&file_handle);
 				exit_status = EG(exit_status);
 			}
 			break;
 		case PHP_MODE_LINT:
-			exit_status = php_lint_script(&file_handle TSRMLS_CC);
+			exit_status = php_lint_script(&file_handle);
 			if (exit_status==SUCCESS) {
 				zend_printf("No syntax errors detected in %s\n", file_handle.filename);
 			} else {
@@ -1014,8 +1026,8 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			}
 			break;
 		case PHP_MODE_STRIP:
-			if (open_file_for_scanning(&file_handle TSRMLS_CC)==SUCCESS) {
-				zend_strip(TSRMLS_C);
+			if (open_file_for_scanning(&file_handle)==SUCCESS) {
+				zend_strip();
 			}
 			goto out;
 			break;
@@ -1031,25 +1043,16 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 			{
 				zend_syntax_highlighter_ini syntax_highlighter_ini;
 
-				if (open_file_for_scanning(&file_handle TSRMLS_CC)==SUCCESS) {
+				if (open_file_for_scanning(&file_handle)==SUCCESS) {
 					php_get_highlight_struct(&syntax_highlighter_ini);
-					zend_highlight(&syntax_highlighter_ini TSRMLS_CC);
+					zend_highlight(&syntax_highlighter_ini);
 				}
 				goto out;
 			}
 			break;
-#if 0
-			/* Zeev might want to do something with this one day */
-		case PHP_MODE_INDENT:
-			open_file_for_scanning(&file_handle TSRMLS_CC);
-			zend_indent(TSRMLS_C);
-			zend_file_handle_dtor(file_handle.handle TSRMLS_CC);
-			goto out;
-			break;
-#endif
 		case PHP_MODE_CLI_DIRECT:
-			cli_register_file_handles(TSRMLS_C);
-			if (zend_eval_string_ex(exec_direct, NULL, "Command line code", 1 TSRMLS_CC) == FAILURE) {
+			cli_register_file_handles();
+			if (zend_eval_string_ex(exec_direct, NULL, "Command line code", 1) == FAILURE) {
 				exit_status=254;
 			}
 			break;
@@ -1060,39 +1063,38 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 				size_t len, index = 0;
 				zval argn, argi;
 
-				cli_register_file_handles(TSRMLS_C);
+				cli_register_file_handles();
 
-				if (exec_begin && zend_eval_string_ex(exec_begin, NULL, "Command line begin code", 1 TSRMLS_CC) == FAILURE) {
+				if (exec_begin && zend_eval_string_ex(exec_begin, NULL, "Command line begin code", 1) == FAILURE) {
 					exit_status=254;
 				}
-				ZVAL_LONG(&argi, index);
-				zend_hash_str_update(&EG(symbol_table).ht, "argi", sizeof("argi")-1, &argi);
 				while (exit_status == SUCCESS && (input=php_stream_gets(s_in_process, NULL, 0)) != NULL) {
 					len = strlen(input);
 					while (len > 0 && len-- && (input[len]=='\n' || input[len]=='\r')) {
 						input[len] = '\0';
 					}
-					ZVAL_STRINGL(&argn, input, len);
-					zend_hash_str_update(&EG(symbol_table).ht, "argn", sizeof("argn")-1, &argn);
-					Z_LVAL(argi) = ++index;
+					ZVAL_STRINGL(&argn, input, len + 1);
+					zend_hash_str_update(&EG(symbol_table), "argn", sizeof("argn")-1, &argn);
+					ZVAL_LONG(&argi, ++index);
+					zend_hash_str_update(&EG(symbol_table), "argi", sizeof("argi")-1, &argi);
 					if (exec_run) {
-						if (zend_eval_string_ex(exec_run, NULL, "Command line run code", 1 TSRMLS_CC) == FAILURE) {
+						if (zend_eval_string_ex(exec_run, NULL, "Command line run code", 1) == FAILURE) {
 							exit_status=254;
 						}
 					} else {
 						if (script_file) {
-							if (cli_seek_file_begin(&file_handle, script_file, &lineno TSRMLS_CC) != SUCCESS) {
+							if (cli_seek_file_begin(&file_handle, script_file, &lineno) != SUCCESS) {
 								exit_status = 1;
 							} else {
 								CG(start_lineno) = lineno;
-								php_execute_script(&file_handle TSRMLS_CC);
+								php_execute_script(&file_handle);
 								exit_status = EG(exit_status);
 							}
 						}
 					}
 					efree(input);
 				}
-				if (exec_end && zend_eval_string_ex(exec_end, NULL, "Command line end code", 1 TSRMLS_CC) == FAILURE) {
+				if (exec_end && zend_eval_string_ex(exec_end, NULL, "Command line end code", 1) == FAILURE) {
 					exit_status=254;
 				}
 
@@ -1137,10 +1139,10 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 					zend_call_method_with_1_params(&ref, pce, &pce->constructor, "__construct", NULL, &arg);
 
 					if (EG(exception)) {
-						zval tmp, *msg;
+						zval tmp, *msg, rv;
 
 						ZVAL_OBJ(&tmp, EG(exception));
-						msg = zend_read_property(zend_exception_get_default(TSRMLS_C), &tmp, "message", sizeof("message")-1, 0 TSRMLS_CC);
+						msg = zend_read_property(zend_ce_exception, &tmp, "message", sizeof("message")-1, 0, &rv);
 						zend_printf("Exception: %s\n", Z_STRVAL_P(msg));
 						zval_ptr_dtor(&tmp);
 						EG(exception) = NULL;
@@ -1166,7 +1168,7 @@ static int do_cli(int argc, char **argv TSRMLS_DC) /* {{{ */
 							exit_status = 1;
 						}
 					} else {
-						php_info_print_module(module TSRMLS_CC);
+						php_info_print_module(module);
 					}
 
 					efree(lcname);
@@ -1196,8 +1198,8 @@ out:
 	}
 	return exit_status;
 err:
-	sapi_deactivate(TSRMLS_C);
-	zend_ini_deactivate(TSRMLS_C);
+	sapi_deactivate();
+	zend_ini_deactivate();
 	exit_status = 1;
 	goto out;
 }
@@ -1211,12 +1213,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int main(int argc, char *argv[])
 #endif
 {
-#ifdef ZTS
-	void ***tsrm_ls;
-#endif
-#ifdef PHP_CLI_WIN32_NO_CONSOLE
+#if defined(PHP_WIN32)
+# ifdef PHP_CLI_WIN32_NO_CONSOLE
 	int argc = __argc;
 	char **argv = __argv;
+# else
+	int num_args;
+	wchar_t **argv_wide;
+	char **argv_save = argv;
+	BOOL using_wide_argv = 0;
+# endif
 #endif
 
 	int c;
@@ -1269,8 +1275,11 @@ int main(int argc, char *argv[])
 
 #ifdef ZTS
 	tsrm_startup(1, 1, 0, NULL);
-	tsrm_ls = ts_resource(0);
+	(void)ts_resource(0);
+	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
+
+	zend_signal_startup();
 
 #ifdef PHP_WIN32
 	_fmode = _O_BINARY;			/*sets default for file streams to binary */
@@ -1378,6 +1387,19 @@ exit_loop:
 	}
 	module_started = 1;
 
+#if defined(PHP_WIN32) && !defined(PHP_CLI_WIN32_NO_CONSOLE)
+	php_win32_cp_cli_setup();
+	orig_cp = (php_win32_cp_get_orig())->id;
+	/* Ignore the delivered argv and argc, read from W API. This place
+		might be too late though, but this is the earliest place ATW
+		we can access the internal charset information from PHP. */
+	argv_wide = CommandLineToArgvW(GetCommandLineW(), &num_args);
+	PHP_WIN32_CP_W_TO_A_ARRAY(argv_wide, num_args, argv, argc)
+	using_wide_argv = 1;
+
+	SetConsoleCtrlHandler(php_cli_win32_ctrl_handler, TRUE);
+#endif
+
 	/* -e option */
 	if (use_extended_info) {
 		CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
@@ -1387,10 +1409,10 @@ exit_loop:
 #ifndef PHP_CLI_WIN32_NO_CONSOLE
 		if (sapi_module == &cli_sapi_module) {
 #endif
-			exit_status = do_cli(argc, argv TSRMLS_CC);
+			exit_status = do_cli(argc, argv);
 #ifndef PHP_CLI_WIN32_NO_CONSOLE
 		} else {
-			exit_status = do_cli_server(argc, argv TSRMLS_CC);
+			exit_status = do_cli_server(argc, argv);
 		}
 #endif
 	} zend_end_try();
@@ -1402,7 +1424,7 @@ out:
 		free(ini_entries);
 	}
 	if (module_started) {
-		php_module_shutdown(TSRMLS_C);
+		php_module_shutdown();
 	}
 	if (sapi_started) {
 		sapi_shutdown();
@@ -1411,6 +1433,15 @@ out:
 	tsrm_shutdown();
 #endif
 
+#if defined(PHP_WIN32) && !defined(PHP_CLI_WIN32_NO_CONSOLE)
+	(void)php_win32_cp_cli_restore();
+
+	if (using_wide_argv) {
+		PHP_WIN32_FREE_ARRAY(argv, argc);
+		LocalFree(argv_wide);
+	}
+	argv = argv_save;
+#endif
 	/*
 	 * Do not move this de-initialization. It needs to happen right before
 	 * exiting.

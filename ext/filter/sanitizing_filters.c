@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 7                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2014 The PHP Group                                |
+  | Copyright (c) 1997-2016 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -87,9 +87,9 @@ static void php_filter_encode_url(zval *value, const unsigned char* chars, const
 		memset(tmp, 1, 32);
 	}
 */
-	str = zend_string_alloc(3 * Z_STRLEN_P(value), 0);
-	p = str->val;
-	s = Z_STRVAL_P(value);
+	str = zend_string_safe_alloc(Z_STRLEN_P(value), 3, 0, 0);
+	p = (unsigned char *) ZSTR_VAL(str);
+	s = (unsigned char *) Z_STRVAL_P(value);
 	e = s + Z_STRLEN_P(value);
 
 	while (s < e) {
@@ -98,12 +98,12 @@ static void php_filter_encode_url(zval *value, const unsigned char* chars, const
 			*p++ = hexchars[(unsigned char) *s >> 4];
 			*p++ = hexchars[(unsigned char) *s & 15];
 		} else {
-			*p++ = *s;	
+			*p++ = *s;
 		}
-		s++;	
+		s++;
 	}
 	*p = '\0';
-	str->len = p - (unsigned char *)str->val;
+	ZSTR_LEN(str) = p - (unsigned char *)ZSTR_VAL(str);
 	zval_ptr_dtor(value);
 	ZVAL_NEW_STR(value, str);
 }
@@ -111,11 +111,12 @@ static void php_filter_encode_url(zval *value, const unsigned char* chars, const
 static void php_filter_strip(zval *value, zend_long flags)
 {
 	unsigned char *str;
-	int   i, c;
+	size_t i;
+	int c;
 	zend_string *buf;
-	
+
 	/* Optimization for if no strip flags are set */
-	if (! ((flags & FILTER_FLAG_STRIP_LOW) || (flags & FILTER_FLAG_STRIP_HIGH)) ) {
+	if (!(flags & (FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK))) {
 		return;
 	}
 
@@ -123,17 +124,17 @@ static void php_filter_strip(zval *value, zend_long flags)
 	buf = zend_string_alloc(Z_STRLEN_P(value) + 1, 0);
 	c = 0;
 	for (i = 0; i < Z_STRLEN_P(value); i++) {
-		if ((str[i] > 127) && (flags & FILTER_FLAG_STRIP_HIGH)) {
+		if ((str[i] >= 127) && (flags & FILTER_FLAG_STRIP_HIGH)) {
 		} else if ((str[i] < 32) && (flags & FILTER_FLAG_STRIP_LOW)) {
 		} else if ((str[i] == '`') && (flags & FILTER_FLAG_STRIP_BACKTICK)) {
 		} else {
-			buf->val[c] = str[i];
+			ZSTR_VAL(buf)[c] = str[i];
 			++c;
 		}
 	}
 	/* update zval string data */
-	buf->val[c] = '\0';
-	buf->len = c;
+	ZSTR_VAL(buf)[c] = '\0';
+	ZSTR_LEN(buf) = c;
 	zval_ptr_dtor(value);
 	ZVAL_NEW_STR(value, buf);
 }
@@ -158,21 +159,22 @@ static void filter_map_update(filter_map *map, int flag, const unsigned char *al
 static void filter_map_apply(zval *value, filter_map *map)
 {
 	unsigned char *str;
-	int   i, c;
+	size_t i;
+	int c;
 	zend_string *buf;
-	
+
 	str = (unsigned char *)Z_STRVAL_P(value);
 	buf = zend_string_alloc(Z_STRLEN_P(value) + 1, 0);
 	c = 0;
 	for (i = 0; i < Z_STRLEN_P(value); i++) {
 		if ((*map)[str[i]]) {
-			buf->val[c] = str[i];
+			ZSTR_VAL(buf)[c] = str[i];
 			++c;
 		}
 	}
 	/* update zval string data */
-	buf->val[c] = '\0';
-	buf->len = c;
+	ZSTR_VAL(buf)[c] = '\0';
+	ZSTR_LEN(buf) = c;
 	zval_ptr_dtor(value);
 	ZVAL_NEW_STR(value, buf);
 }
@@ -215,7 +217,7 @@ void php_filter_string(PHP_INPUT_FILTER_PARAM_DECL)
 		if (flags & FILTER_FLAG_EMPTY_STRING_NULL) {
 			ZVAL_NULL(value);
 		} else {
-			ZVAL_EMPTY_STRING(value);			
+			ZVAL_EMPTY_STRING(value);
 		}
 		return;
 	}
@@ -248,8 +250,8 @@ void php_filter_special_chars(PHP_INPUT_FILTER_PARAM_DECL)
 	if (flags & FILTER_FLAG_ENCODE_HIGH) {
 		memset(enc + 127, 1, sizeof(enc) - 127);
 	}
-	
-	php_filter_encode_html(value, enc);	
+
+	php_filter_encode_html(value, enc);
 }
 /* }}} */
 
@@ -258,13 +260,13 @@ void php_filter_full_special_chars(PHP_INPUT_FILTER_PARAM_DECL)
 {
 	zend_string *buf;
 	int quotes;
-	
+
 	if (!(flags & FILTER_FLAG_NO_ENCODE_QUOTES)) {
 		quotes = ENT_QUOTES;
 	} else {
 		quotes = ENT_NOQUOTES;
 	}
-	buf = php_escape_html_entities_ex(Z_STRVAL_P(value), Z_STRLEN_P(value), 1, quotes, SG(default_charset), 0 TSRMLS_CC);
+	buf = php_escape_html_entities_ex((unsigned char *) Z_STRVAL_P(value), Z_STRLEN_P(value), 1, quotes, SG(default_charset), 0);
 	zval_ptr_dtor(value);
 	ZVAL_STR(value, buf);
 }
@@ -289,7 +291,7 @@ void php_filter_unsafe_raw(PHP_INPUT_FILTER_PARAM_DECL)
 			memset(enc + 127, 1, sizeof(enc) - 127);
 		}
 
-		php_filter_encode_html(value, enc);	
+		php_filter_encode_html(value, enc);
 	} else if (flags & FILTER_FLAG_EMPTY_STRING_NULL && Z_STRLEN_P(value) == 0) {
 		zval_dtor(value);
 		ZVAL_NULL(value);
@@ -371,9 +373,9 @@ void php_filter_number_float(PHP_INPUT_FILTER_PARAM_DECL)
 void php_filter_magic_quotes(PHP_INPUT_FILTER_PARAM_DECL)
 {
 	zend_string *buf;
-	
+
 	/* just call php_addslashes quotes */
-	buf = php_addslashes(Z_STRVAL_P(value), Z_STRLEN_P(value), 0 TSRMLS_CC);
+	buf = php_addslashes(Z_STR_P(value), 0);
 
 	zval_ptr_dtor(value);
 	ZVAL_STR(value, buf);

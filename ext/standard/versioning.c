@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -215,7 +215,7 @@ PHP_FUNCTION(version_compare)
 	int compare, argc;
 
 	argc = ZEND_NUM_ARGS();
-	if (zend_parse_parameters(argc TSRMLS_CC, "ss|s", &v1, &v1_len, &v2,
+	if (zend_parse_parameters(argc, "ss|s", &v1, &v1_len, &v2,
 							  &v2_len, &op, &op_len) == FAILURE) {
 		return;
 	}

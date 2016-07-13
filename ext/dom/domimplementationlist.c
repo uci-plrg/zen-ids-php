@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -34,7 +34,7 @@ ZEND_END_ARG_INFO();
 /* }}} */
 
 /*
-* class domimplementationlist 
+* class domimplementationlist
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#DOMImplementationList
 * Since: DOM Level 3
@@ -42,17 +42,17 @@ ZEND_END_ARG_INFO();
 
 const zend_function_entry php_dom_domimplementationlist_class_functions[] = {
 	PHP_FALIAS(item, dom_domimplementationlist_item, arginfo_dom_implementationlist_item)
-	{NULL, NULL, NULL}
+	PHP_FE_END
 };
 
 /* {{{ attribute protos, not implemented yet */
 
-/* {{{ length	unsigned long	
-readonly=yes 
+/* {{{ length	unsigned long
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#DOMImplementationList-length
-Since: 
+Since:
 */
-int dom_domimplementationlist_length_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domimplementationlist_length_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;
@@ -62,7 +62,7 @@ int dom_domimplementationlist_length_read(dom_object *obj, zval *retval TSRMLS_D
 
 /* {{{ proto domdomimplementation dom_domimplementationlist_item(int index);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#DOMImplementationList-item
-Since: 
+Since:
 */
 PHP_FUNCTION(dom_domimplementationlist_item)
 {

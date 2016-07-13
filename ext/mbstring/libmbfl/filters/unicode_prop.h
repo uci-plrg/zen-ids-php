@@ -5,7 +5,7 @@
  * LICENSE NOTICES
  *
  * This file is part of "streamable kanji code filter and converter",
- * which is distributed under the terms of GNU Lesser General Public 
+ * which is distributed under the terms of GNU Lesser General Public
  * License (version 2) as published by the Free Software Foundation.
  *
  * This software is distributed in the hope that it will be useful,
@@ -22,7 +22,7 @@
  *
  */
 
-/* charactor property table */
+/* character property table */
 #define MBFL_CHP_CTL		0x01
 #define MBFL_CHP_DIGIT		0x02
 #define MBFL_CHP_UALPHA		0x04

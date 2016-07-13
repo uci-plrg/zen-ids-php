@@ -112,7 +112,7 @@ int gdAlphaBlend(int dest, int src);
 
  *  GD_BELL				 - Bell
  *  GD_BESSEL			 - Bessel
- *  GD_BILINEAR_FIXED 	 - fixed point bilinear 
+ *  GD_BILINEAR_FIXED 	 - fixed point bilinear
  *  GD_BICUBIC 			 - Bicubic
  *  GD_BICUBIC_FIXED 	 - fixed point bicubic integer
  *  GD_BLACKMAN			 - Blackman
@@ -782,7 +782,7 @@ int gdImageBrightness(gdImagePtr src, int brightness);
 /* Set the contrast level <contrast> for the image <src> */
 int gdImageContrast(gdImagePtr src, double contrast);
 
-/* Simply adds or substracts respectively red, green or blue to a pixel */
+/* Simply adds or subtracts respectively red, green or blue to a pixel */
 int gdImageColor(gdImagePtr src, const int red, const int green, const int blue, const int alpha);
 
 /* Image convolution by a 3x3 custom matrix */

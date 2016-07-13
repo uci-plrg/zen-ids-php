@@ -1,9 +1,7 @@
 --TEST--
 Bug #20175 (Static vars can't store ref to new instance)
---SKIPIF--
-<?php if (version_compare(zend_version(),'2.0.0-dev','<')) die('skip ZE1 does not have static class members'); ?>
 --INI--
-error_reporting=E_ALL | E_STRICT | E_DEPRECATED
+error_reporting=E_ALL
 --FILE--
 <?php
 print zend_version()."\n";
@@ -97,7 +95,7 @@ $oop_global = 0;
 class oop_class {
 	var $oop_name;
 	
-	function oop_class() {
+	function __construct() {
 		global $oop_global;
 		echo "oop_class()\n";
 		$this->oop_name = 'oop:' . ++$oop_global;
@@ -107,14 +105,14 @@ class oop_class {
 class oop_test {
 	static $oop_value;
 	
-	function oop_test() {
+	function __construct() {
 		echo "oop_test()\n";
 	}
 	
 	function oop_static() {
 		echo "oop_static()\n";
 		if (!isset(self::$oop_value)) {
-			self::$oop_value = & new oop_class;
+			self::$oop_value = new oop_class;
 		}
 		echo self::$oop_value->oop_name;
 	}
@@ -139,7 +137,6 @@ $oop_tester = new oop_test; // repeated.
 print $oop_tester->oop_static()."\n";
 ?>
 --EXPECTF--
-Deprecated: Assigning the return value of new by reference is deprecated in %s.php on line %d
 %s
 foo_static()
 foo_global()
@@ -149,7 +146,7 @@ foo:1
 bar_static()
 bar_global()
 
-Strict Standards: Only variables should be assigned by reference in %sbug20175.php on line 47
+Notice: Only variables should be assigned by reference in %sbug20175.php on line 47
 bar:1
 bar_static()
 bar:1

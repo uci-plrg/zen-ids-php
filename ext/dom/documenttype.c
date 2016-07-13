@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -28,27 +28,27 @@
 #include "php_dom.h"
 
 /*
-* class DOMDocumentType extends DOMNode 
+* class DOMDocumentType extends DOMNode
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-412266927
-* Since: 
+* Since:
 */
 
 const zend_function_entry php_dom_documenttype_class_functions[] = {
 	PHP_FE_END
 };
 
-/* {{{ name	string	
-readonly=yes 
+/* {{{ name	string
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-1844763134
-Since: 
+Since:
 */
-int dom_documenttype_name_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_documenttype_name_read(dom_object *obj, zval *retval)
 {
 	xmlDtdPtr dtdptr = (xmlDtdPtr) dom_object_get_node(obj);
 
 	if (dtdptr == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 0);
 		return FAILURE;
 	}
 
@@ -59,73 +59,73 @@ int dom_documenttype_name_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ entities	DOMNamedNodeMap	
-readonly=yes 
+/* {{{ entities	DOMNamedNodeMap
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-1788794630
-Since: 
+Since:
 */
-int dom_documenttype_entities_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_documenttype_entities_read(dom_object *obj, zval *retval)
 {
 	xmlDtdPtr doctypep = (xmlDtdPtr) dom_object_get_node(obj);
 	xmlHashTable *entityht;
 	dom_object *intern;
 
 	if (doctypep == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 0);
 		return FAILURE;
 	}
 
-	php_dom_create_interator(retval, DOM_NAMEDNODEMAP TSRMLS_CC);
+	php_dom_create_interator(retval, DOM_NAMEDNODEMAP);
 
 	entityht = (xmlHashTable *) doctypep->entities;
 
 	intern = Z_DOMOBJ_P(retval);
-	dom_namednode_iter(obj, XML_ENTITY_NODE, intern, entityht, NULL, NULL TSRMLS_CC);
+	dom_namednode_iter(obj, XML_ENTITY_NODE, intern, entityht, NULL, NULL);
 
 	return SUCCESS;
 }
 
 /* }}} */
 
-/* {{{ notations	DOMNamedNodeMap	
-readonly=yes 
+/* {{{ notations	DOMNamedNodeMap
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-D46829EF
-Since: 
+Since:
 */
-int dom_documenttype_notations_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_documenttype_notations_read(dom_object *obj, zval *retval)
 {
 	xmlDtdPtr doctypep = (xmlDtdPtr) dom_object_get_node(obj);
 	xmlHashTable *notationht;
 	dom_object *intern;
 
 	if (doctypep == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 0);
 		return FAILURE;
 	}
 
-	php_dom_create_interator(retval, DOM_NAMEDNODEMAP TSRMLS_CC);
+	php_dom_create_interator(retval, DOM_NAMEDNODEMAP);
 
 	notationht = (xmlHashTable *) doctypep->notations;
 
 	intern = Z_DOMOBJ_P(retval);
-	dom_namednode_iter(obj, XML_NOTATION_NODE, intern, notationht, NULL, NULL TSRMLS_CC);
+	dom_namednode_iter(obj, XML_NOTATION_NODE, intern, notationht, NULL, NULL);
 
 	return SUCCESS;
 }
 
 /* }}} */
 
-/* {{{ publicId	string	
-readonly=yes 
+/* {{{ publicId	string
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-Core-DocType-publicId
 Since: DOM Level 2
 */
-int dom_documenttype_public_id_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_documenttype_public_id_read(dom_object *obj, zval *retval)
 {
 	xmlDtdPtr dtdptr = (xmlDtdPtr) dom_object_get_node(obj);
 
 	if (dtdptr == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 0);
 		return FAILURE;
 	}
 
@@ -140,17 +140,17 @@ int dom_documenttype_public_id_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ systemId	string	
-readonly=yes 
+/* {{{ systemId	string
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-Core-DocType-systemId
 Since: DOM Level 2
 */
-int dom_documenttype_system_id_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_documenttype_system_id_read(dom_object *obj, zval *retval)
 {
 	xmlDtdPtr dtdptr = (xmlDtdPtr) dom_object_get_node(obj);
 
 	if (dtdptr == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 0);
 		return FAILURE;
 	}
 
@@ -164,18 +164,18 @@ int dom_documenttype_system_id_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ internalSubset	string	
-readonly=yes 
+/* {{{ internalSubset	string
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-Core-DocType-internalSubset
 Since: DOM Level 2
 */
-int dom_documenttype_internal_subset_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_documenttype_internal_subset_read(dom_object *obj, zval *retval)
 {
 	xmlDtdPtr dtdptr = (xmlDtdPtr) dom_object_get_node(obj);
 	xmlDtdPtr intsubset;
 
 	if (dtdptr == NULL) {
-		php_dom_throw_error(INVALID_STATE_ERR, 0 TSRMLS_CC);
+		php_dom_throw_error(INVALID_STATE_ERR, 0);
 		return FAILURE;
 	}
 
@@ -191,9 +191,9 @@ int dom_documenttype_internal_subset_read(dom_object *obj, zval *retval TSRMLS_D
 				xmlOutputBufferFlush(buff);
 
 #ifdef LIBXML2_NEW_BUFFER
-				smart_str_appendl(&ret_buf, xmlOutputBufferGetContent(buff), xmlOutputBufferGetSize(buff));
+				smart_str_appendl(&ret_buf, (const char *) xmlOutputBufferGetContent(buff), xmlOutputBufferGetSize(buff));
 #else
-				smart_str_appendl(&ret_buf, buff->buffer->content, buff->buffer->use);
+				smart_str_appendl(&ret_buf, (char *) buff->buffer->content, buff->buffer->use);
 #endif
 
 				(void)xmlOutputBufferClose(buff);

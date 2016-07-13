@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 2008-2009 The PHP Group                                |
+   | Copyright (c) 2008-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -50,7 +50,7 @@ PHP_FUNCTION(dns_get_mx) /* {{{ */
 	DNS_STATUS      status;                 /* Return value of DnsQuery_A() function */
 	PDNS_RECORD     pResult, pRec;          /* Pointer to DNS_RECORD structure */
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz|z", &hostname, &hostname_len, &mx_list, &weight_list) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "sz|z", &hostname, &hostname_len, &mx_list, &weight_list) == FAILURE) {
 		return;
 	}
 
@@ -99,12 +99,12 @@ PHP_FUNCTION(dns_check_record)
 	DNS_STATUS      status;                 /* Return value of DnsQuery_A() function */
 	PDNS_RECORD     pResult;          /* Pointer to DNS_RECORD structure */
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s", &hostname, &hostname_len, &rectype, &rectype_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|s", &hostname, &hostname_len, &rectype, &rectype_len) == FAILURE) {
 		return;
 	}
 
 	if (hostname_len == 0) {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Host cannot be empty");
+		php_error_docref(NULL, E_WARNING, "Host cannot be empty");
 		RETURN_FALSE;
 	}
 
@@ -122,7 +122,7 @@ PHP_FUNCTION(dns_check_record)
 		else if (!strcasecmp("NAPTR", rectype)) type = DNS_TYPE_NAPTR;
 		else if (!strcasecmp("A6",    rectype)) type = DNS_TYPE_A6;
 		else {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Type '%s' not supported", rectype);
+			php_error_docref(NULL, E_WARNING, "Type '%s' not supported", rectype);
 			RETURN_FALSE;
 		}
 	}
@@ -145,6 +145,8 @@ static void php_parserr(PDNS_RECORD pRec, int type_to_fetch, int store, int raw,
 
 	type = pRec->wType;
 	ttl = pRec->dwTtl;
+
+	ZVAL_UNDEF(subarray);
 
 	if (type_to_fetch != DNS_TYPE_ANY && type != type_to_fetch) {
 		return;
@@ -212,9 +214,9 @@ static void php_parserr(PDNS_RECORD pRec, int type_to_fetch, int store, int raw,
 				zval entries;
 
 				add_assoc_string(subarray, "type", "TXT");
-				
+
 				array_init(&entries);
-				
+
 				for (i = 0; i < count; i++) {
 					txt_len += strlen(data_txt->pStringArray[i]) + 1;
 				}
@@ -316,7 +318,6 @@ static void php_parserr(PDNS_RECORD pRec, int type_to_fetch, int store, int raw,
 			}
 			break;
 
-#if _MSC_VER >= 1500
 		case DNS_TYPE_NAPTR:
 			{
 				DNS_NAPTR_DATA * data_naptr = &pRec->Data.Naptr;
@@ -330,7 +331,6 @@ static void php_parserr(PDNS_RECORD pRec, int type_to_fetch, int store, int raw,
 				add_assoc_string(subarray, "replacement", data_naptr->pReplacement);
 			}
 			break;
-#endif
 
 		default:
 			/* unknown type */
@@ -352,7 +352,7 @@ PHP_FUNCTION(dns_get_record)
 	int type, type_to_fetch, first_query = 1, store_results = 1;
 	zend_bool raw = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|lz!z!b",
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lz!z!b",
 			&hostname, &hostname_len, &type_param, &authns, &addtl, &raw) == FAILURE) {
 		return;
 	}
@@ -368,12 +368,12 @@ PHP_FUNCTION(dns_get_record)
 
 	if (!raw) {
 		if ((type_param & ~PHP_DNS_ALL) && (type_param != PHP_DNS_ANY)) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Type '%ld' not supported", type_param);
+			php_error_docref(NULL, E_WARNING, "Type '%ld' not supported", type_param);
 			RETURN_FALSE;
 		}
 	} else {
 		if ((type_param < 1) || (type_param > 0xFFFF)) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING,
+			php_error_docref(NULL, E_WARNING,
 				"Numeric DNS record type must be between 1 and 65535, '%ld' given", type_param);
 			RETURN_FALSE;
 		}
@@ -456,14 +456,13 @@ PHP_FUNCTION(dns_get_record)
 				if (status == DNS_INFO_NO_RECORDS || status == DNS_ERROR_RCODE_NAME_ERROR) {
 					continue;
 				} else {
-					php_error_docref(NULL TSRMLS_CC, E_WARNING, "Dns Query failed");
+					php_error_docref(NULL, E_WARNING, "DNS Query failed");
 					zval_dtor(return_value);
 					RETURN_FALSE;
 				}
 			}
 
 			for (pRec = pResult; pRec; pRec = pRec->pNext) {
-				DNS_SRV_DATA *srv = &pRec->Data.Srv;
 				zval retval;
 
 				if (pRec->Flags.S.Section == DnsSectionAnswer) {

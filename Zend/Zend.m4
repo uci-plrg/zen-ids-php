@@ -7,10 +7,10 @@ dnl
 AC_DEFUN([LIBZEND_CHECK_INT_TYPE],[
 AC_MSG_CHECKING(for $1)
 AC_TRY_COMPILE([
-#if HAVE_SYS_TYPES_H  
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_INTTYPES_H  
+#if HAVE_INTTYPES_H
 #include <inttypes.h>
 #elif HAVE_STDINT_H
 #include <stdint.h>
@@ -137,7 +137,7 @@ int main()
 ], [
   AC_MSG_RESULT(no)
 ])
-	
+
 ])
 
 AC_DEFUN([LIBZEND_ENABLE_DEBUG],[
@@ -147,37 +147,26 @@ AC_ARG_ENABLE(debug,
   ZEND_DEBUG=$enableval
 ],[
   ZEND_DEBUG=no
-])  
+])
 
 ])
 
 AC_DEFUN([LIBZEND_OTHER_CHECKS],[
-
-AC_ARG_WITH(zend-vm,
-[  --with-zend-vm=TYPE     Set virtual machine dispatch method. Type is
-                          one of "CALL", "SWITCH" or "GOTO" [TYPE=CALL]],[
-  PHP_ZEND_VM=$withval
-],[
-  PHP_ZEND_VM=CALL
-])
 
 AC_ARG_ENABLE(maintainer-zts,
 [  --enable-maintainer-zts Enable thread safety - for code maintainers only!!],[
   ZEND_MAINTAINER_ZTS=$enableval
 ],[
   ZEND_MAINTAINER_ZTS=no
-])  
+])
 
 AC_ARG_ENABLE(inline-optimization,
-[  --disable-inline-optimization 
+[  --disable-inline-optimization
                           If building zend_execute.lo fails, try this switch],[
   ZEND_INLINE_OPTIMIZATION=$enableval
 ],[
   ZEND_INLINE_OPTIMIZATION=yes
 ])
-
-AC_MSG_CHECKING([virtual machine dispatch method])
-AC_MSG_RESULT($PHP_ZEND_VM)
 
 AC_MSG_CHECKING(whether to enable thread-safety)
 AC_MSG_RESULT($ZEND_MAINTAINER_ZTS)
@@ -187,19 +176,6 @@ AC_MSG_RESULT($ZEND_INLINE_OPTIMIZATION)
 
 AC_MSG_CHECKING(whether to enable Zend debugging)
 AC_MSG_RESULT($ZEND_DEBUG)
-
-case $PHP_ZEND_VM in
-  SWITCH)
-    AC_DEFINE(ZEND_VM_KIND,ZEND_VM_KIND_SWITCH,[virtual machine dispatch method])
-    ;;
-  GOTO)
-    AC_DEFINE(ZEND_VM_KIND,ZEND_VM_KIND_GOTO,[virtual machine dispatch method])
-    ;;
-  *)
-    PHP_ZEND_VM=CALL
-    AC_DEFINE(ZEND_VM_KIND,ZEND_VM_KIND_CALL,[virtual machine dispatch method])
-    ;;
-esac
 
 if test "$ZEND_DEBUG" = "yes"; then
   AC_DEFINE(ZEND_DEBUG,1,[ ])
@@ -220,7 +196,7 @@ if test "$ZEND_MAINTAINER_ZTS" = "yes"; then
   AC_DEFINE(ZTS,1,[ ])
   CFLAGS="$CFLAGS -DZTS"
   LIBZEND_CPLUSPLUS_CHECKS
-fi  
+fi
 
 changequote({,})
 if test -n "$GCC" && test "$ZEND_INLINE_OPTIMIZATION" != "yes"; then
@@ -273,7 +249,7 @@ int main()
   }
 
   fp = fopen("conftest.zend", "w");
-  fprintf(fp, "%d %d\n", ZEND_MM_ALIGNMENT, zeros);  
+  fprintf(fp, "%d %d\n", ZEND_MM_ALIGNMENT, zeros);
   fclose(fp);
 
   exit(0);
@@ -282,7 +258,7 @@ int main()
   LIBZEND_MM_ALIGN=`cat conftest.zend | cut -d ' ' -f 1`
   LIBZEND_MM_ALIGN_LOG2=`cat conftest.zend | cut -d ' ' -f 2`
   AC_DEFINE_UNQUOTED(ZEND_MM_ALIGNMENT, $LIBZEND_MM_ALIGN, [ ])
-  AC_DEFINE_UNQUOTED(ZEND_MM_ALIGNMENT_LOG2, $LIBZEND_MM_ALIGN_LOG2, [ ]) 
+  AC_DEFINE_UNQUOTED(ZEND_MM_ALIGNMENT_LOG2, $LIBZEND_MM_ALIGN_LOG2, [ ])
 ], [], [
   dnl cross-compile needs something here
   LIBZEND_MM_ALIGN=8
@@ -394,11 +370,11 @@ AC_CHECK_FUNCS(mremap)
 
 
 AC_ARG_ENABLE(zend-signals,
-[  --enable-zend-signals   Use zend signal handling],[
+[  --disable-zend-signals  whether to enable zend signal handling],[
   ZEND_SIGNALS=$enableval
 ],[
-  ZEND_SIGNALS=no
-])  
+  ZEND_SIGNALS=yes
+])
 
 AC_CHECK_FUNC(sigaction, [
 	AC_DEFINE(HAVE_SIGACTION, 1, [Whether sigaction() is available])
@@ -419,23 +395,80 @@ AC_DEFUN([LIBZEND_CPLUSPLUS_CHECKS],[
 
 ])
 
-AC_MSG_CHECKING(whether /dev/urandom exists) 
-if test -r "/dev/urandom" && test -c "/dev/urandom"; then 
+AC_MSG_CHECKING(whether /dev/urandom exists)
+if test -r "/dev/urandom" && test -c "/dev/urandom"; then
   AC_DEFINE([HAVE_DEV_URANDOM], 1, [Define if the target system has /dev/urandom device])
-  AC_MSG_RESULT(yes) 
-else 
-  AC_MSG_RESULT(no) 
-  AC_MSG_CHECKING(whether /dev/arandom exists) 
-  if test -r "/dev/arandom" && test -c "/dev/arandom"; then 
-    AC_DEFINE([HAVE_DEV_ARANDOM], 1, [Define if the target system has /dev/arandom device])
-    AC_MSG_RESULT(yes) 
-  else 
-    AC_MSG_RESULT(no) 
-  fi 
-fi 
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether /dev/arandom exists)
+if test -r "/dev/arandom" && test -c "/dev/arandom"; then
+  AC_DEFINE([HAVE_DEV_ARANDOM], 1, [Define if the target system has /dev/arandom device])
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
 
 AC_ARG_ENABLE(zend-monitor,
 [  --enable-zend-monitor   Enable Zend opcode monitoring],[
 	AC_DEFINE(ZEND_MONITOR, 1, [Enable Zend opcode monitoring])
 	CFLAGS="$CFLAGS -DZEND_MONITOR"
-])  
+])
+
+AC_ARG_ENABLE(gcc-global-regs,
+[  --disable-gcc-global-regs
+                          whether to enable GCC global register variables],[
+  ZEND_GCC_GLOBAL_REGS=$enableval
+],[
+  ZEND_GCC_GLOBAL_REGS=yes
+])
+AC_MSG_CHECKING(for global register variables support)
+if test "$ZEND_GCC_GLOBAL_REGS" != "no"; then
+  AC_TRY_COMPILE([
+#if defined(__GNUC__)
+# define ZEND_GCC_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+#else
+# define ZEND_GCC_VERSION 0
+#endif
+#if defined(__GNUC__) && ZEND_GCC_VERSION >= 4008 && defined(i386)
+# define ZEND_VM_FP_GLOBAL_REG "%esi"
+# define ZEND_VM_IP_GLOBAL_REG "%edi"
+#elif defined(__GNUC__) && ZEND_GCC_VERSION >= 4008 && defined(__x86_64__)
+# define ZEND_VM_FP_GLOBAL_REG "%r14"
+# define ZEND_VM_IP_GLOBAL_REG "%r15"
+#elif defined(__GNUC__) && ZEND_GCC_VERSION >= 4008 && defined(__powerpc64__)
+# define ZEND_VM_FP_GLOBAL_REG "r28"
+# define ZEND_VM_IP_GLOBAL_REG "r29"
+#elif defined(__IBMC__) && ZEND_GCC_VERSION >= 4002 && defined(__powerpc64__)
+# define ZEND_VM_FP_GLOBAL_REG "r28"
+# define ZEND_VM_IP_GLOBAL_REG "r29"
+#else
+# error "global register variables are not supported"
+#endif
+typedef int (*opcode_handler_t)(void);
+register void *FP  __asm__(ZEND_VM_FP_GLOBAL_REG);
+register const opcode_handler_t *IP __asm__(ZEND_VM_IP_GLOBAL_REG);
+int emu(const opcode_handler_t *ip, void *fp) {
+	const opcode_handler_t *orig_ip = IP;
+	void *orig_fp = FP;
+	IP = ip;
+	FP = fp;
+	while ((*ip)());
+	FP = orig_fp;
+	IP = orig_ip;
+}
+  ], [
+  ], [
+    ZEND_GCC_GLOBAL_REGS=yes
+  ], [
+    ZEND_GCC_GLOBAL_REGS=no
+  ])
+fi
+if test "$ZEND_GCC_GLOBAL_REGS" = "yes"; then
+  AC_DEFINE([HAVE_GCC_GLOBAL_REGS], 1, [Define if the target system has support for global register variables])
+else
+  HAVE_GCC_GLOBAL_REGS=no
+fi
+AC_MSG_RESULT($ZEND_GCC_GLOBAL_REGS)

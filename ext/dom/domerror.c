@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -29,7 +29,7 @@
 
 
 /*
-* class domerror 
+* class domerror
 *
 * URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-Interfaces-DOMError
 * Since: DOM Level 3
@@ -41,12 +41,12 @@ const zend_function_entry php_dom_domerror_class_functions[] = {
 
 /* {{{ attribute protos, not implemented yet */
 
-/* {{{ severity	unsigned short	
-readonly=yes 
+/* {{{ severity	unsigned short
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-DOMError-severity
-Since: 
+Since:
 */
-int dom_domerror_severity_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domerror_severity_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;
@@ -54,12 +54,12 @@ int dom_domerror_severity_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ message	string	
-readonly=yes 
+/* {{{ message	string
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-DOMError-message
-Since: 
+Since:
 */
-int dom_domerror_message_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domerror_message_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;
@@ -67,12 +67,12 @@ int dom_domerror_message_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ type	string	
-readonly=yes 
+/* {{{ type	string
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-DOMError-type
-Since: 
+Since:
 */
-int dom_domerror_type_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domerror_type_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;
@@ -80,12 +80,12 @@ int dom_domerror_type_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ relatedException	object	
-readonly=yes 
+/* {{{ relatedException	object
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-DOMError-relatedException
-Since: 
+Since:
 */
-int dom_domerror_related_exception_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domerror_related_exception_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;
@@ -93,12 +93,12 @@ int dom_domerror_related_exception_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ relatedData	domobject	
-readonly=yes 
+/* {{{ relatedData	domobject
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-DOMError-relatedData
-Since: 
+Since:
 */
-int dom_domerror_related_data_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domerror_related_data_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;
@@ -106,12 +106,12 @@ int dom_domerror_related_data_read(dom_object *obj, zval *retval TSRMLS_DC)
 
 /* }}} */
 
-/* {{{ location	domlocator	
-readonly=yes 
+/* {{{ location	domlocator
+readonly=yes
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#ERROR-DOMError-location
-Since: 
+Since:
 */
-int dom_domerror_location_read(dom_object *obj, zval *retval TSRMLS_DC)
+int dom_domerror_location_read(dom_object *obj, zval *retval)
 {
 	ZVAL_STRING(retval, "TEST");
 	return SUCCESS;

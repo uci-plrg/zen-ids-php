@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2014 The PHP Group                                |
+   | Copyright (c) 1997-2016 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -121,7 +121,7 @@ zend_module_entry ctype_module_entry = {
 	NULL,
 	NULL,
 	PHP_MINFO(ctype),
-    NO_VERSION_YET,
+    PHP_CTYPE_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
@@ -144,7 +144,7 @@ static PHP_MINFO_FUNCTION(ctype)
  */
 #define CTYPE(iswhat) \
 	zval *c, tmp; \
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &c) == FAILURE) \
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &c) == FAILURE) \
 		return; \
 	if (Z_TYPE_P(c) == IS_LONG) { \
 		if (Z_LVAL_P(c) <= 255 && Z_LVAL_P(c) >= 0) { \
