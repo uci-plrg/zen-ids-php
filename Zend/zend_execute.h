@@ -260,7 +260,6 @@ static zend_always_inline void zend_vm_stack_free_args(zend_execute_data *call)
 #ifdef ZEND_MONITOR
       opcode_monitor->notify_zval_free(p);
 #endif
-			zval_ptr_dtor_nogc(p);
 			if (Z_REFCOUNTED_P(p)) {
 				if (!Z_DELREF_P(p)) {
 					zend_refcounted *r = Z_COUNTED_P(p);
