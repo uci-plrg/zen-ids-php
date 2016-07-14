@@ -35,12 +35,12 @@
 
 #if ZEND_DEBUG
 /*
-#define HASH_MASK_CONSISTENCY	0x180
+#define HASH_MASK_CONSISTENCY	0xc0
 */
 #define HT_OK					0x00
-#define HT_IS_DESTROYING		0x80
-#define HT_DESTROYED			0x100
-#define HT_CLEANING				0x180
+#define HT_IS_DESTROYING		0x40
+#define HT_DESTROYED			0x80
+#define HT_CLEANING				0xc0
 
 static void _zend_is_inconsistent(const HashTable *ht, const char *file, int line)
 {
@@ -175,6 +175,9 @@ ZEND_API void ZEND_FASTCALL _zend_hash_init(HashTable *ht, uint32_t nSize, dtor_
 	GC_REFCOUNT(ht) = 1;
 	GC_TYPE_INFO(ht) = IS_ARRAY;
 	ht->u.flags = (persistent ? HASH_FLAG_PERSISTENT : 0) | HASH_FLAG_APPLY_PROTECTION | HASH_FLAG_STATIC_KEYS;
+#ifdef ZEND_MONITOR
+  ht->u.v.reserve = 0;
+#endif
 	ht->nTableSize = zend_hash_check_size(nSize);
 	ht->nTableMask = HT_MIN_MASK;
 	HT_SET_DATA_ADDR(ht, &uninitialized_bucket);
@@ -586,7 +589,7 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			}
 #ifdef ZEND_MONITOR
 			if (zval_copy_value(data, pData))
-        ht->u.flags |= HASH_FLAG_TAINT;
+        ht->u.flags |= HASH_RESERVE_TAINT;
 #else
 			ZVAL_COPY_VALUE(data, pData);
 #endif
@@ -613,7 +616,7 @@ add_to_hash:
 	p->h = h = ZSTR_H(key);
 #ifdef ZEND_MONITOR_
 	if (zval_copy_value(&p->val, pData))
-    ht->u.flags |= HASH_FLAG_TAINT;
+    ht->u.flags |= HASH_RESERVE_TAINT;
 #else
 	ZVAL_COPY_VALUE(&p->val, pData);
 #endif
@@ -882,7 +885,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
 		pefree(old_data, ht->u.flags & HASH_FLAG_PERSISTENT);
 		zend_hash_rehash(ht);
 #ifdef ZEND_MONITOR
-    if (ht->u.flags & HASH_FLAG_TAINT) {
+    if (ht->u.flags & HASH_RESERVE_TAINT) {
       uint32_t iOld, iNew;
       Bucket *pNew, *pOld;
 

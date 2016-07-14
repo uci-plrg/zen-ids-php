@@ -2357,7 +2357,7 @@ ZEND_VM_C_LABEL(try_assign_dim_array):
 		value = zend_assign_to_variable(variable_ptr, value, OP_DATA_TYPE);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -3593,7 +3593,7 @@ ZEND_VM_HANDLER(129, ZEND_DO_ICALL, ANY, ANY, SPEC(RETVAL))
 	ret = RETURN_VALUE_USED(opline) ? EX_VAR(opline->result.var) : &retval;
 	ZVAL_NULL(ret);
 
-	fbc->internal_function.handler(call, ret);
+	fbc->internal_function.handler(call, ret); /* alpha */
 
 #if ZEND_DEBUG
 	ZEND_ASSERT(
@@ -3762,7 +3762,7 @@ ZEND_VM_HANDLER(60, ZEND_DO_FCALL, ANY, ANY, SPEC(RETVAL))
 		call->prev_execute_data = execute_data;
 		i_init_func_execute_data(call, &fbc->op_array, ret);
 
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -5455,7 +5455,7 @@ ZEND_VM_HANDLER(73, ZEND_INCLUDE_OR_EVAL, CONST|TMPVAR|CV, ANY, EVAL)
 
 		call->prev_execute_data = execute_data;
 		i_init_code_execute_data(call, new_op_array, return_value);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -7977,7 +7977,7 @@ ZEND_VM_HANDLER(158, ZEND_CALL_TRAMPOLINE, ANY, ANY)
 			init_func_run_time_cache(&fbc->op_array);
 		}
 		i_init_func_execute_data(call, &fbc->op_array, ret);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);

@@ -41,11 +41,12 @@
 #define HASH_FLAG_INITIALIZED      (1<<3)
 #define HASH_FLAG_STATIC_KEYS      (1<<4)
 #define HASH_FLAG_HAS_EMPTY_IND    (1<<5)
+
 #ifdef ZEND_MONITOR
-# define HASH_FLAG_TAINT           (1<<6)
+# define HASH_RESERVE_TAINT        (1<<0)
 #endif
 
-#define HASH_MASK_CONSISTENCY      0x180
+#define HASH_MASK_CONSISTENCY      0xc0
 
 typedef struct _zend_hash_key {
 	zend_ulong h;

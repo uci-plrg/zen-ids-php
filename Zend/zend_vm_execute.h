@@ -643,7 +643,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_DO_ICALL_SPEC_RETVAL_UNUSED_HA
 	ret = 0 ? EX_VAR(opline->result.var) : &retval;
 	ZVAL_NULL(ret);
 
-	fbc->internal_function.handler(call, ret);
+	fbc->internal_function.handler(call, ret); /* alpha */
 
 #if ZEND_DEBUG
 	ZEND_ASSERT(
@@ -690,7 +690,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_DO_ICALL_SPEC_RETVAL_USED_HAND
 	ret = 1 ? EX_VAR(opline->result.var) : &retval;
 	ZVAL_NULL(ret);
 
-	fbc->internal_function.handler(call, ret);
+	fbc->internal_function.handler(call, ret); /* alpha */
 
 #if ZEND_DEBUG
 	ZEND_ASSERT(
@@ -960,7 +960,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_DO_FCALL_SPEC_RETVAL_UNUSED_HA
 		call->prev_execute_data = execute_data;
 		i_init_func_execute_data(call, &fbc->op_array, ret);
 
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -1089,7 +1089,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_DO_FCALL_SPEC_RETVAL_USED_HAND
 		call->prev_execute_data = execute_data;
 		i_init_func_execute_data(call, &fbc->op_array, ret);
 
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -2013,7 +2013,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_CALL_TRAMPOLINE_SPEC_HANDLER(Z
 			init_func_run_time_cache(&fbc->op_array);
 		}
 		i_init_func_execute_data(call, &fbc->op_array, ret);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -3437,7 +3437,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HAN
 
 		call->prev_execute_data = execute_data;
 		i_init_code_execute_data(call, new_op_array, return_value);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -19218,7 +19218,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -19316,7 +19316,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -19415,7 +19415,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -19514,7 +19514,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21196,7 +21196,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21294,7 +21294,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21393,7 +21393,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21492,7 +21492,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24032,7 +24032,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24130,7 +24130,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24229,7 +24229,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24328,7 +24328,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27005,7 +27005,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27103,7 +27103,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27202,7 +27202,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27301,7 +27301,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -35452,7 +35452,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLE
 
 		call->prev_execute_data = execute_data;
 		i_init_code_execute_data(call, new_op_array, return_value);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -39019,7 +39019,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -39117,7 +39117,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -39216,7 +39216,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -39315,7 +39315,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42243,7 +42243,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42341,7 +42341,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42440,7 +42440,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42539,7 +42539,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -45958,7 +45958,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -46056,7 +46056,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -46155,7 +46155,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -46254,7 +46254,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50034,7 +50034,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50132,7 +50132,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50231,7 +50231,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50330,7 +50330,7 @@ try_assign_dim_array:
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
     if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.flags |= HASH_FLAG_TAINT;
+      object_ptr->value.arr->u.flags |= HASH_RESERVE_TAINT;
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -51609,7 +51609,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_INCLUDE_OR_EVAL_SPEC_TMPVAR_HA
 
 		call->prev_execute_data = execute_data;
 		i_init_code_execute_data(call, new_op_array, return_value);
-		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
 			ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
