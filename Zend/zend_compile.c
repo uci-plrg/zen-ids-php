@@ -107,6 +107,10 @@ void nop_notify_function_created(zend_op_array *src, zend_op_array *f)
 {
 }
 
+void nop_monitor_call()
+{
+}
+
 void nop_notify_zval_free(const zval *zv)
 {
 }
@@ -143,6 +147,7 @@ zend_opcode_monitor_t nop_opcode_monitor = {
   nop_set_top_level_script,
   nop_has_taint,
   nop_notify_function_created,
+  nop_monitor_call,
   nop_notify_zval_free,
   nop_notify_http_request,
   nop_notify_database_query,

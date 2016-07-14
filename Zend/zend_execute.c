@@ -3080,6 +3080,16 @@ ZEND_API int ZEND_FASTCALL zend_check_arg_type(zend_function *zf, uint32_t arg_n
 	return zend_verify_arg_type(zf, arg_num, arg, default_value, cache_slot);
 }
 
+#ifdef ZEND_MONITOR
+void zend_monitor_call()
+{
+  extern zend_opcode_monitor_t *opcode_monitor;
+  opcode_monitor->notify_call();
+}
+#endif
+
+
+
 /*
  * Local variables:
  * tab-width: 4

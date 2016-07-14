@@ -329,6 +329,14 @@ ZEND_API zval* zend_get_compiled_variable_value(const zend_execute_data *execute
 ZEND_API int zend_set_user_opcode_handler(zend_uchar opcode, user_opcode_handler_t handler);
 ZEND_API user_opcode_handler_t zend_get_user_opcode_handler(zend_uchar opcode);
 
+#ifdef ZEND_MONITOR
+# define ZEND_VM_MONITOR_CALL() zend_monitor_call()
+#else
+# define ZEND_VM_MONITOR_CALL()
+#endif
+
+void zend_monitor_call();
+
 /* former zend_execute_locks.h */
 typedef zval* zend_free_op;
 
