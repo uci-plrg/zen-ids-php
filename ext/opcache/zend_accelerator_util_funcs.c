@@ -542,7 +542,8 @@ static void zend_accel_function_hash_copy_from_shm(HashTable *target, HashTable 
 			_zend_hash_append_ptr(target, p->key, ARENA_REALLOC(Z_PTR(p->val)));
 		}
 #ifdef ZEND_MONITOR
-    zend_notify_function_copied(Z_PTR(p->val), Z_PTR_P(t));
+    if (t != NULL)
+      zend_notify_function_copied(Z_PTR(p->val), Z_PTR_P(t));
 #endif
 	}
 	target->nInternalPointer = target->nNumOfElements ? 0 : HT_INVALID_IDX;
