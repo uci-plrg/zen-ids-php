@@ -19,8 +19,8 @@ done
     --enable-opcache \
     $debug \
     --with-gd \
-    --with-png-dir=/stash/www \
-    --with-jpeg-dir=/stash/www \
+    --with-png-dir=/var/www \
+    --with-jpeg-dir=/var/www \
     --with-apxs2=/usr/bin/apxs \
     --with-gettext \
     --with-mysqli \
