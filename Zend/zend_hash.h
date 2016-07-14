@@ -45,7 +45,7 @@
 # define HASH_FLAG_TAINT           (1<<6)
 #endif
 
-#define HASH_MASK_CONSISTENCY      0xc0
+#define HASH_MASK_CONSISTENCY      0x180
 
 typedef struct _zend_hash_key {
 	zend_ulong h;

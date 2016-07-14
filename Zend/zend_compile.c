@@ -162,13 +162,14 @@ zend_dataflow_monitor_t *dataflow_monitor = &nop_opcode_monitor.dataflow;
 
 void register_opcode_monitor(zend_opcode_monitor_t *monitor)
 {
-  //if (1) return;
-
-  opcode_monitor = monitor;
-  dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
-
-  if (monitor == NULL)
+  if (monitor == NULL) {
+    opcode_monitor = &nop_opcode_monitor;
+    dataflow_monitor = &nop_opcode_monitor.dataflow;
     zend_execute_ex = execute_ex;
+  } else {
+    opcode_monitor = monitor;
+    dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
+  }
 }
 
 zend_dataflow_monitor_t *get_zend_dataflow_monitor()

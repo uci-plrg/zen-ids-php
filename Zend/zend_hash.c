@@ -35,12 +35,12 @@
 
 #if ZEND_DEBUG
 /*
-#define HASH_MASK_CONSISTENCY	0xc0
+#define HASH_MASK_CONSISTENCY	0x180
 */
 #define HT_OK					0x00
-#define HT_IS_DESTROYING		0x40
-#define HT_DESTROYED			0x80
-#define HT_CLEANING				0xc0
+#define HT_IS_DESTROYING		0x80
+#define HT_DESTROYED			0x100
+#define HT_CLEANING				0x180
 
 static void _zend_is_inconsistent(const HashTable *ht, const char *file, int line)
 {
@@ -611,7 +611,7 @@ add_to_hash:
 		zend_string_hash_val(key);
 	}
 	p->h = h = ZSTR_H(key);
-#ifdef ZEND_MONITOR
+#ifdef ZEND_MONITOR_
 	if (zval_copy_value(&p->val, pData))
     ht->u.flags |= HASH_FLAG_TAINT;
 #else

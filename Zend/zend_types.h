@@ -346,10 +346,7 @@ static zend_always_inline zend_bool notify_dataflow(const zval *src, const char 
                                                     zend_bool is_internal_transfer)
 {
     extern zend_dataflow_monitor_t *dataflow_monitor;
-    if (dataflow_monitor != NULL)
-        return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
-    else
-        return 0;
+    return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
 }
 # define ZEND_DATAFLOW(src, src_name, dst, dst_name, is_internal_transfer) \
     notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer)
@@ -861,7 +858,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 }
 
 #ifdef ZEND_MONITOR
-static zend_always_inline zend_bool zval_copy_value_ex(const zval *src, zval *dst, zend_refcounted *gc, uint32_t t) {
+static zend_always_inline zend_bool zval_copy_value_ex(zval *dst, const zval *src, zend_refcounted *gc, uint32_t t) {
 # if SIZEOF_SIZE_T == 4
   uint32_t _w2 = src->value.ww.w2;
   Z_COUNTED_P(dst) = gc;
@@ -876,12 +873,12 @@ static zend_always_inline zend_bool zval_copy_value_ex(const zval *src, zval *ds
   return ZEND_DATAFLOW(src, "copy-src", dst, "copy-dst", 0 /*not a transfer*/);
 }
 
-static zend_always_inline zend_bool zval_copy_value(const zval *src, zval *dst) {
+static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) {
   zend_refcounted *gc = Z_COUNTED_P(src);
   uint32_t t = Z_TYPE_INFO_P(src);
-  return zval_copy_value_ex(src, dst, gc, t);
+  return zval_copy_value_ex(dst, src, gc, t);
 }
-# define ZVAL_COPY_VALUE_EX(z, v, gc, t)	zval_copy_value_ex(v, z, gc, t)
+# define ZVAL_COPY_VALUE_EX(z, v, gc, t)	zval_copy_value_ex(z, v, gc, t)
 #else /* !ZEND_MONITOR */
 # if SIZEOF_SIZE_T == 4
 #  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\
