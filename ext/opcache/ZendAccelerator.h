@@ -44,9 +44,6 @@
 # include <sys/resource.h>
 #endif
 
-// hack!
-//#define ZEND_MONITOR 1
-
 #if HAVE_UNISTD_H
 # include "unistd.h"
 #endif

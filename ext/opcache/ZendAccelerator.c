@@ -136,10 +136,6 @@ static time_t zend_accel_get_time(void)
 # define zend_accel_get_time() time(NULL)
 #endif
 
-#ifdef ZEND_MONITOR
-zend_dataflow_monitor_t *dataflow_monitor = NULL;
-#endif
-
 static inline int is_stream_path(const char *filename)
 {
 	const char *p;
@@ -2677,11 +2673,6 @@ static int accel_startup(zend_extension *extension)
 
 #ifdef ZEND_WIN32
 	_setmaxstdio(2048); /* The default configuration is limited to 512 stdio files */
-#endif
-
-#ifdef ZEND_MONITOR
-  dataflow_monitor = get_zend_dataflow_monitor();
-  fprintf(stderr, "Dataflow monitor: 0x%lx\n", (zend_ulong) dataflow_monitor);
 #endif
 
 	if (start_accel_module() == FAILURE) {
