@@ -31,6 +31,6 @@ done
     --with-mcrypt \
     --with-tidy \
     --with-zlib \
-    --with-config-file-path=$PHP_HOME/conf.d \
+    --with-config-file-path=$PHP_HOME/conf.d
 
 # --with-xdiff
