@@ -6614,8 +6614,8 @@ ZEND_VM_C_LABEL(num_index_prop):
 				Z_OBJ_HT_P(container)->has_dimension(container, offset, (opline->extended_value & ZEND_ISSET) == 0);
 #ifdef ZEND_MONITOR
       if (result && EXPECTED(Z_OBJ_HT_P(container)->read_dimension)) {
-        zval rv; // compulsory, not used
-				internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv TSRMLS_CC);
+        zval rv; // placeholder
+				internal_value = Z_OBJ_HT_P(container)->read_dimension(container, offset, BP_VAR_IS, &rv);
       }
 #endif
 		} else {
@@ -6716,8 +6716,8 @@ ZEND_VM_C_LABEL(isset_no_object):
 			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
     if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
-      zval rv; // compulsory, not used
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((OP2_TYPE == IS_CONST) ? (EX(run_time_cache) + Z_CACHE_SLOT_P(offset)) : NULL), &rv TSRMLS_CC);
+      zval rv; // placeholder
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
