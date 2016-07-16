@@ -495,9 +495,12 @@ static void zend_accel_function_hash_copy(HashTable *target, HashTable *source)
 				goto failure;
 			}
 		} else {
-			_zend_hash_append_ptr(target, p->key, Z_PTR(p->val));
+			t = _zend_hash_append_ptr(target, p->key, Z_PTR(p->val));
 		}
 	}
+#ifdef ZEND_MONITOR
+  zend_notify_function_copied(Z_PTR(p->val), Z_PTR_P(t));
+#endif
 	target->nInternalPointer = target->nNumOfElements ? 0 : HT_INVALID_IDX;
 	return;
 

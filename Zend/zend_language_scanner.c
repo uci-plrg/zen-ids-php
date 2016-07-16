@@ -634,7 +634,7 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type)
 	} else {
 		op_array = zend_compile(ZEND_USER_FUNCTION);
 #ifdef ZEND_MONITOR
-		opcode_monitor->notify_function_created(NULL, op_array); // move inside zend_compile?
+		//opcode_monitor->notify_function_created(NULL, op_array); // move inside zend_compile?
 #endif
 	}
 

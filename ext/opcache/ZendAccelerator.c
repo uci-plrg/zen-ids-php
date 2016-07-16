@@ -136,6 +136,10 @@ static time_t zend_accel_get_time(void)
 # define zend_accel_get_time() time(NULL)
 #endif
 
+#ifdef ZEND_MONITOR
+zend_dataflow_monitor_t *dataflow_monitor = NULL; /* N.B.: required for shared module */
+#endif
+
 static inline int is_stream_path(const char *filename)
 {
 	const char *p;
@@ -1542,7 +1546,7 @@ static zend_persistent_script *opcache_compile_file(zend_file_handle *file_handl
 	new_persistent_script->script.main_op_array = *op_array;
 
 #ifdef ZEND_MONITOR
-  zend_notify_function_copied(NULL /*new copy src*/, &new_persistent_script->script.main_op_array);
+  // zend_notify_function_copied(NULL /*new copy src*/, &new_persistent_script->script.main_op_array);
 #endif
 
 	efree(op_array); /* we have valid persistent_script, so it's safe to free op_array */
@@ -2675,7 +2679,11 @@ static int accel_startup(zend_extension *extension)
 	_setmaxstdio(2048); /* The default configuration is limited to 512 stdio files */
 #endif
 
-	if (start_accel_module() == FAILURE) {
+#ifdef ZEND_MONITOR
+  dataflow_monitor = get_zend_dataflow_monitor(); /* N.B.: required for shared module */
+#endif
+
+ 	if (start_accel_module() == FAILURE) {
 		accel_startup_ok = 0;
 		zend_error(E_WARNING, ACCELERATOR_PRODUCT_NAME ": module registration failed!");
 		return FAILURE;
