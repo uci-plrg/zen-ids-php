@@ -143,7 +143,7 @@ int nop_opmon_dataflow()
 }
 
 zend_opcode_monitor_t nop_opcode_monitor = {
-  { nop_notify_dataflow },
+  { 0, nop_notify_dataflow },
   nop_set_top_level_script,
   nop_has_taint,
   nop_notify_function_created,

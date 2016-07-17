@@ -333,9 +333,10 @@ static zend_always_inline zend_uchar zval_get_type(const zval* pz) {
 
 #ifdef ZEND_MONITOR
 typedef struct _zend_dataflow_monitor_t {
-    zend_bool (*notify_dataflow)(const zval *src, const char *src_name,
-                                 const zval *dst, const char *dst_name,
-                                 zend_bool is_internal_transfer);
+  zend_bool is_enabled;
+  zend_bool (*notify_dataflow)(const zval *src, const char *src_name,
+                               const zval *dst, const char *dst_name,
+                               zend_bool is_internal_transfer);
 } zend_dataflow_monitor_t;
 
 ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
@@ -346,7 +347,9 @@ static zend_always_inline zend_bool notify_dataflow(const zval *src, const char 
                                                     zend_bool is_internal_transfer)
 {
     extern zend_dataflow_monitor_t *dataflow_monitor;
-    return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
+
+    if (dataflow_monitor->is_enabled)
+      return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
 }
 # define ZEND_DATAFLOW(src, src_name, dst, dst_name, is_internal_transfer) \
     notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer)

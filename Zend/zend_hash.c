@@ -589,7 +589,7 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			}
 #ifdef ZEND_MONITOR
 			if (zval_copy_value(data, pData))
-        ht->u.flags |= HASH_RESERVE_TAINT;
+        ht->u.v.reserve |= HASH_RESERVE_TAINT;
 #else
 			ZVAL_COPY_VALUE(data, pData);
 #endif
@@ -616,7 +616,7 @@ add_to_hash:
 	p->h = h = ZSTR_H(key);
 #ifdef ZEND_MONITOR_
 	if (zval_copy_value(&p->val, pData))
-    ht->u.flags |= HASH_RESERVE_TAINT;
+    ht->u.v.reserve |= HASH_RESERVE_TAINT;
 #else
 	ZVAL_COPY_VALUE(&p->val, pData);
 #endif
@@ -885,7 +885,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
 		pefree(old_data, ht->u.flags & HASH_FLAG_PERSISTENT);
 		zend_hash_rehash(ht);
 #ifdef ZEND_MONITOR
-    if (ht->u.flags & HASH_RESERVE_TAINT) {
+    if (ht->u.v.reserve & HASH_RESERVE_TAINT) {
       uint32_t iOld, iNew;
       Bucket *pNew, *pOld;
 
