@@ -346,10 +346,12 @@ static zend_always_inline zend_bool notify_dataflow(const zval *src, const char 
                                                     const zval *dst, const char *dst_name,
                                                     zend_bool is_internal_transfer)
 {
-    extern zend_dataflow_monitor_t *dataflow_monitor;
+    extern zend_dataflow_monitor_t *dataflow_monitor; // would it be faster to globalize the load?
 
     if (dataflow_monitor->is_enabled)
       return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
+    else
+      return 0;
 }
 # define ZEND_DATAFLOW(src, src_name, dst, dst_name, is_internal_transfer) \
     notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer)
