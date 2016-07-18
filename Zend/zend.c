@@ -1449,10 +1449,6 @@ ZEND_API int zend_execute_scripts(int type, zval *retval, int file_count, ...) /
 		}
 		zend_destroy_file_handle(file_handle);
 		if (op_array) {
-#ifdef ZEND_MONITOR
-      extern zend_opcode_monitor_t *opcode_monitor;
-      opcode_monitor->notify_function_created(NULL, op_array);
-#endif
 			zend_execute(op_array, retval);
 			zend_exception_restore();
 			zend_try_exception_handler();

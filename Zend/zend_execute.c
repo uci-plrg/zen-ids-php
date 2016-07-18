@@ -2866,9 +2866,6 @@ already_compiled:
 					char *eval_desc = zend_make_compiled_string_description("eval()'d code");
 					new_op_array = zend_compile_string(inc_filename, eval_desc);
 					efree(eval_desc);
-#ifdef ZEND_MONITOR
-          opcode_monitor->notify_function_created(NULL, new_op_array);
-#endif
 				}
 				break;
 			EMPTY_SWITCH_DEFAULT_CASE()

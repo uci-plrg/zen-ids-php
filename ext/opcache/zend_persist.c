@@ -332,6 +332,9 @@ static void zend_persist_op_array_ex(zend_op_array *op_array, zend_persistent_sc
 	int already_stored = 0;
 	zend_op *persist_ptr;
 	zval *orig_literals = NULL;
+#ifdef ZEND_MONITOR
+  zend_op *original_opcodes = op_array->opcodes;
+#endif
 
 	if (op_array->type != ZEND_USER_FUNCTION) {
 		return;
@@ -556,6 +559,10 @@ static void zend_persist_op_array_ex(zend_op_array *op_array, zend_persistent_sc
 	} else {
 		op_array->prototype = NULL;
 	}
+
+#ifdef ZEND_MONITOR
+  zend_notify_function_copied(original_opcodes, op_array);
+#endif
 
 	ZCG(mem) = (void*)((char*)ZCG(mem) + ZEND_ALIGNED_SIZE(zend_extensions_op_array_persist(op_array, ZCG(mem))));
 }

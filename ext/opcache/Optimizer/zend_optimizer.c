@@ -815,6 +815,10 @@ static void zend_optimize_op_array(zend_op_array      *op_array,
 
 	/* Redo pass_two() */
 	zend_redo_pass_two(op_array);
+
+#ifdef ZEND_MONITOR
+  zend_notify_function_copied(NULL /*new copy src*/, op_array);
+#endif
 }
 
 static void zend_adjust_fcall_stack_size(zend_op_array *op_array, zend_optimizer_ctx *ctx)

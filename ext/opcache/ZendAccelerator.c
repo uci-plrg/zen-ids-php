@@ -1545,10 +1545,6 @@ static zend_persistent_script *opcache_compile_file(zend_file_handle *file_handl
 	zend_accel_move_user_functions(&ZCG(function_table), &new_persistent_script->script.function_table);
 	new_persistent_script->script.main_op_array = *op_array;
 
-#ifdef ZEND_MONITOR
-  // zend_notify_function_copied(NULL /*new copy src*/, &new_persistent_script->script.main_op_array);
-#endif
-
 	efree(op_array); /* we have valid persistent_script, so it's safe to free op_array */
 
     /* Fill in the ping_auto_globals_mask for the new script. If jit for auto globals is enabled we

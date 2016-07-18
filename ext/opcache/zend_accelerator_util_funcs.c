@@ -265,10 +265,6 @@ static void zend_hash_clone_methods(HashTable *ht, HashTable *source, zend_class
 		ZVAL_PTR(&q->val, ARENA_REALLOC(Z_PTR(p->val)));
 		new_entry = (zend_op_array*)Z_PTR(q->val);
 
-#ifdef ZEND_MONITOR
-    zend_notify_function_copied(Z_PTR(p->val), new_entry);
-#endif
-
 		if ((void*)new_entry->scope >= ZCG(current_persistent_script)->arena_mem &&
 		    (void*)new_entry->scope < (void*)((char*)ZCG(current_persistent_script)->arena_mem + ZCG(current_persistent_script)->arena_size)) {
 
@@ -498,9 +494,6 @@ static void zend_accel_function_hash_copy(HashTable *target, HashTable *source)
 			t = _zend_hash_append_ptr(target, p->key, Z_PTR(p->val));
 		}
 	}
-#ifdef ZEND_MONITOR
-  zend_notify_function_copied(Z_PTR(p->val), Z_PTR_P(t));
-#endif
 	target->nInternalPointer = target->nNumOfElements ? 0 : HT_INVALID_IDX;
 	return;
 
@@ -544,9 +537,6 @@ static void zend_accel_function_hash_copy_from_shm(HashTable *target, HashTable 
 		} else {
 			t = _zend_hash_append_ptr(target, p->key, ARENA_REALLOC(Z_PTR(p->val)));
 		}
-#ifdef ZEND_MONITOR
-    zend_notify_function_copied(Z_PTR(p->val), Z_PTR_P(t));
-#endif
 	}
 	target->nInternalPointer = target->nNumOfElements ? 0 : HT_INVALID_IDX;
 	return;
@@ -704,10 +694,6 @@ zend_op_array* zend_accel_load_script(zend_persistent_script *persistent_script,
 	if (UNEXPECTED(!from_shared_memory)) {
 		free_persistent_script(persistent_script, 0); /* free only hashes */
 	}
-
-#ifdef ZEND_MONITOR
-  zend_notify_function_copied(&persistent_script->script.main_op_array, op_array);
-#endif
 
 	return op_array;
 }

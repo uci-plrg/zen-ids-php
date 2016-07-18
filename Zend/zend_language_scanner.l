@@ -631,9 +631,6 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type)
 		}
 	} else {
 		op_array = zend_compile(ZEND_USER_FUNCTION);
-#ifdef ZEND_MONITOR
-		//opcode_monitor->notify_function_created(NULL, op_array); // move inside zend_compile?
-#endif
 	}
 
 	zend_restore_lexical_state(&original_lex_state);
@@ -662,9 +659,6 @@ zend_op_array *compile_filename(int type, zval *filename)
 
 	retval = zend_compile_file(&file_handle, type);
 	if (retval && file_handle.handle.stream.handle) {
-#ifdef ZEND_MONITOR
-		opcode_monitor->notify_function_created(NULL, retval);
-#endif
 		if (!file_handle.opened_path) {
 			file_handle.opened_path = opened_path = zend_string_copy(Z_STR_P(filename));
 		}

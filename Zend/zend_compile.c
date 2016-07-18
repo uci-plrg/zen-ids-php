@@ -103,7 +103,7 @@ zend_bool nop_has_taint(const zval *value)
   return 0;
 }
 
-void nop_notify_function_created(zend_op_array *src, zend_op_array *f)
+void nop_notify_function_created(zend_op *src, zend_op_array *f)
 {
 }
 
