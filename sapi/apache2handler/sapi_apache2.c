@@ -63,10 +63,6 @@
 #define PHP_SOURCE_MAGIC_TYPE "application/x-httpd-php-source"
 #define PHP_SCRIPT "php7-script"
 
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 /* A way to specify the location of the php.ini dir in an apache directive */
 char *apache2_php_ini_path_override = NULL;
 #if defined(PHP_WIN32) && defined(ZTS)
@@ -552,7 +548,6 @@ static int php_handler(request_rec *r)
 	request_rec * volatile parent_req = NULL;
 #ifdef ZEND_MONITOR
   zend_bool opmon_notified = 0;
-  extern zend_opcode_monitor_t *opcode_monitor;
 #endif
 #ifdef ZTS
 	/* initial resource fetch */

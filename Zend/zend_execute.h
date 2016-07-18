@@ -56,10 +56,6 @@ ZEND_API void ZEND_FASTCALL zend_check_internal_arg_type(zend_function *zf, uint
 ZEND_API int  ZEND_FASTCALL zend_check_arg_type(zend_function *zf, uint32_t arg_num, zval *arg, zval *default_value, void **cache_slot);
 ZEND_API ZEND_COLD void ZEND_FASTCALL zend_missing_arg_error(zend_execute_data *execute_data);
 
-#ifdef ZEND_MONITOR
-extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval *value, zend_uchar value_type)
 {
 	zend_refcounted *ref = NULL;
@@ -214,10 +210,6 @@ static zend_always_inline zend_execute_data *zend_vm_stack_push_call_frame(uint3
 
 static zend_always_inline void zend_vm_stack_free_extra_args_ex(uint32_t call_info, zend_execute_data *call)
 {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 	if (UNEXPECTED(call_info & ZEND_CALL_FREE_EXTRA_ARGS)) {
 		zval *end = ZEND_CALL_VAR_NUM(call, call->func->op_array.last_var + call->func->op_array.T);
  		zval *p = end + (ZEND_CALL_NUM_ARGS(call) - call->func->op_array.num_args);
@@ -247,10 +239,6 @@ static zend_always_inline void zend_vm_stack_free_extra_args(zend_execute_data *
 static zend_always_inline void zend_vm_stack_free_args(zend_execute_data *call)
 {
 	uint32_t num_args = ZEND_CALL_NUM_ARGS(call);
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 	if (EXPECTED(num_args > 0)) {
 		zval *end = ZEND_CALL_ARG(call, 1);
 		zval *p = end + num_args;
@@ -329,7 +317,7 @@ ZEND_API int zend_set_user_opcode_handler(zend_uchar opcode, user_opcode_handler
 ZEND_API user_opcode_handler_t zend_get_user_opcode_handler(zend_uchar opcode);
 
 #ifdef ZEND_MONITOR
-# define ZEND_VM_MONITOR_CALL() zend_monitor_call()
+# define ZEND_VM_MONITOR_CALL() opcode_monitor->notify_call()
 #else
 # define ZEND_VM_MONITOR_CALL()
 #endif

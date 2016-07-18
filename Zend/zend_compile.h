@@ -813,6 +813,33 @@ int zend_add_literal(zend_op_array *op_array, zval *zv);
 
 ZEND_API void zend_assert_valid_class_name(const zend_string *const_name);
 
+#ifdef ZEND_MONITOR
+typedef enum _monitor_query_flags_t {
+    MONITOR_QUERY_FLAG_IS_WRITE = 0x1,
+    MONITOR_QUERY_FLAG_IS_ADMIN = 0x2,
+} monitor_query_flags_t;
+
+typedef struct _zend_opcode_monitor_t {
+    zend_dataflow_monitor_t dataflow;
+    void (*set_top_level_script)(const char *script_path);
+    zend_bool (*has_taint)(const zval *value);
+    void (*notify_function_created)(zend_op *src, zend_op_array *f);
+    void (*notify_call)();
+    void (*notify_zval_free)(const zval *zv);
+    void (*notify_http_request)(zend_bool start);
+    monitor_query_flags_t (*notify_database_query)(const char *query);
+    void (*notify_database_fetch)(uint32_t field_count, const char **table_names,
+                                  const char **column_names, const zval **value);
+    void (*notify_worker_startup)();
+    void (*opmon_tokenize)();
+    int (*opmon_dataflow)();
+} zend_opcode_monitor_t;
+
+extern zend_opcode_monitor_t *opcode_monitor;
+
+ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);
+#endif
+
 /* BEGIN: OPCODES */
 
 #include "zend_vm_opcodes.h"
@@ -956,31 +983,6 @@ static zend_always_inline int zend_check_arg_send_type(const zend_function *zf, 
 #define ZEND_ARRAY_ELEMENT_REF		(1<<0)
 #define ZEND_ARRAY_NOT_PACKED		(1<<1)
 #define ZEND_ARRAY_SIZE_SHIFT		2
-
-#ifdef ZEND_MONITOR
-typedef enum _monitor_query_flags_t {
-    MONITOR_QUERY_FLAG_IS_WRITE = 0x1,
-    MONITOR_QUERY_FLAG_IS_ADMIN = 0x2,
-} monitor_query_flags_t;
-
-typedef struct _zend_opcode_monitor_t {
-    zend_dataflow_monitor_t dataflow;
-    void (*set_top_level_script)(const char *script_path);
-    zend_bool (*has_taint)(const zval *value);
-    void (*notify_function_created)(zend_op *src, zend_op_array *f);
-    void (*notify_call)();
-    void (*notify_zval_free)(const zval *zv);
-    void (*notify_http_request)(zend_bool start);
-    monitor_query_flags_t (*notify_database_query)(const char *query);
-    void (*notify_database_fetch)(uint32_t field_count, const char **table_names,
-                                  const char **column_names, const zval **value);
-    void (*notify_worker_startup)();
-    void (*opmon_tokenize)();
-    int (*opmon_dataflow)();
-} zend_opcode_monitor_t;
-
-ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);
-#endif
 
 /* Pseudo-opcodes that are used only temporarily during compilation */
 #define ZEND_GOTO  253

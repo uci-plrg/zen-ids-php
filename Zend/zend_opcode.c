@@ -363,9 +363,6 @@ ZEND_API void destroy_op_array(zend_op_array *op_array)
 	zval *literal = op_array->literals;
 	zval *end;
 	uint32_t i;
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	if (op_array->static_variables &&
 	    !(GC_FLAGS(op_array->static_variables) & IS_ARRAY_IMMUTABLE)) {

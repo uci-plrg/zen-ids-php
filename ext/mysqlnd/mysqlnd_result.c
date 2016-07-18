@@ -1087,7 +1087,6 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 	const unsigned int field_count = meta->field_count;
 	MYSQLND_RES_BUFFERED_ZVAL * set = (MYSQLND_RES_BUFFERED_ZVAL *) result->stored_data;
 #ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
   const char *table_names[EVO_MAX_COLUMNS];
   const char *column_names[EVO_MAX_COLUMNS];
   const zval *column_values[EVO_MAX_COLUMNS];

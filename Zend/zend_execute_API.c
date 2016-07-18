@@ -1607,9 +1607,6 @@ ZEND_API void zend_detach_symbol_table(zend_execute_data *execute_data) /* {{{ *
 {
 	zend_op_array *op_array = &execute_data->func->op_array;
 	HashTable *ht = execute_data->symbol_table;
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	/* copy real values from CV slots into symbol table */
 	if (EXPECTED(op_array->last_var)) {

@@ -121,10 +121,6 @@ do {																			\
 #define ZEND_IS_OCT(c)  ((c)>='0' && (c)<='7')
 #define ZEND_IS_HEX(c)  (((c)>='0' && (c)<='9') || ((c)>='a' && (c)<='f') || ((c)>='A' && (c)<='F'))
 
-#ifdef ZEND_MONITOR
-extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 BEGIN_EXTERN_C()
 
 static size_t encoding_filter_script_to_internal(unsigned char **to, size_t *to_length, const unsigned char *from, size_t from_length)

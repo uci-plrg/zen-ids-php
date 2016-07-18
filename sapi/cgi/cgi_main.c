@@ -1130,9 +1130,6 @@ static void init_request_info(fcgi_request *request)
 	char *env_script_filename = CGI_GETENV("SCRIPT_FILENAME");
 	char *env_path_translated = CGI_GETENV("PATH_TRANSLATED");
 	char *script_path_translated = env_script_filename;
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	/* some broken servers do not have script_filename or argv0
 	 * an example, IIS configured in some ways.  then they do more
@@ -2634,8 +2631,6 @@ consult the installation file that came with this distribution, or visit \n\
           */
 				} break;
         case PHP_MODE_DATAFLOW: {
-          extern zend_opcode_monitor_t *opcode_monitor;
-
 					PG(during_request_startup) = 0;
           exit_status = opcode_monitor->opmon_dataflow(&file_handle);
         } break;

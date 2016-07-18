@@ -2331,9 +2331,6 @@ ZEND_VM_HANDLER(147, ZEND_ASSIGN_DIM, VAR|CV, CONST|TMPVAR|UNUSED|NEXT|CV, SPEC(
 	object_ptr = GET_OP1_ZVAL_PTR_PTR_UNDEF(BP_VAR_W);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 ZEND_VM_C_LABEL(try_assign_dim_array):
 		SEPARATE_ARRAY(object_ptr);
 		if (OP2_TYPE == IS_UNUSED) {
@@ -2505,7 +2502,6 @@ ZEND_VM_HELPER(zend_leave_helper, ANY, ANY)
 	uint32_t call_info = EX_CALL_INFO();
 
 #ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
   if (execute_data->func != NULL) {
     zend_op_array *op_array = &execute_data->func->op_array;
     zval *var = EX_VAR_NUM(0);
@@ -6529,8 +6525,7 @@ ZEND_VM_HANDLER(115, ZEND_ISSET_ISEMPTY_DIM_OBJ, CONST|TMPVAR|CV, CONST|TMPVAR|C
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -6680,8 +6675,7 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMPVAR|UNUSED|THIS|CV, C
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();

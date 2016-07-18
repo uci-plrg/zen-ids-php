@@ -552,9 +552,6 @@ PHP_FUNCTION(mysqli_query)
 	char				*query = NULL;
 	size_t 				query_len;
 	zend_long 				resultmode = MYSQLI_STORE_RESULT;
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "Os|l", &mysql_link, mysqli_link_class_entry, &query, &query_len, &resultmode) == FAILURE) {
 		return;

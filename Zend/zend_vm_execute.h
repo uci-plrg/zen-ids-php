@@ -482,7 +482,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL zend_leave_helper_SPEC(ZEND_OPCODE_
 	uint32_t call_info = EX_CALL_INFO();
 
 #ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
   if (execute_data->func != NULL) {
     zend_op_array *op_array = &execute_data->func->op_array;
     zval *var = EX_VAR_NUM(0);
@@ -6001,8 +6000,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CON
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -6152,8 +6150,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -9718,8 +9715,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CON
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -9869,8 +9865,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -11606,8 +11601,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CON
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -11757,8 +11751,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -19201,9 +19194,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CONST_OP_D
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -19299,9 +19289,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CONST_OP_D
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -19398,9 +19385,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CONST_OP_D
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -19497,9 +19481,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CONST_OP_D
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -21179,9 +21160,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_UNUSED_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -21277,9 +21255,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_UNUSED_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -21376,9 +21351,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_UNUSED_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -21475,9 +21447,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_UNUSED_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -24015,9 +23984,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CV_OP_DATA
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -24113,9 +24079,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CV_OP_DATA
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -24212,9 +24175,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CV_OP_DATA
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -24311,9 +24271,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_CV_OP_DATA
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -26988,9 +26945,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_TMPVAR_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -27086,9 +27040,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_TMPVAR_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -27185,9 +27136,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_TMPVAR_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -27284,9 +27232,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_VAR_TMPVAR_OP_
 	object_ptr = _get_zval_ptr_ptr_var(opline->op1.var, execute_data, &free_op1);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -29789,8 +29734,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -32371,8 +32315,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -34281,8 +34224,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -39002,9 +38944,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CONST_OP_DA
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -39100,9 +39039,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CONST_OP_DA
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -39199,9 +39135,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CONST_OP_DA
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -39298,9 +39231,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CONST_OP_DA
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CONST == IS_UNUSED) {
@@ -40103,8 +40033,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -40254,8 +40183,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -42226,9 +42154,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_UNUSED_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -42324,9 +42249,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_UNUSED_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -42423,9 +42345,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_UNUSED_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -42522,9 +42441,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_UNUSED_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_UNUSED == IS_UNUSED) {
@@ -45941,9 +45857,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CV_OP_DATA_
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -46039,9 +45952,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CV_OP_DATA_
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -46138,9 +46048,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CV_OP_DATA_
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -46237,9 +46144,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_CV_OP_DATA_
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if (IS_CV == IS_UNUSED) {
@@ -46954,8 +46858,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -47105,8 +47008,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -50017,9 +49919,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_TMPVAR_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -50115,9 +50014,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_TMPVAR_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -50214,9 +50110,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_TMPVAR_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -50313,9 +50206,6 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ASSIGN_DIM_SPEC_CV_TMPVAR_OP_D
 	object_ptr = _get_zval_ptr_cv_undef_BP_VAR_W(execute_data, opline->op1.var);
 
 	if (EXPECTED(Z_TYPE_P(object_ptr) == IS_ARRAY)) {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 try_assign_dim_array:
 		SEPARATE_ARRAY(object_ptr);
 		if ((IS_TMP_VAR|IS_VAR) == IS_UNUSED) {
@@ -50924,8 +50814,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_CV_
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -51075,8 +50964,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -53003,8 +52891,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -53154,8 +53041,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -55261,8 +55147,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -55412,8 +55297,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -56526,8 +56410,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_DIM_OBJ_SPEC_TMP
 	zend_ulong hval;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -56677,8 +56560,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	int result;
 	zval *offset;
 #ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-    zval *internal_value = NULL;
+  zval *internal_value = NULL;
 #endif
 
 	SAVE_OPLINE();
@@ -62566,13 +62448,7 @@ static const void *zend_vm_get_opcode_handler(zend_uchar opcode, const zend_op* 
 
 ZEND_API void zend_vm_set_opcode_handler(zend_op* op)
 {
-#ifdef ZEND_MONITOR_refactored
-	extern zend_opcode_monitor_t *opcode_monitor;
-	opcode_handler_t handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);
-	op->handler = (opcode_handler_t) (((zend_uintptr_t) handler) | 1);
-#else
 	op->handler = zend_vm_get_opcode_handler(zend_user_opcodes[op->opcode], op);
-#endif
 }
 
 ZEND_API void zend_vm_set_opcode_handler_ex(zend_op* op, uint32_t op1_info, uint32_t op2_info, uint32_t res_info)

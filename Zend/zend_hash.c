@@ -894,7 +894,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
         if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
         pNew = ht->arData + iNew;
         if (pOld != pNew)
-          ZEND_DATAFLOW(&pOld->val, "ht-old", &pNew->val, "ht-new", 1/*internal transfer*/);
+          dataflow_monitor->notify_dataflow(&pOld->val, "ht-old", &pNew->val, "ht-new", 1/*internal transfer*/);
         iNew++;
       }
     }

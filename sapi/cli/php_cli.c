@@ -130,10 +130,6 @@ static DWORD orig_cp = 0;
 # define PHP_MODE_TOKENIZE      14
 #endif
 
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
-
 cli_shell_callbacks_t cli_shell_callbacks = { NULL, NULL, NULL };
 PHP_CLI_API cli_shell_callbacks_t *php_cli_get_shell_callbacks()
 {
@@ -681,9 +677,6 @@ static int do_cli(int argc, char **argv) /* {{{ */
 	int lineno = 0;
 	const char *param_error=NULL;
 	int hide_argv = 0;
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	zend_try {
 

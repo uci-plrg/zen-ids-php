@@ -168,7 +168,7 @@ void register_opcode_monitor(zend_opcode_monitor_t *monitor)
     zend_execute_ex = execute_ex;
   } else {
     opcode_monitor = monitor;
-    dataflow_monitor = (zend_dataflow_monitor_t *) monitor;
+    dataflow_monitor = &monitor->dataflow;
   }
 }
 
@@ -177,9 +177,9 @@ zend_dataflow_monitor_t *get_zend_dataflow_monitor()
   return dataflow_monitor;
 }
 
-void zend_notify_function_copied(void *src_op_array, void *dst_op_array)
+void zend_notify_function_copied(void *src_ops, void *dst_op_array)
 {
-  opcode_monitor->notify_function_created((zend_op_array *) src_op_array, (zend_op_array *) dst_op_array);
+  opcode_monitor->notify_function_created((zend_op *) src_ops, (zend_op_array *) dst_op_array);
 }
 #endif
 

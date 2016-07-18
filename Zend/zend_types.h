@@ -339,24 +339,10 @@ typedef struct _zend_dataflow_monitor_t {
                                zend_bool is_internal_transfer);
 } zend_dataflow_monitor_t;
 
+extern zend_dataflow_monitor_t *dataflow_monitor;
+
 ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
 ZEND_API void zend_notify_function_copied(void *src_op_array, void *dst_op_array);
-
-static zend_always_inline zend_bool notify_dataflow(const zval *src, const char *src_name,
-                                                    const zval *dst, const char *dst_name,
-                                                    zend_bool is_internal_transfer)
-{
-    extern zend_dataflow_monitor_t *dataflow_monitor; // would it be faster to globalize the load?
-
-    if (dataflow_monitor->is_enabled)
-      return dataflow_monitor->notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer);
-    else
-      return 0;
-}
-# define ZEND_DATAFLOW(src, src_name, dst, dst_name, is_internal_transfer) \
-    notify_dataflow(src, src_name, dst, dst_name, is_internal_transfer)
-#else
-# define ZEND_DATAFLOW(src, src_name, dst, dst_name)
 #endif
 
 #define ZEND_SAME_FAKE_TYPE(faketype, realtype) ( \
@@ -863,7 +849,9 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 }
 
 #ifdef ZEND_MONITOR
-static zend_always_inline zend_bool zval_copy_value_ex(zval *dst, const zval *src, zend_refcounted *gc, uint32_t t) {
+static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) {
+  zend_refcounted *gc = Z_COUNTED_P(src);
+  uint32_t t = Z_TYPE_INFO_P(src);
 # if SIZEOF_SIZE_T == 4
   uint32_t _w2 = src->value.ww.w2;
   Z_COUNTED_P(dst) = gc;
@@ -875,15 +863,33 @@ static zend_always_inline zend_bool zval_copy_value_ex(zval *dst, const zval *sr
 # else
 #  error "Unknown SIZEOF_SIZE_T"
 # endif
-  return ZEND_DATAFLOW(src, "copy-src", dst, "copy-dst", 0 /*not a transfer*/);
+  if (dataflow_monitor->is_enabled)
+    return dataflow_monitor->notify_dataflow(src, "copy-src", dst, "copy-dst", 0 /*not a transfer*/);
+  else
+    return 0;
 }
 
-static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) {
-  zend_refcounted *gc = Z_COUNTED_P(src);
-  uint32_t t = Z_TYPE_INFO_P(src);
-  return zval_copy_value_ex(dst, src, gc, t);
-}
-# define ZVAL_COPY_VALUE_EX(z, v, gc, t)	zval_copy_value_ex(z, v, gc, t)
+# if SIZEOF_SIZE_T == 4
+#  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\
+	do {												\
+		uint32_t _w2 = v->value.ww.w2;					\
+		Z_COUNTED_P(z) = gc;							\
+		z->value.ww.w2 = _w2;							\
+		Z_TYPE_INFO_P(z) = t;							\
+    if (dataflow_monitor->is_enabled) \
+      dataflow_monitor->notify_dataflow(v, "copy-src", z, "copy-dst", 0 /*not a transfer*/); \
+	} while (0)
+# elif SIZEOF_SIZE_T == 8
+#  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\
+	do {												\
+		Z_COUNTED_P(z) = gc;							\
+		Z_TYPE_INFO_P(z) = t;							\
+    if (dataflow_monitor->is_enabled) \
+      dataflow_monitor->notify_dataflow(v, "copy-src", z, "copy-dst", 0 /*not a transfer*/); \
+	} while (0)
+# else
+#  error "Unknown SIZEOF_SIZE_T"
+# endif
 #else /* !ZEND_MONITOR */
 # if SIZEOF_SIZE_T == 4
 #  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\

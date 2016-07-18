@@ -953,9 +953,6 @@ static ZEND_COLD void zend_verify_void_return_error(const zend_function *zf, con
 
 static int zend_verify_internal_return_type(zend_function *zf, zval *ret)
 {
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 	zend_arg_info *ret_info = zf->common.arg_info - 1;
 	char *need_msg, *class_name;
 	zend_class_entry *ce;
@@ -2073,9 +2070,6 @@ ZEND_API void zend_clean_and_cache_symbol_table(zend_array *symbol_table) /* {{{
 
 static zend_always_inline void i_free_compiled_variables(zend_execute_data *execute_data) /* {{{ */
 {
-#ifdef ZEND_MONITOR
-    extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 	zval *cv = EX_VAR_NUM(0);
 	zval *end = cv + EX(func)->op_array.last_var;
 	while (EXPECTED(cv != end)) {
@@ -2860,9 +2854,6 @@ already_compiled:
 				new_op_array = compile_filename(type, inc_filename);
 				break;
 			case ZEND_EVAL: {
-#ifdef ZEND_MONITOR
-          extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 					char *eval_desc = zend_make_compiled_string_description("eval()'d code");
 					new_op_array = zend_compile_string(inc_filename, eval_desc);
 					efree(eval_desc);
@@ -3076,16 +3067,6 @@ ZEND_API int ZEND_FASTCALL zend_check_arg_type(zend_function *zf, uint32_t arg_n
 {
 	return zend_verify_arg_type(zf, arg_num, arg, default_value, cache_slot);
 }
-
-#ifdef ZEND_MONITOR
-void zend_monitor_call()
-{
-  extern zend_opcode_monitor_t *opcode_monitor;
-  opcode_monitor->notify_call();
-}
-#endif
-
-
 
 /*
  * Local variables:

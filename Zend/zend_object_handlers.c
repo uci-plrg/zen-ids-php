@@ -698,9 +698,6 @@ ZEND_API void zend_std_write_property(zval *object, zval *member, zval *value, v
 	zval tmp_member;
 	zval *variable_ptr;
 	uint32_t property_offset;
-#ifdef ZEND_MONITOR
-  extern zend_opcode_monitor_t *opcode_monitor;
-#endif
 
 	zobj = Z_OBJ_P(object);
 
