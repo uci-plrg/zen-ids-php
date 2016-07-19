@@ -344,9 +344,9 @@ typedef struct _zend_dataflow_monitor_t {
   // zend_bool (*notify_dataflow)(const zval *src, const zval *dst, zend_bool is_internal_transfer);
 } zend_dataflow_monitor_t;
 
-extern zend_dataflow_monitor_t *dataflow_monitor;
+extern zend_dataflow_monitor_t dataflow_monitor;
 
-ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
+// ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
 ZEND_API void zend_notify_function_copied(void *src_op_array, void *dst_op_array);
 #endif
 
@@ -869,29 +869,46 @@ static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) 
 # else
 #  error "Unknown SIZEOF_SIZE_T"
 # endif
-  if (UNEXPECTED(dataflow_monitor->is_enabled))
-    return dataflow_monitor->notify_dataflow(src, dst, 0 /*not a transfer*/);
+  if (UNEXPECTED(dataflow_monitor.is_enabled))
+    return dataflow_monitor.notify_dataflow(src, dst, 0 /*not a transfer*/);
   else
     return 0;
 }
 # endif
 
+# define ZVAL_FLOW_FLAG(z, c) \
+  do { \
+    if (UNEXPECTED(dataflow_monitor.is_enabled)) {      \
+      dataflow_monitor.dataflow_stack->dst = (z);       \
+      dataflow_monitor.dataflow_stack->container = (c); \
+      dataflow_monitor.dataflow_stack++;                \
+    }  \
+	} while (0)
+
+# define ZVAL_FLOW_FREE(v) \
+  do { \
+    if (UNEXPECTED(dataflow_monitor.is_enabled))  { \
+      dataflow_monitor.dataflow_stack->src = (v);   \
+      dataflow_monitor.dataflow_stack++;            \
+    }  \
+	} while (0)
+
 # define ZVAL_FLOW(z, v) \
 	do { \
-    if (UNEXPECTED(dataflow_monitor->is_enabled)) { \
-      dataflow_monitor->dataflow_stack->dst = z;    \
-      dataflow_monitor->dataflow_stack->src = v;    \
-      dataflow_monitor->dataflow_stack++;           \
+    if (UNEXPECTED(dataflow_monitor.is_enabled)) { \
+      dataflow_monitor.dataflow_stack->dst = (z);  \
+      dataflow_monitor.dataflow_stack->src = (v);  \
+      dataflow_monitor.dataflow_stack++;           \
     }  \
 	} while (0)
 
 # define ZVAL_FLOW_EX(z, v, c) \
 	do { \
-    if (UNEXPECTED(dataflow_monitor->is_enabled)) {    \
-      dataflow_monitor->dataflow_stack->dst = z;       \
-      dataflow_monitor->dataflow_stack->src = v;       \
-      dataflow_monitor->dataflow_stack->container = c; \
-      dataflow_monitor->dataflow_stack++;              \
+    if (UNEXPECTED(dataflow_monitor.is_enabled)) {      \
+      dataflow_monitor.dataflow_stack->dst = (z);       \
+      dataflow_monitor.dataflow_stack->src = (v);       \
+      dataflow_monitor.dataflow_stack->container = (c); \
+      dataflow_monitor.dataflow_stack++;                \
     }  \
 	} while (0)
 

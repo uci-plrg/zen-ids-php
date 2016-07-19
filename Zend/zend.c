@@ -854,7 +854,7 @@ void zend_shutdown(void) /* {{{ */
 	}
 	zend_destroy_modules();
 #ifdef ZEND_MONITOR
-   register_opcode_monitor(NULL);
+   unhook_opcode_monitor();
 #endif
 
 	virtual_cwd_deactivate();

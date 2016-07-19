@@ -2353,8 +2353,7 @@ ZEND_VM_C_LABEL(try_assign_dim_array):
 		value = GET_OP_DATA_ZVAL_PTR(BP_VAR_R);
 		value = zend_assign_to_variable(variable_ptr, value, OP_DATA_TYPE);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -2502,13 +2501,13 @@ ZEND_VM_HELPER(zend_leave_helper, ANY, ANY)
 	uint32_t call_info = EX_CALL_INFO();
 
 #ifdef ZEND_MONITOR
-  if (execute_data->func != NULL) {
+  if (execute_data->func != NULL && dataflow_monitor.is_enabled) {
     zend_op_array *op_array = &execute_data->func->op_array;
     zval *var = EX_VAR_NUM(0);
     zval *end = EX_VAR_NUM(op_array->last_var + op_array->T);
 
     do {
-      opcode_monitor->notify_zval_free((zval *) var);
+      ZVAL_FLOW_FREE((zval *) var);
       var++;
     } while (var <= end);
   }
@@ -6658,8 +6657,8 @@ ZEND_VM_C_LABEL(isset_dim_obj_exit):
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -6724,8 +6723,8 @@ ZEND_VM_C_LABEL(isset_no_object):
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }

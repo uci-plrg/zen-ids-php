@@ -75,7 +75,7 @@ ZEND_API void ZEND_FASTCALL _zval_dtor_func(zend_refcounted *p ZEND_FILE_LINE_DC
 	}
 
 #ifdef ZEND_MONITOR
-  opcode_monitor->notify_zval_free((zval *) p);
+  ZVAL_FLOW_FREE((zval *) p);
 #endif
 }
 
@@ -110,7 +110,7 @@ ZEND_API void _zval_internal_dtor(zval *zvalue ZEND_FILE_LINE_DC)
 	}
 
 #ifdef ZEND_MONITOR
-  opcode_monitor->notify_zval_free(zvalue);
+  ZVAL_FLOW_FREE(zvalue);
 #endif
 }
 
@@ -145,7 +145,7 @@ ZEND_API void _zval_internal_dtor_for_ptr(zval *zvalue ZEND_FILE_LINE_DC)
 	}
 
 #ifdef ZEND_MONITOR
-  opcode_monitor->notify_zval_free(zvalue);
+  ZVAL_FLOW_FREE(zvalue);
 #endif
 }
 

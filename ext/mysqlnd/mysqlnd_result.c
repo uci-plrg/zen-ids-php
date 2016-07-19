@@ -1170,7 +1170,7 @@ MYSQLND_METHOD(mysqlnd_result_buffered_zval, fetch_row)(MYSQLND_RES * result, vo
 		}
 #ifdef ZEND_MONITOR
     if (field_count > 0 && strlen(meta->fields[0].org_table) > 0)
-      opcode_monitor->notify_database_fetch(field_count, table_names, column_names, column_values);
+      opcode_monitor.notify_database_fetch(field_count, table_names, column_names, column_values);
 #endif
 		set->data_cursor += field_count;
 		MYSQLND_INC_GLOBAL_STATISTIC(STAT_ROWS_FETCHED_FROM_CLIENT_NORMAL_BUF);

@@ -87,10 +87,12 @@ ZEND_API zend_executor_globals executor_globals;
 #endif
 
 #ifdef ZEND_MONITOR
+/*
 zend_bool nop_notify_dataflow(const zval *src, const zval *dst, zend_bool is_internal_transfer)
 {
   return 0;
 }
+*/
 
 void nop_set_top_level_script(const char *script_path)
 {
@@ -109,9 +111,11 @@ void nop_monitor_call()
 {
 }
 
+/*
 void nop_notify_zval_free(const zval *zv)
 {
 }
+*/
 
 void nop_notify_http_request(zend_bool start)
 {
@@ -141,12 +145,11 @@ int nop_opmon_dataflow()
 }
 
 zend_opcode_monitor_t nop_opcode_monitor = {
-  { 0, nop_notify_dataflow },
   nop_set_top_level_script,
   nop_has_taint,
   nop_notify_function_created,
   nop_monitor_call,
-  nop_notify_zval_free,
+  // nop_notify_zval_free,
   nop_notify_http_request,
   nop_notify_database_query,
   nop_notify_database_fetch,
@@ -155,29 +158,44 @@ zend_opcode_monitor_t nop_opcode_monitor = {
   nop_opmon_dataflow
 };
 
-zend_opcode_monitor_t *opcode_monitor = &nop_opcode_monitor;
-zend_dataflow_monitor_t *dataflow_monitor = &nop_opcode_monitor.dataflow;
+zend_dataflow_monitor_t nop_dataflow_monitor = { 0 };
 
-void register_opcode_monitor(zend_opcode_monitor_t *monitor)
+zend_opcode_monitor_t opcode_monitor = { 0 };
+zend_dataflow_monitor_t dataflow_monitor = { 0 };
+
+void zend_monitor_init()
 {
-  if (monitor == NULL) {
-    opcode_monitor = &nop_opcode_monitor;
-    dataflow_monitor = &nop_opcode_monitor.dataflow;
-    zend_execute_ex = execute_ex;
-  } else {
-    opcode_monitor = monitor;
-    dataflow_monitor = &monitor->dataflow;
-  }
+  opcode_monitor = nop_opcode_monitor;
+  dataflow_monitor = nop_dataflow_monitor;
 }
 
+zend_dataflow_monitor_t *get_dataflow_monitor()
+{
+  return &dataflow_monitor;
+}
+
+zend_opcode_monitor_t *get_opcode_monitor()
+{
+  return &opcode_monitor;
+}
+
+void unhook_opcode_monitor()
+{
+  opcode_monitor = nop_opcode_monitor;
+  dataflow_monitor = nop_dataflow_monitor;
+  zend_execute_ex = execute_ex;
+}
+
+/*
 zend_dataflow_monitor_t *get_zend_dataflow_monitor()
 {
   return dataflow_monitor;
 }
+*/
 
 void zend_notify_function_copied(void *src_ops, void *dst_op_array)
 {
-  opcode_monitor->notify_function_created((zend_op *) src_ops, (zend_op_array *) dst_op_array);
+  opcode_monitor.notify_function_created((zend_op *) src_ops, (zend_op_array *) dst_op_array);
 }
 #endif
 

@@ -216,7 +216,7 @@ static zend_always_inline void zend_vm_stack_free_extra_args_ex(uint32_t call_in
 		do {
 			p--;
 #ifdef ZEND_MONITOR
-      opcode_monitor->notify_zval_free(p);
+      ZVAL_FLOW_FREE(p);
 #endif
 			if (Z_REFCOUNTED_P(p)) {
 				if (!Z_DELREF_P(p)) {
@@ -246,7 +246,7 @@ static zend_always_inline void zend_vm_stack_free_args(zend_execute_data *call)
 		do {
 			p--;
 #ifdef ZEND_MONITOR
-      opcode_monitor->notify_zval_free(p);
+      ZVAL_FLOW_FREE(p);
 #endif
 			if (Z_REFCOUNTED_P(p)) {
 				if (!Z_DELREF_P(p)) {
@@ -317,7 +317,7 @@ ZEND_API int zend_set_user_opcode_handler(zend_uchar opcode, user_opcode_handler
 ZEND_API user_opcode_handler_t zend_get_user_opcode_handler(zend_uchar opcode);
 
 #ifdef ZEND_MONITOR
-# define ZEND_VM_MONITOR_CALL() opcode_monitor->notify_call()
+# define ZEND_VM_MONITOR_CALL() opcode_monitor.notify_call()
 #else
 # define ZEND_VM_MONITOR_CALL()
 #endif

@@ -2070,7 +2070,7 @@ static zend_always_inline void i_free_compiled_variables(zend_execute_data *exec
 	zval *end = cv + EX(func)->op_array.last_var;
 	while (EXPECTED(cv != end)) {
 #ifdef ZEND_MONITOR
-    opcode_monitor->notify_zval_free(cv);
+    ZVAL_FLOW_FREE(cv);
 #endif
 		if (Z_REFCOUNTED_P(cv)) {
 			if (!Z_DELREF_P(cv)) {

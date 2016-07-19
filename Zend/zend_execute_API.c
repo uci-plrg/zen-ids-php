@@ -1617,7 +1617,7 @@ ZEND_API void zend_detach_symbol_table(zend_execute_data *execute_data) /* {{{ *
 		do {
 			if (Z_TYPE_P(var) == IS_UNDEF) {
 #ifdef ZEND_MONITOR
-        opcode_monitor->notify_zval_free(var);
+        ZVAL_FLOW_FREE(var);
 #endif
 				zend_hash_del(ht, *str);
 			} else {

@@ -820,24 +820,27 @@ typedef enum _monitor_query_flags_t {
 } monitor_query_flags_t;
 
 typedef struct _zend_opcode_monitor_t {
-    zend_dataflow_monitor_t dataflow;
     void (*set_top_level_script)(const char *script_path);
     zend_bool (*has_taint)(const zval *value);
     void (*notify_function_created)(zend_op *src, zend_op_array *f);
     void (*notify_call)();
-    void (*notify_zval_free)(const zval *zv);
+    //void (*notify_zval_free)(const zval *zv);
     void (*notify_http_request)(zend_bool start);
     monitor_query_flags_t (*notify_database_query)(const char *query);
     void (*notify_database_fetch)(uint32_t field_count, const char **table_names,
                                   const char **column_names, const zval **value);
     void (*notify_worker_startup)();
     void (*opmon_tokenize)();
-    int (*opmon_dataflow)();
+    int (*opmon_dataflow)(); /* static dataflow analysis */
 } zend_opcode_monitor_t;
 
-extern zend_opcode_monitor_t *opcode_monitor;
+extern zend_opcode_monitor_t opcode_monitor;
 
-ZEND_API void register_opcode_monitor(zend_opcode_monitor_t *monitor);
+void zend_monitor_init();
+void unhook_opcode_monitor();
+
+ZEND_API zend_dataflow_monitor_t *get_dataflow_monitor();
+ZEND_API zend_opcode_monitor_t *get_opcode_monitor();
 #endif
 
 /* BEGIN: OPCODES */

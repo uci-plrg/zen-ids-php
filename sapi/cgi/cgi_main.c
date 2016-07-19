@@ -1408,7 +1408,7 @@ static void init_request_info(fcgi_request *request)
 		}
 
 #ifdef ZEND_MONITOR
-    opcode_monitor->set_top_level_script(SG(request_info).path_translated);
+    opcode_monitor.set_top_level_script(SG(request_info).path_translated);
 #endif
 
 		SG(request_info).request_method = CGI_GETENV("REQUEST_METHOD");
@@ -2632,7 +2632,7 @@ consult the installation file that came with this distribution, or visit \n\
 				} break;
         case PHP_MODE_DATAFLOW: {
 					PG(during_request_startup) = 0;
-          exit_status = opcode_monitor->opmon_dataflow(&file_handle);
+          exit_status = opcode_monitor.opmon_dataflow(&file_handle);
         } break;
 #endif
 				case PHP_MODE_LINT:

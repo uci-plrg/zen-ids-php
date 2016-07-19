@@ -482,13 +482,13 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL zend_leave_helper_SPEC(ZEND_OPCODE_
 	uint32_t call_info = EX_CALL_INFO();
 
 #ifdef ZEND_MONITOR
-  if (execute_data->func != NULL) {
+  if (execute_data->func != NULL && dataflow_monitor.is_enabled) {
     zend_op_array *op_array = &execute_data->func->op_array;
     zval *var = EX_VAR_NUM(0);
     zval *end = EX_VAR_NUM(op_array->last_var + op_array->T);
 
     do {
-      opcode_monitor->notify_zval_free((zval *) var);
+      ZVAL_FLOW_FREE((zval *) var);
       var++;
     } while (var <= end);
   }
@@ -6133,8 +6133,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -6198,8 +6198,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -9856,8 +9856,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -9921,8 +9921,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -11750,8 +11750,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -11816,8 +11816,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -19240,8 +19240,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -19335,8 +19334,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -19431,8 +19429,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -19527,8 +19524,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21206,8 +21202,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21301,8 +21296,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21397,8 +21391,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -21493,8 +21486,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24030,8 +24022,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24125,8 +24116,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24221,8 +24211,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -24317,8 +24306,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -26991,8 +26979,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27086,8 +27073,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27182,8 +27168,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -27278,8 +27263,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -29803,8 +29787,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -32389,8 +32373,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -34304,8 +34288,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -39005,8 +38989,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -39100,8 +39083,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -39196,8 +39178,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -39292,8 +39273,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -40205,8 +40185,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -40270,8 +40250,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -42223,8 +42203,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42318,8 +42297,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42414,8 +42392,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -42510,8 +42487,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -45926,8 +45902,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -46021,8 +45996,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -46117,8 +46091,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -46213,8 +46186,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -47038,8 +47010,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -47103,8 +47075,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -49996,8 +49968,7 @@ try_assign_dim_array:
 		value = EX_CONSTANT((opline+1)->op1);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CONST);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50091,8 +50062,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_tmp((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_TMP_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50187,8 +50157,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_var((opline+1)->op1.var, execute_data, &free_op_data);
 		value = zend_assign_to_variable(variable_ptr, value, IS_VAR);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -50283,8 +50252,7 @@ try_assign_dim_array:
 		value = _get_zval_ptr_cv_BP_VAR_R(execute_data, (opline+1)->op1.var);
 		value = zend_assign_to_variable(variable_ptr, value, IS_CV);
 #ifdef ZEND_MONITOR
-    if (opcode_monitor->has_taint(value))
-      object_ptr->value.arr->u.v.reserve |= HASH_RESERVE_TAINT;
+    ZVAL_FLOW_FLAG(value, Z_ARRVAL_P(object_ptr));
 #endif
 		if (UNEXPECTED(RETURN_VALUE_USED(opline))) {
 			ZVAL_COPY(EX_VAR(opline->result.var), value);
@@ -51002,8 +50970,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -51068,8 +51036,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -53087,8 +53055,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -53152,8 +53120,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -55351,8 +55319,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -55416,8 +55384,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -56622,8 +56590,8 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
@@ -56688,8 +56656,8 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value,
+  if (internal_value != NULL && dataflow_monitor.is_enabled) {
+    dataflow_monitor.notify_dataflow(internal_value,
                                              EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }

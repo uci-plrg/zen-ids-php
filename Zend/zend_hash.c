@@ -889,7 +889,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
 		pefree(old_data, ht->u.flags & HASH_FLAG_PERSISTENT);
 		zend_hash_rehash(ht);
 #ifdef ZEND_MONITOR
-    if (dataflow_monitor->is_enabled && (ht->u.v.reserve & HASH_RESERVE_TAINT)) {
+    if (dataflow_monitor.is_enabled && (ht->u.v.reserve & HASH_RESERVE_TAINT)) {
       uint32_t iOld, iNew;
       Bucket *pNew, *pOld;
 

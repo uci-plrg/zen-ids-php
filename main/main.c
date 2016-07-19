@@ -2207,6 +2207,10 @@ int php_module_startup(sapi_module_struct *sf, zend_module_entry *additional_mod
 		REGISTER_MAIN_STRINGL_CONSTANT("PHP_BINARY", "", 0, CONST_PERSISTENT | CONST_CS);
 	}
 
+#ifdef ZEND_MONITOR
+  zend_monitor_init();
+#endif
+
 	php_output_register_constants();
 	php_rfc1867_register_constants();
 

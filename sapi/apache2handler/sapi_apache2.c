@@ -677,7 +677,7 @@ zend_first_try {
 
 #ifdef ZEND_MONITOR
     opmon_notified = 1;
-    opcode_monitor->notify_http_request(1);
+    opcode_monitor.notify_http_request(1);
 #endif
 		if (!parent_req) {
 			php_execute_script(&zfd);
@@ -711,7 +711,7 @@ zend_first_try {
 
 #ifdef ZEND_MONITOR
   if (opmon_notified)
-    opcode_monitor->notify_http_request(0);
+    opcode_monitor.notify_http_request(0);
 #endif
 	return OK;
 }
@@ -719,7 +719,7 @@ zend_first_try {
 static void php_apache_child_init(apr_pool_t *pchild, server_rec *s)
 {
 #ifdef ZEND_MONITOR
-  opcode_monitor->notify_worker_startup();
+  opcode_monitor.notify_worker_startup();
 #endif
 
 	apr_pool_cleanup_register(pchild, NULL, php_apache_child_shutdown, apr_pool_cleanup_null);

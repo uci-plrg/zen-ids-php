@@ -137,7 +137,7 @@ static time_t zend_accel_get_time(void)
 #endif
 
 #ifdef ZEND_MONITOR
-zend_dataflow_monitor_t *dataflow_monitor = NULL; /* N.B.: required for shared module */
+zend_dataflow_monitor_t dataflow_monitor = { 0 }; /* N.B.: required for shared module */
 #endif
 
 static inline int is_stream_path(const char *filename)
@@ -2675,9 +2675,9 @@ static int accel_startup(zend_extension *extension)
 	_setmaxstdio(2048); /* The default configuration is limited to 512 stdio files */
 #endif
 
-#ifdef ZEND_MONITOR
-  dataflow_monitor = get_zend_dataflow_monitor(); /* N.B.: required for shared module */
-#endif
+//#ifdef ZEND_MONITOR
+//  dataflow_monitor = get_zend_dataflow_monitor(); /* N.B.: required for shared module */
+//#endif
 
  	if (start_accel_module() == FAILURE) {
 		accel_startup_ok = 0;

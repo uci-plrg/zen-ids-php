@@ -1,9 +1,12 @@
 #!/bin/bash
 
+opt="-O3 -march=native"
+
 while getopts "d" option
 do
   case $option in
-    d) debug="--enable-debug";;
+    d) debug="--enable-debug"
+       opt="-O2 -g";;
   esac
 done
 
@@ -31,6 +34,6 @@ done
     --with-mcrypt \
     --with-tidy \
     --with-zlib \
-    --with-config-file-path=$PHP_HOME/conf.d
+    --with-config-file-path=$PHP_HOME/conf.d \
+    CFLAGS="$opt"
 
-# --with-xdiff

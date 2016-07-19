@@ -387,7 +387,7 @@ ZEND_API void destroy_op_array(zend_op_array *op_array)
 		while (i > 0) {
 			i--;
 #ifdef ZEND_MONITOR
-      opcode_monitor->notify_zval_free(op_array->vars[i]);
+      ZVAL_FLOW_FREE(op_array->vars[i]);
 #endif
 			zend_string_release(op_array->vars[i]);
 		}
@@ -398,7 +398,7 @@ ZEND_API void destroy_op_array(zend_op_array *op_array)
 	 	end = literal + op_array->last_literal;
 	 	while (literal < end) {
 #ifdef ZEND_MONITOR
-      opcode_monitor->notify_zval_free(literal);
+      ZVAL_FLOW_FREE(literal);
 #endif
 			zval_ptr_dtor_nogc(literal);
 			literal++;
