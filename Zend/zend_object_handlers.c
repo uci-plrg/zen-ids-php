@@ -769,11 +769,13 @@ write_std_property:
 			}
 		}
 		if (EXPECTED(property_offset != ZEND_DYNAMIC_PROPERTY_OFFSET)) {
-#ifdef ZEND_MONITOR
+#ifdef ZEND_MONITOR_refactored
 			if (zval_copy_value(OBJ_PROP(zobj, property_offset), value))
         zobj->properties->u.v.reserve |= HASH_RESERVE_TAINT;
-#else
+#endif
 			ZVAL_COPY_VALUE(OBJ_PROP(zobj, property_offset), value);
+#ifdef ZEND_MONITOR
+      ZVAL_FLOW_EX(OBJ_PROP(zobj, property_offset), value, zobj->properties);
 #endif
 		} else {
 			if (!zobj->properties) {

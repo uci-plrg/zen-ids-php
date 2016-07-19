@@ -335,7 +335,7 @@ static zend_always_inline zend_uchar zval_get_type(const zval* pz) {
 typedef struct _zend_dataflow_t {
   const zval *src;
   const zval *dst;
-  Hashtable *container;
+  HashTable *container;
 } zend_dataflow_t;
 
 typedef struct _zend_dataflow_monitor_t {
@@ -854,6 +854,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 }
 
 #ifdef ZEND_MONITOR
+# ifdef ZEND_MONITOR_refactor
 static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) {
   zend_refcounted *gc = Z_COUNTED_P(src);
   uint32_t t = Z_TYPE_INFO_P(src);
@@ -873,21 +874,24 @@ static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) 
   else
     return 0;
 }
+# endif
 
-# define ZVAL_FLOW(dst, src) \
+# define ZVAL_FLOW(z, v) \
 	do { \
     if (UNEXPECTED(dataflow_monitor->is_enabled)) { \
-      dataflow_monitor->dataflow_stack->dst = dst;  \
-      dataflow_monitor->dataflow_stack->src = src;  \
+      dataflow_monitor->dataflow_stack->dst = z;    \
+      dataflow_monitor->dataflow_stack->src = v;    \
+      dataflow_monitor->dataflow_stack++;           \
     }  \
 	} while (0)
 
-# define ZVAL_FLOW_EX(dst, src, cont) \
+# define ZVAL_FLOW_EX(z, v, c) \
 	do { \
-    if (UNEXPECTED(dataflow_monitor->is_enabled)) {        \
-      dataflow_monitor->dataflow_stack->dst = dst;         \
-      dataflow_monitor->dataflow_stack->src = src;         \
-      dataflow_monitor->dataflow_stack->container = cont;  \
+    if (UNEXPECTED(dataflow_monitor->is_enabled)) {    \
+      dataflow_monitor->dataflow_stack->dst = z;       \
+      dataflow_monitor->dataflow_stack->src = v;       \
+      dataflow_monitor->dataflow_stack->container = c; \
+      dataflow_monitor->dataflow_stack++;              \
     }  \
 	} while (0)
 
@@ -898,16 +902,14 @@ static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) 
 		Z_COUNTED_P(z) = gc;							\
 		z->value.ww.w2 = _w2;							\
 		Z_TYPE_INFO_P(z) = t;							\
-    if (UNEXPECTED(dataflow_monitor->is_enabled)) \
-      dataflow_monitor->notify_dataflow(v, z, 0 /*not a transfer*/); \
+    ZVAL_FLOW(v, z); \
 	} while (0)
 # elif SIZEOF_SIZE_T == 8
 #  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\
 	do {												\
 		Z_COUNTED_P(z) = gc;							\
 		Z_TYPE_INFO_P(z) = t;							\
-    if (UNEXPECTED(dataflow_monitor->is_enabled)) \
-      dataflow_monitor->notify_dataflow(v, z, 0 /*not a transfer*/); \
+    ZVAL_FLOW(v, z); \
 	} while (0)
 # else
 #  error "Unknown SIZEOF_SIZE_T"
