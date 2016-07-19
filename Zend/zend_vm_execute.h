@@ -6133,9 +6133,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -6195,9 +6195,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -9848,9 +9848,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -9910,9 +9910,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -11734,9 +11734,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -11797,9 +11797,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -29779,9 +29779,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -32360,9 +32360,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -34270,9 +34270,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -40166,9 +40166,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -40228,9 +40228,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -46991,9 +46991,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -47053,9 +47053,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -50947,9 +50947,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -51010,9 +51010,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -53024,9 +53024,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -53086,9 +53086,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -55280,9 +55280,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -55342,9 +55342,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -56543,9 +56543,9 @@ isset_dim_obj_exit:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif
@@ -56606,9 +56606,9 @@ isset_no_object:
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    opcode_monitor->dataflow.notify_dataflow(internal_value, "A[i]",
-                                             EX_VAR(opline->result.var), "R",
+  if (internal_value != NULL && opcode_monitor->dataflow.is_enabled) {
+    opcode_monitor->dataflow.notify_dataflow(internal_value,
+                                             EX_VAR(opline->result.var),
                                              0 /*not a transfer*/);
   }
 #endif

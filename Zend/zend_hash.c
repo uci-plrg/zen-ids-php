@@ -885,7 +885,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
 		pefree(old_data, ht->u.flags & HASH_FLAG_PERSISTENT);
 		zend_hash_rehash(ht);
 #ifdef ZEND_MONITOR
-    if (ht->u.v.reserve & HASH_RESERVE_TAINT) {
+    if (dataflow_monitor->is_enabled && (ht->u.v.reserve & HASH_RESERVE_TAINT)) {
       uint32_t iOld, iNew;
       Bucket *pNew, *pOld;
 
@@ -894,7 +894,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
         if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
         pNew = ht->arData + iNew;
         if (pOld != pNew)
-          dataflow_monitor->notify_dataflow(&pOld->val, "ht-old", &pNew->val, "ht-new", 1/*internal transfer*/);
+          dataflow_monitor->notify_dataflow(&pOld->val, &pNew->val, 1/*internal transfer*/);
         iNew++;
       }
     }

@@ -87,9 +87,7 @@ ZEND_API zend_executor_globals executor_globals;
 #endif
 
 #ifdef ZEND_MONITOR
-zend_bool nop_notify_dataflow(const zval *src, const char *src_name,
-                              const zval *dst, const char *dst_name,
-                              zend_bool is_internal_transfer)
+zend_bool nop_notify_dataflow(const zval *src, const zval *dst, zend_bool is_internal_transfer)
 {
   return 0;
 }

@@ -966,10 +966,6 @@ static int zend_verify_internal_return_type(zend_function *zf, zval *ret)
 					return 0;
 				}
 			}
-#ifdef ZEND_MONITOR_merged_out
-        opcode_monitor->dataflow.notify_dataflow(value, "*", variable_ptr, "var",
-                                                 0/*not a transfer*/);
-#endif
 		} else if (Z_TYPE_P(ret) != IS_NULL || !ret_info->allow_null) {
 			if (ret_info->class_name) {
 				need_msg = zend_verify_internal_arg_class_kind((zend_internal_arg_info *)ret_info, &class_name, &ce);
