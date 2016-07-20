@@ -3064,6 +3064,12 @@ ZEND_API int ZEND_FASTCALL zend_check_arg_type(zend_function *zf, uint32_t arg_n
 	return zend_verify_arg_type(zf, arg_num, arg, default_value, cache_slot);
 }
 
+void zend_vm_call()
+{
+  execute_data = EG(current_execute_data);
+  LOAD_OPLINE();
+}
+
 /*
  * Local variables:
  * tab-width: 4

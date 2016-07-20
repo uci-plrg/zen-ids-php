@@ -55,14 +55,10 @@
 
 #include "zend.h"
 #include "zend_alloc.h"
-#include "zend_API.h"
 #include "zend_globals.h"
 #include "zend_operators.h"
 #include "zend_multiply.h"
 #include "zend_bitset.h"
-
-#include <execinfo.h>
-#include <unistd.h>
 
 #ifdef HAVE_SIGNAL_H
 # include <signal.h>
@@ -438,13 +434,7 @@ static void *zend_mm_mmap_fixed(void *addr, size_t size)
 	} else if (ptr != addr) {
 		if (munmap(ptr, size) != 0) {
 #if ZEND_MM_ERROR
-      zval fname, retval;
-
-      ZVAL_STRING(&fname, "opcache_reset");
-      call_user_function_ex(CG(function_table), NULL, &fname, &retval, 0, NULL, 0, NULL TSRMLS_CC);
-
-			fprintf(stderr, "\nmunmap() failed: [%d] %s (exiting now)\n", errno, strerror(errno));
-      exit(1);
+			fprintf(stderr, "\nmunmap() failed: [%d] %s\n", errno, strerror(errno));
 #endif
 		}
 		return NULL;
@@ -500,14 +490,7 @@ static void zend_mm_munmap(void *addr, size_t size)
 #else
 	if (munmap(addr, size) != 0) {
 #if ZEND_MM_ERROR
-    zval fname, retval;
-
-    EG(active) = 1;
-    ZVAL_STRING(&fname, "opcache_reset");
-	  call_user_function_ex(CG(function_table), NULL, &fname, &retval, 0, NULL, 0, NULL TSRMLS_CC);
-
-		fprintf(stderr, "\nmunmap() failed: [%d] %s (exiting now)\n", errno, strerror(errno));
-    exit(1);
+		fprintf(stderr, "\nmunmap() failed: [%d] %s\n", errno, strerror(errno));
 #endif
 	}
 #endif
@@ -997,10 +980,6 @@ get_chunk:
 						goto get_chunk;
 					} else if (heap->overflow == 0) {
 #if ZEND_DEBUG
-            void *array[10];
-            size_t size;
-            size = backtrace(array, 10);
-            backtrace_symbols_fd(array, size, fileno(stderr));
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted (tried to allocate %zu bytes)", heap->limit, ZEND_MM_PAGE_SIZE * pages_count);
@@ -1485,11 +1464,6 @@ static void *zend_mm_realloc_heap(zend_mm_heap *heap, void *ptr, size_t size, si
 						/* pass */
 					} else if (heap->overflow == 0) {
 #if ZEND_DEBUG
-            void *array[40];
-            size_t size;
-            size = backtrace(array, 40);
-            backtrace_symbols_fd(array, size, fileno(stderr));
-            fprintf(stderr, "Memory corrupt on pid 0x%x\n", getpid());
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted (tried to allocate %zu bytes)", heap->limit, size);
@@ -1736,10 +1710,6 @@ static void *zend_mm_alloc_huge(zend_mm_heap *heap, size_t size ZEND_FILE_LINE_D
 			/* pass */
 		} else if (heap->overflow == 0) {
 #if ZEND_DEBUG
-      void *array[10];
-      size_t size;
-      size = backtrace(array, 10);
-      backtrace_symbols_fd(array, size, fileno(stderr));
 			zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
 			zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted (tried to allocate %zu bytes)", heap->limit, size);

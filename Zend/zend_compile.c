@@ -87,13 +87,6 @@ ZEND_API zend_executor_globals executor_globals;
 #endif
 
 #ifdef ZEND_MONITOR
-/*
-zend_bool nop_notify_dataflow(const zval *src, const zval *dst, zend_bool is_internal_transfer)
-{
-  return 0;
-}
-*/
-
 void nop_set_top_level_script(const char *script_path)
 {
 }
@@ -106,16 +99,6 @@ zend_bool nop_has_taint(const zval *value)
 void nop_notify_function_created(zend_op *src, zend_op_array *f)
 {
 }
-
-void nop_monitor_call()
-{
-}
-
-/*
-void nop_notify_zval_free(const zval *zv)
-{
-}
-*/
 
 void nop_notify_http_request(zend_bool start)
 {
@@ -148,8 +131,7 @@ zend_opcode_monitor_t nop_opcode_monitor = {
   nop_set_top_level_script,
   nop_has_taint,
   nop_notify_function_created,
-  nop_monitor_call,
-  // nop_notify_zval_free,
+  zend_vm_call,
   nop_notify_http_request,
   nop_notify_database_query,
   nop_notify_database_fetch,
@@ -185,13 +167,6 @@ void unhook_opcode_monitor()
   dataflow_monitor = nop_dataflow_monitor;
   zend_execute_ex = execute_ex;
 }
-
-/*
-zend_dataflow_monitor_t *get_zend_dataflow_monitor()
-{
-  return dataflow_monitor;
-}
-*/
 
 void zend_notify_function_copied(void *src_ops, void *dst_op_array)
 {

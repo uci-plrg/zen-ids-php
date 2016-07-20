@@ -55,6 +55,7 @@ extern ZEND_API const zend_internal_function zend_pass_function;
 ZEND_API void ZEND_FASTCALL zend_check_internal_arg_type(zend_function *zf, uint32_t arg_num, zval *arg);
 ZEND_API int  ZEND_FASTCALL zend_check_arg_type(zend_function *zf, uint32_t arg_num, zval *arg, zval *default_value, void **cache_slot);
 ZEND_API ZEND_COLD void ZEND_FASTCALL zend_missing_arg_error(zend_execute_data *execute_data);
+void zend_vm_call();
 
 static zend_always_inline zval* zend_assign_to_variable(zval *variable_ptr, zval *value, zend_uchar value_type)
 {
@@ -317,9 +318,9 @@ ZEND_API int zend_set_user_opcode_handler(zend_uchar opcode, user_opcode_handler
 ZEND_API user_opcode_handler_t zend_get_user_opcode_handler(zend_uchar opcode);
 
 #ifdef ZEND_MONITOR
-# define ZEND_VM_MONITOR_CALL() opcode_monitor.notify_call()
+# define ZEND_VM_CALL() opcode_monitor.vm_call()
 #else
-# define ZEND_VM_MONITOR_CALL()
+# define ZEND_VM_CALL() execute_data = EG(current_execute_data); LOAD_OPLINE();
 #endif
 
 void zend_monitor_call();

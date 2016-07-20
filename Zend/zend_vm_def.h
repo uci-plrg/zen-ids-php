@@ -6656,13 +6656,6 @@ ZEND_VM_C_LABEL(isset_dim_obj_exit):
 	FREE_OP1();
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
-#ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && dataflow_monitor.is_enabled) {
-    dataflow_monitor.notify_dataflow(internal_value,
-                                             EX_VAR(opline->result.var),
-                                             0 /*not a transfer*/);
-  }
-#endif
 #ifdef ZEND_MONITOR
   ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
 #endif
@@ -6722,13 +6715,6 @@ ZEND_VM_C_LABEL(isset_no_object):
 	FREE_OP1();
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
-#ifdef ZEND_MONITOR_refactored
-  if (internal_value != NULL && dataflow_monitor.is_enabled) {
-    dataflow_monitor.notify_dataflow(internal_value,
-                                             EX_VAR(opline->result.var),
-                                             0 /*not a transfer*/);
-  }
-#endif
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
     ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));

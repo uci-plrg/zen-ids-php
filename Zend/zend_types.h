@@ -341,12 +341,10 @@ typedef struct _zend_dataflow_t {
 typedef struct _zend_dataflow_monitor_t {
   zend_bool is_enabled;
   zend_dataflow_t *dataflow_stack;
-  // zend_bool (*notify_dataflow)(const zval *src, const zval *dst, zend_bool is_internal_transfer);
 } zend_dataflow_monitor_t;
 
 extern zend_dataflow_monitor_t dataflow_monitor;
 
-// ZEND_API zend_dataflow_monitor_t *get_zend_dataflow_monitor();
 ZEND_API void zend_notify_function_copied(void *src_op_array, void *dst_op_array);
 #endif
 
@@ -854,28 +852,6 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 }
 
 #ifdef ZEND_MONITOR
-# ifdef ZEND_MONITOR_refactor
-static zend_always_inline zend_bool zval_copy_value(zval *dst, const zval *src) {
-  zend_refcounted *gc = Z_COUNTED_P(src);
-  uint32_t t = Z_TYPE_INFO_P(src);
-# if SIZEOF_SIZE_T == 4
-  uint32_t _w2 = src->value.ww.w2;
-  Z_COUNTED_P(dst) = gc;
-  dst->value.ww.w2 = _w2;
-  Z_TYPE_INFO_P(dst) = t;
-# elif SIZEOF_SIZE_T == 8
-  Z_COUNTED_P(dst) = gc;
-  Z_TYPE_INFO_P(dst) = t;
-# else
-#  error "Unknown SIZEOF_SIZE_T"
-# endif
-  if (UNEXPECTED(dataflow_monitor.is_enabled))
-    return dataflow_monitor.notify_dataflow(src, dst, 0 /*not a transfer*/);
-  else
-    return 0;
-}
-# endif
-
 # define ZVAL_FLOW_FLAG(z, c) \
   do { \
     if (UNEXPECTED(dataflow_monitor.is_enabled)) {      \

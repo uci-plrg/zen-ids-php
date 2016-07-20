@@ -587,10 +587,6 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			if (ht->pDestructor) {
 				ht->pDestructor(data);
 			}
-#ifdef ZEND_MONITOR_refactored
-			if (zval_copy_value(data, pData))
-        ht->u.v.reserve |= HASH_RESERVE_TAINT;
-#endif
 			ZVAL_COPY_VALUE(data, pData);
 #ifdef ZEND_MONITOR_
       ZVAL_FLOW_EX(data, pData, ht);
@@ -616,10 +612,6 @@ add_to_hash:
 		zend_string_hash_val(key);
 	}
 	p->h = h = ZSTR_H(key);
-#ifdef ZEND_MONITOR_refactored
-	if (zval_copy_value(&p->val, pData))
-    ht->u.v.reserve |= HASH_RESERVE_TAINT;
-#endif
 	ZVAL_COPY_VALUE(&p->val, pData);
 #ifdef ZEND_MONITOR_
   ZVAL_FLOW(&p->val, pData, ht);

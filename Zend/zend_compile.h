@@ -823,8 +823,7 @@ typedef struct _zend_opcode_monitor_t {
     void (*set_top_level_script)(const char *script_path);
     zend_bool (*has_taint)(const zval *value);
     void (*notify_function_created)(zend_op *src, zend_op_array *f);
-    void (*notify_call)();
-    //void (*notify_zval_free)(const zval *zv);
+    void (*vm_call)();
     void (*notify_http_request)(zend_bool start);
     monitor_query_flags_t (*notify_database_query)(const char *query);
     void (*notify_database_fetch)(uint32_t field_count, const char **table_names,
