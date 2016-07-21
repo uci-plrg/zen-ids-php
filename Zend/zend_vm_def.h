@@ -3757,16 +3757,20 @@ ZEND_VM_HANDLER(60, ZEND_DO_FCALL, ANY, ANY, SPEC(RETVAL))
 		call->prev_execute_data = execute_data;
 		i_init_func_execute_data(call, &fbc->op_array, ret);
 
-		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
-      if (UNEXPECTED(fbc->op_array.fn_flags & ZEND_ACC_CALL_VIA_TRAMPOLINE)) {
-        ZEND_VM_ENTER_INTERNAL();
-      } else {
-        ZEND_VM_ENTER();
-      }
+#ifdef ZEND_MONITOR
+    if (UNEXPECTED(fbc->op_array.fn_flags & ZEND_ACC_CALL_VIA_TRAMPOLINE)) {
+			ZEND_VM_ENTER_INTERNAL();
+    } else {
+		  ZEND_VM_ENTER();
+    }
+#else
+		if (EXPECTED(zend_execute_ex == execute_ex)) {
+      ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
 			zend_execute_ex(call);
 		}
+#endif
 	} else if (EXPECTED(fbc->type < ZEND_USER_FUNCTION)) {
 		zval retval;
 
@@ -7968,12 +7972,20 @@ ZEND_VM_HANDLER(158, ZEND_CALL_TRAMPOLINE, ANY, ANY)
 			init_func_run_time_cache(&fbc->op_array);
 		}
 		i_init_func_execute_data(call, &fbc->op_array, ret);
-		if (1 || EXPECTED(zend_execute_ex == execute_ex)) {
+#ifdef ZEND_MONITOR
+		if (dataflow_monitor.is_training || dataflow_monitor.is_enabled) {
+		  ZEND_VM_ENTER();
+    } else {
 			ZEND_VM_ENTER_INTERNAL();
+    }
+#else
+		if (EXPECTED(zend_execute_ex == execute_ex)) {
+		  ZEND_VM_ENTER();
 		} else {
 			ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
 			zend_execute_ex(call);
 		}
+#endif
 	} else {
 		zval retval;
 

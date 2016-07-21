@@ -815,10 +815,6 @@ static void zend_optimize_op_array(zend_op_array      *op_array,
 
 	/* Redo pass_two() */
 	zend_redo_pass_two(op_array);
-
-#ifdef ZEND_MONITOR
-  zend_notify_function_copied(NULL /*new copy src*/, op_array);
-#endif
 }
 
 static void zend_adjust_fcall_stack_size(zend_op_array *op_array, zend_optimizer_ctx *ctx)
@@ -988,6 +984,18 @@ int zend_optimize_script(zend_script *script, zend_long optimization_level, zend
 		zend_hash_destroy(ctx.constants);
 	}
 	zend_arena_destroy(ctx.arena);
+
+#ifdef ZEND_MONITOR
+	zend_notify_function_copied(NULL /*new function*/, &script->main_op_array);
+  ZEND_HASH_FOREACH_PTR(&script->function_table, op_array) {
+    zend_notify_function_copied(NULL /*new function*/, op_array);
+  } ZEND_HASH_FOREACH_END();
+  ZEND_HASH_FOREACH_PTR(&script->class_table, ce) {
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&ce->function_table, name, op_array) {
+      zend_notify_function_copied(NULL /*new function*/, op_array);
+    } ZEND_HASH_FOREACH_END();
+  } ZEND_HASH_FOREACH_END();
+#endif
 
 	return 1;
 }

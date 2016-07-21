@@ -1844,6 +1844,9 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
 		if (!persistent_script) {
 			SHM_PROTECT();
 			HANDLE_UNBLOCK_INTERRUPTIONS();
+#ifdef ZEND_MONITOR
+      zend_notify_function_copied(NULL /*new function*/, op_array);
+#endif
 			return op_array;
 		}
 		if (from_shared_memory) {
@@ -2674,10 +2677,6 @@ static int accel_startup(zend_extension *extension)
 #ifdef ZEND_WIN32
 	_setmaxstdio(2048); /* The default configuration is limited to 512 stdio files */
 #endif
-
-//#ifdef ZEND_MONITOR
-//  dataflow_monitor = get_zend_dataflow_monitor(); /* N.B.: required for shared module */
-//#endif
 
  	if (start_accel_module() == FAILURE) {
 		accel_startup_ok = 0;

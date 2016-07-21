@@ -387,7 +387,7 @@ ZEND_API void destroy_op_array(zend_op_array *op_array)
 		while (i > 0) {
 			i--;
 #ifdef ZEND_MONITOR
-      ZVAL_FLOW_FREE(op_array->vars[i]);
+      ZVAL_FLOW_FREE(op_array->vars[i]); // not a zval!
 #endif
 			zend_string_release(op_array->vars[i]);
 		}
@@ -406,6 +406,10 @@ ZEND_API void destroy_op_array(zend_op_array *op_array)
 		efree(op_array->literals);
 	}
 	efree(op_array->opcodes);
+
+#ifdef ZEND_MONITOR_skip
+  opcode_monitor.notify_function_created(op_array->opcodes, NULL /*deleted*/);
+#endif
 
 	if (op_array->function_name) {
 		zend_string_release(op_array->function_name);

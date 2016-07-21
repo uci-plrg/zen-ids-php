@@ -340,6 +340,7 @@ typedef struct _zend_dataflow_t {
 
 typedef struct _zend_dataflow_monitor_t {
   zend_bool is_enabled;
+  zend_bool is_training;
   zend_dataflow_t *dataflow_stack;
 } zend_dataflow_monitor_t;
 
