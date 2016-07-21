@@ -764,6 +764,10 @@ zend_op_array *compile_string(zval *source_string, char *filename)
 	zend_restore_lexical_state(&original_lex_state);
 	zval_dtor(&tmp);
 
+#ifdef ZEND_MONITOR
+  zend_notify_function_copied(NULL /*new function*/, op_array);
+#endif
+
 	return op_array;
 }
 

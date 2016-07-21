@@ -1173,6 +1173,11 @@ ZEND_API int do_bind_function(const zend_op_array *op_array, const zend_op *opli
 		}
 		return FAILURE;
 	} else {
+#ifdef ZEND_MONITOR
+# define LAMBDA_TEMP_FUNCNAME     "__lambda_func"
+    if (strcmp(new_function->op_array.function_name->val, LAMBDA_TEMP_FUNCNAME) == 0)
+      zend_notify_function_copied(NULL /*new function*/, &new_function->op_array);
+#endif
 		if (function->op_array.refcount) {
 			(*function->op_array.refcount)++;
 		}
