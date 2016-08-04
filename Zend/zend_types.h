@@ -870,6 +870,15 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
     }  \
 	} while (0)
 
+# define ZVAL_FLOW_FREE_HT(val, ht) \
+  do { \
+    if (UNEXPECTED(dataflow_monitor.is_enabled) && \
+        ((ht)->u.v.reserve & HASH_RESERVE_INTERNAL) == 0)  { \
+      dataflow_monitor.dataflow_stack->src = (val);   \
+      dataflow_monitor.dataflow_stack++;            \
+    }  \
+	} while (0)
+
 # define ZVAL_FLOW(z, v) \
 	do { \
     if (UNEXPECTED(dataflow_monitor.is_enabled)) { \
@@ -879,13 +888,14 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
     }  \
 	} while (0)
 
-# define ZVAL_FLOW_EX(z, v, c) \
+# define ZVAL_FLOW_HT(z, val, ht) \
 	do { \
-    if (UNEXPECTED(dataflow_monitor.is_enabled)) {      \
-      dataflow_monitor.dataflow_stack->dst = (z);       \
-      dataflow_monitor.dataflow_stack->src = (v);       \
-      dataflow_monitor.dataflow_stack->container = (c); \
-      dataflow_monitor.dataflow_stack++;                \
+    if (UNEXPECTED(dataflow_monitor.is_enabled) && (ht) != NULL && \
+        ((ht)->u.v.reserve & HASH_RESERVE_INTERNAL) == 0)  { \
+      dataflow_monitor.dataflow_stack->dst = (z);        \
+      dataflow_monitor.dataflow_stack->src = (val);      \
+      dataflow_monitor.dataflow_stack->container = (ht); \
+      dataflow_monitor.dataflow_stack++;                 \
     }  \
 	} while (0)
 
@@ -898,6 +908,13 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 		Z_TYPE_INFO_P(z) = t;							\
     ZVAL_FLOW(v, z); \
 	} while (0)
+#  define ZVAL_COPY_VALUE_INT_EX(z, v, gc, t)				\
+	do {												\
+		uint32_t _w2 = v->value.ww.w2;					\
+		Z_COUNTED_P(z) = gc;							\
+		z->value.ww.w2 = _w2;							\
+		Z_TYPE_INFO_P(z) = t;							\
+	} while (0)
 # elif SIZEOF_SIZE_T == 8
 #  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\
 	do {												\
@@ -905,9 +922,24 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 		Z_TYPE_INFO_P(z) = t;							\
     ZVAL_FLOW(v, z); \
 	} while (0)
+#  define ZVAL_COPY_VALUE_INT_EX(z, v, gc, t)				\
+	do {												\
+		Z_COUNTED_P(z) = gc;							\
+		Z_TYPE_INFO_P(z) = t;							\
+	} while (0)
 # else
 #  error "Unknown SIZEOF_SIZE_T"
 # endif
+# define ZVAL_COPY_VALUE_HT(z, v, ht)							\
+	do {												\
+		zval *_z1 = (z);								\
+		const zval *_z2 = (v);							\
+		zend_refcounted *_gc = Z_COUNTED_P(_z2);		\
+		uint32_t _t = Z_TYPE_INFO_P(_z2);				\
+		ZVAL_COPY_VALUE_INT_EX(_z1, _z2, _gc, _t);			\
+    ZVAL_FLOW_HT(v, z, ht); \
+	} while (0)
+
 #else /* !ZEND_MONITOR */
 # if SIZEOF_SIZE_T == 4
 #  define ZVAL_COPY_VALUE_EX(z, v, gc, t)				\
@@ -926,6 +958,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 # else
 #  error "Unknown SIZEOF_SIZE_T"
 # endif
+# define ZVAL_COPY_VALUE_HT(z, v, ht)	ZVAL_COPY_VALUE(z, v)
 #endif
 
 #define ZVAL_COPY_VALUE(z, v)							\

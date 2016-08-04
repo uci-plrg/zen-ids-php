@@ -1808,6 +1808,12 @@ void php_request_shutdown_for_hook(void *dummy)
 void php_request_shutdown(void *dummy)
 {
 	zend_bool report_memleaks;
+#ifdef ZEND_MONITOR
+  extern zend_dataflow_monitor_t dataflow_monitor;
+  zend_bool was_enabled = dataflow_monitor.is_enabled;
+
+  dataflow_monitor.is_enabled = 0;
+#endif
 
 	report_memleaks = PG(report_memleaks);
 
@@ -1919,6 +1925,10 @@ void php_request_shutdown(void *dummy)
 #ifdef HAVE_DTRACE
 	DTRACE_REQUEST_SHUTDOWN(SAFE_FILENAME(SG(request_info).path_translated), SAFE_FILENAME(SG(request_info).request_uri), (char *)SAFE_FILENAME(SG(request_info).request_method));
 #endif /* HAVE_DTRACE */
+
+#ifdef ZEND_MONITOR
+  dataflow_monitor.is_enabled = was_enabled;
+#endif
 }
 /* }}} */
 

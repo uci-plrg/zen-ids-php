@@ -35,6 +35,10 @@
 #include "zend_execute.h"
 #include "zend_vm.h"
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 #define ZEND_IS_CONSTANT_TYPE(t)	((t) == IS_CONSTANT)
 
 void zend_optimizer_pass1(zend_op_array *op_array, zend_optimizer_ctx *ctx)

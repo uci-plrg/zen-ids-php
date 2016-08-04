@@ -24,6 +24,10 @@
 #include "zend_call_graph.h"
 #include "zend_worklist.h"
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 //#define LOG_SSA_RANGE
 //#define LOG_NEG_RANGE
 #define SYM_RANGE

@@ -44,6 +44,7 @@
 
 #ifdef ZEND_MONITOR
 # define HASH_RESERVE_TAINT        (1<<0)
+# define HASH_RESERVE_INTERNAL     (1<<1)
 #endif
 
 #define HASH_MASK_CONSISTENCY      0xc0

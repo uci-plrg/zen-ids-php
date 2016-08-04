@@ -25,6 +25,10 @@
 #include "zend_persist.h"
 #include "zend_shared_alloc.h"
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 #if SIZEOF_SIZE_T <= SIZEOF_ZEND_LONG
 /* If sizeof(void*) == sizeof(ulong) we can use zend_hash index functions */
 # define accel_xlat_set(old, new)	zend_hash_index_add_new_ptr(&ZCG(bind_hash), (zend_ulong)(zend_uintptr_t)(old), (new))

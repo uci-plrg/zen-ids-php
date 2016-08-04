@@ -587,10 +587,7 @@ static zend_always_inline zval *_zend_hash_add_or_update_i(HashTable *ht, zend_s
 			if (ht->pDestructor) {
 				ht->pDestructor(data);
 			}
-			ZVAL_COPY_VALUE(data, pData);
-#ifdef ZEND_MONITOR_
-      ZVAL_FLOW_EX(data, pData, ht);
-#endif
+			ZVAL_COPY_VALUE_HT(data, pData, ht);
 			return data;
 		}
 	}
@@ -612,10 +609,7 @@ add_to_hash:
 		zend_string_hash_val(key);
 	}
 	p->h = h = ZSTR_H(key);
-	ZVAL_COPY_VALUE(&p->val, pData);
-#ifdef ZEND_MONITOR_
-  ZVAL_FLOW(&p->val, pData, ht);
-#endif
+	ZVAL_COPY_VALUE_HT(&p->val, pData, ht);
 	nIndex = h | ht->nTableMask;
 	Z_NEXT(p->val) = HT_HASH(ht, nIndex);
 	HT_HASH(ht, nIndex) = HT_IDX_TO_HASH(idx);
@@ -738,7 +732,7 @@ static zend_always_inline zval *_zend_hash_index_add_or_update_i(HashTable *ht, 
 				if (ht->pDestructor) {
 					ht->pDestructor(&p->val);
 				}
-				ZVAL_COPY_VALUE(&p->val, pData);
+				ZVAL_COPY_VALUE_HT(&p->val, pData, ht);
 				if ((zend_long)h >= (zend_long)ht->nNextFreeElement) {
 					ht->nNextFreeElement = h < ZEND_LONG_MAX ? h + 1 : ZEND_LONG_MAX;
 				}
@@ -780,7 +774,7 @@ add_to_packed:
 		}
 		p->h = h;
 		p->key = NULL;
-		ZVAL_COPY_VALUE(&p->val, pData);
+		ZVAL_COPY_VALUE_HT(&p->val, pData, ht);
 
 		return &p->val;
 
@@ -796,7 +790,7 @@ convert_to_hash:
 			if (ht->pDestructor) {
 				ht->pDestructor(&p->val);
 			}
-			ZVAL_COPY_VALUE(&p->val, pData);
+			ZVAL_COPY_VALUE_HT(&p->val, pData, ht);
 			if ((zend_long)h >= (zend_long)ht->nNextFreeElement) {
 				ht->nNextFreeElement = h < ZEND_LONG_MAX ? h + 1 : ZEND_LONG_MAX;
 			}
@@ -820,7 +814,7 @@ add_to_hash:
 	p->h = h;
 	p->key = NULL;
 	nIndex = h | ht->nTableMask;
-	ZVAL_COPY_VALUE(&p->val, pData);
+	ZVAL_COPY_VALUE_HT(&p->val, pData, ht);
 	Z_NEXT(p->val) = HT_HASH(ht, nIndex);
 	HT_HASH(ht, nIndex) = HT_IDX_TO_HASH(idx);
 
@@ -890,7 +884,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
         if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
         pNew = ht->arData + iNew;
         if (pOld != pNew)
-          ZVAL_FLOW_EX(&pOld->val, &pNew->val, ht);
+          ZVAL_FLOW_HT(&pOld->val, &pNew->val, ht);
         iNew++;
       }
     }
@@ -935,7 +929,7 @@ ZEND_API int ZEND_FASTCALL zend_hash_rehash(HashTable *ht)
 					while (++i < ht->nNumUsed) {
 						p++;
 						if (EXPECTED(Z_TYPE_INFO(p->val) != IS_UNDEF)) {
-							ZVAL_COPY_VALUE(&q->val, &p->val);
+							ZVAL_COPY_VALUE_HT(&q->val, &p->val, ht);
 							q->h = p->h;
 							nIndex = q->h | ht->nTableMask;
 							q->key = p->key;
@@ -954,7 +948,7 @@ ZEND_API int ZEND_FASTCALL zend_hash_rehash(HashTable *ht)
 					while (++i < ht->nNumUsed) {
 						p++;
 						if (EXPECTED(Z_TYPE_INFO(p->val) != IS_UNDEF)) {
-							ZVAL_COPY_VALUE(&q->val, &p->val);
+							ZVAL_COPY_VALUE_HT(&q->val, &p->val, ht);
 							q->h = p->h;
 							nIndex = q->h | ht->nTableMask;
 							q->key = p->key;
@@ -1023,6 +1017,9 @@ static zend_always_inline void _zend_hash_del_el_ex(HashTable *ht, uint32_t idx,
 	if (ht->pDestructor) {
 		zval tmp;
 		ZVAL_COPY_VALUE(&tmp, &p->val);
+#ifdef ZEND_MONITOR_
+    ZVAL_FLOW_FREE_HT(&tmp, ht);
+#endif
 		ZVAL_UNDEF(&p->val);
 		ht->pDestructor(&tmp);
 	} else {
@@ -1119,6 +1116,9 @@ ZEND_API int ZEND_FASTCALL zend_hash_del_ind(HashTable *ht, zend_string *key)
 					if (ht->pDestructor) {
 						zval tmp;
 						ZVAL_COPY_VALUE(&tmp, data);
+#ifdef ZEND_MONITOR_
+            ZVAL_FLOW_FREE_HT(&tmp, ht);
+#endif
 						ZVAL_UNDEF(data);
 						ht->pDestructor(&tmp);
 					} else {
@@ -1715,7 +1715,7 @@ static zend_always_inline int zend_array_dup_element(HashTable *source, HashTabl
 			Z_ADDREF_P(data);
 		}
 	} while (0);
-	ZVAL_COPY_VALUE(&q->val, data);
+	ZVAL_COPY_VALUE_HT(&q->val, data, source);
 
 	q->h = p->h;
 	if (packed) {
@@ -1868,6 +1868,9 @@ ZEND_API HashTable* ZEND_FASTCALL zend_array_dup(HashTable *source)
 			target->nInternalPointer = 0;
 		}
 	}
+#ifdef ZEND_MONITOR
+  target->u.v.reserve = source->u.v.reserve;
+#endif
 	return target;
 }
 

@@ -53,6 +53,11 @@
 #define Z_OBJ_UNPROTECT_RECURSION(zval_p) \
 	Z_OBJ_DEC_APPLY_COUNT_P(zval_p)
 
+#ifdef ZEND_MONITOR
+# undef ZVAL_COPY_VALUE_EX
+# define ZVAL_COPY_VALUE_EX ZVAL_COPY_VALUE_INT_EX
+#endif
+
 /*
   __X accessors explanation:
 
@@ -771,7 +776,7 @@ write_std_property:
 		if (EXPECTED(property_offset != ZEND_DYNAMIC_PROPERTY_OFFSET)) {
 			ZVAL_COPY_VALUE(OBJ_PROP(zobj, property_offset), value);
 #ifdef ZEND_MONITOR
-      ZVAL_FLOW_EX(OBJ_PROP(zobj, property_offset), value, zobj->properties);
+      ZVAL_FLOW_HT(OBJ_PROP(zobj, property_offset), value, zobj->properties);
 #endif
 		} else {
 			if (!zobj->properties) {
@@ -1662,6 +1667,9 @@ ZEND_API int zend_std_cast_object_tostring(zval *readobj, zval *writeobj, int ty
 						zval_ptr_dtor(readobj);
 					}
 					ZVAL_COPY_VALUE(writeobj, &retval);
+#ifdef ZEND_MONITOR
+          ZVAL_FLOW(writeobj, &retval);
+#endif
 					return SUCCESS;
 				} else {
 					zval_ptr_dtor(&retval);

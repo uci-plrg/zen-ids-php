@@ -77,6 +77,10 @@ typedef int gid_t;
 #include <sys/stat.h>
 #include <errno.h>
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 #define SHM_PROTECT() \
 	do { \
 		if (ZCG(accel_directives).protect_memory) { \
@@ -1649,7 +1653,25 @@ zend_op_array *file_cache_compile_file(zend_file_handle *file_handle, int type)
 #endif
 
 /* zend_compile() replacement */
+#ifdef ZEND_MONITOR
+static zend_op_array *_persistent_compile_file(zend_file_handle *file_handle, int type);
+
 zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
+{
+  zend_op_array *ops;
+  zend_dataflow_monitor_t *dataflow_monitor = get_dataflow_monitor();
+  zend_bool was_enabled = dataflow_monitor->is_enabled;
+
+  dataflow_monitor->is_enabled = 0;
+  ops = _persistent_compile_file(file_handle, type);
+  dataflow_monitor->is_enabled = was_enabled;
+  return ops;
+}
+
+static zend_op_array *_persistent_compile_file(zend_file_handle *file_handle, int type)
+#else
+zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
+#endif
 {
 	zend_persistent_script *persistent_script = NULL;
 	char *key = NULL;

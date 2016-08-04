@@ -30,6 +30,10 @@
 #include "zend_cfg.h"
 #include "zend_dump.h"
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 /* Checks if a constant (like "true") may be replaced by its value */
 int zend_optimizer_get_persistent_constant(zend_string *name, zval *result, int copy)
 {

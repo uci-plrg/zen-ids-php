@@ -38,6 +38,10 @@
 # include "sys/mman.h"
 #endif
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 #define SEM_FILENAME_PREFIX ".ZendSem."
 #define S_H(s) g_shared_alloc_handler->s
 

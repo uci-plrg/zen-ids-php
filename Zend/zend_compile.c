@@ -34,6 +34,23 @@
 #include "zend_inheritance.h"
 #include "zend_vm.h"
 
+#ifdef ZEND_MONITOR
+# undef ZVAL_COPY_VALUE_EX
+# define ZVAL_COPY_VALUE_EX ZVAL_COPY_VALUE_INT_EX
+# undef zend_hash_init
+# define zend_hash_init(ht, nSize, pHashFunction, pDestructor, persistent) \
+    do { \
+      _zend_hash_init((ht), (nSize), (pDestructor), (persistent) ZEND_FILE_LINE_CC); \
+      (ht)->u.v.reserve |= HASH_RESERVE_INTERNAL; \
+    } while (0)
+# undef zend_hash_init_ex
+# define zend_hash_init_ex(ht, nSize, pHashFunction, pDestructor, persistent, bApplyProtection) \
+    do { \
+      _zend_hash_init_ex((ht), (nSize), (pDestructor), (persistent), (bApplyProtection) ZEND_FILE_LINE_CC); \
+      (ht)->u.v.reserve |= HASH_RESERVE_INTERNAL; \
+    } while (0)
+#endif
+
 #define SET_NODE(target, src) do { \
 		target ## _type = (src)->op_type; \
 		if ((src)->op_type == IS_CONST) { \
@@ -148,7 +165,7 @@ zend_dataflow_monitor_t dataflow_monitor = { 0 };
 void zend_monitor_init()
 {
   opcode_monitor = nop_opcode_monitor;
-  dataflow_monitor = nop_dataflow_monitor;
+  dataflow_monitor = nop_dataflow_monitor; // not allocating stack--never written in nop mode
 }
 
 zend_dataflow_monitor_t *get_dataflow_monitor()

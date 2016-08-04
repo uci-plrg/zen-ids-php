@@ -32,6 +32,10 @@
 #include "zend_inference.h"
 #include "zend_dump.h"
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 #ifndef HAVE_DFA_PASS
 # define HAVE_DFA_PASS 1
 #endif

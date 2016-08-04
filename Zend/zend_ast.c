@@ -26,6 +26,11 @@
 #include "zend_smart_str.h"
 #include "zend_exceptions.h"
 
+#ifdef ZEND_MONITOR
+# undef ZVAL_COPY_VALUE_EX
+# define ZVAL_COPY_VALUE_EX ZVAL_COPY_VALUE_INT_EX
+#endif
+
 ZEND_API zend_ast_process_t zend_ast_process = NULL;
 
 static inline void *zend_ast_alloc(size_t size) {

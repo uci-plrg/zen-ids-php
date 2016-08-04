@@ -27,6 +27,10 @@
 #include "zend_func_info.h"
 #include "zend_inference.h"
 
+#ifdef ZEND_MONITOR
+# include "ZendAccelerator.monitor_patch.h"
+#endif
+
 typedef uint32_t (*info_func_t)(const zend_call_info *call_info, const zend_ssa *ssa);
 
 typedef struct _func_info_t {

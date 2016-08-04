@@ -42,6 +42,21 @@
 #include <unistd.h>
 #endif
 
+#ifdef ZEND_MONITOR
+# undef zend_hash_init
+# define zend_hash_init(ht, nSize, pHashFunction, pDestructor, persistent) \
+    do { \
+      _zend_hash_init((ht), (nSize), (pDestructor), (persistent) ZEND_FILE_LINE_CC); \
+      (ht)->u.v.reserve |= HASH_RESERVE_INTERNAL; \
+    } while (0)
+# undef zend_hash_init_ex
+# define zend_hash_init_ex(ht, nSize, pHashFunction, pDestructor, persistent, bApplyProtection) \
+    do { \
+      _zend_hash_init_ex((ht), (nSize), (pDestructor), (persistent), (bApplyProtection) ZEND_FILE_LINE_CC); \
+      (ht)->u.v.reserve |= HASH_RESERVE_INTERNAL; \
+    } while (0)
+#endif
+
 ZEND_API void (*zend_execute_ex)(zend_execute_data *execute_data);
 ZEND_API void (*zend_execute_internal)(zend_execute_data *execute_data, zval *return_value);
 
