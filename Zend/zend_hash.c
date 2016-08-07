@@ -884,7 +884,7 @@ static void ZEND_FASTCALL zend_hash_do_resize(HashTable *ht)
         if (Z_TYPE(pOld->val) == IS_UNDEF) continue;
         pNew = ht->arData + iNew;
         if (pOld != pNew)
-          ZVAL_FLOW_HT(&pOld->val, &pNew->val, ht);
+          ZVAL_FLOW_HT(&pNew->val, &pOld->val, (HashTable *) (void *) 1ULL);
         iNew++;
       }
     }

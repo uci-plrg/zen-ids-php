@@ -891,7 +891,8 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 # define ZVAL_FLOW_HT(z, val, ht) \
 	do { \
     if (UNEXPECTED(dataflow_monitor.is_enabled) && (ht) != NULL && \
-        ((ht)->u.v.reserve & HASH_RESERVE_INTERNAL) == 0)  { \
+        ((ht) == (HashTable *) (void *) 1ULL || \
+         ((ht)->u.v.reserve & HASH_RESERVE_INTERNAL) == 0)) { \
       dataflow_monitor.dataflow_stack->dst = (z);        \
       dataflow_monitor.dataflow_stack->src = (val);      \
       dataflow_monitor.dataflow_stack->container = (ht); \
@@ -906,7 +907,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 		Z_COUNTED_P(z) = gc;							\
 		z->value.ww.w2 = _w2;							\
 		Z_TYPE_INFO_P(z) = t;							\
-    ZVAL_FLOW(v, z); \
+    ZVAL_FLOW(z, v); \
 	} while (0)
 #  define ZVAL_COPY_VALUE_INT_EX(z, v, gc, t)				\
 	do {												\
@@ -920,7 +921,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 	do {												\
 		Z_COUNTED_P(z) = gc;							\
 		Z_TYPE_INFO_P(z) = t;							\
-    ZVAL_FLOW(v, z); \
+    ZVAL_FLOW(z, v); \
 	} while (0)
 #  define ZVAL_COPY_VALUE_INT_EX(z, v, gc, t)				\
 	do {												\
