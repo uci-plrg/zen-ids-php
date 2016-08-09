@@ -6516,6 +6516,9 @@ ZEND_VM_C_LABEL(is_static_prop_return):
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -6671,7 +6674,7 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMPVAR|UNUSED|THIS|CV, C
 	USE_OPLINE
 	zend_free_op free_op1, free_op2;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -6702,15 +6705,14 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMPVAR|UNUSED|THIS|CV, C
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 ZEND_VM_C_LABEL(isset_no_object):
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -6721,7 +6723,7 @@ ZEND_VM_C_LABEL(isset_no_object):
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();

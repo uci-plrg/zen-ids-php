@@ -6004,6 +6004,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -6159,7 +6162,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	USE_OPLINE
 
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -6190,15 +6193,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -6208,7 +6210,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -6912,6 +6914,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -7976,6 +7981,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -9868,7 +9876,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	USE_OPLINE
 
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -9899,15 +9907,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -9917,7 +9924,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -11748,7 +11755,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	USE_OPLINE
 	zend_free_op free_op2;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -11779,15 +11786,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CO
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -11798,7 +11804,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -29713,7 +29719,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	USE_OPLINE
 
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -29744,15 +29750,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -29762,7 +29767,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -32292,7 +32297,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	USE_OPLINE
 
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -32323,15 +32328,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -32341,7 +32345,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -34199,7 +34203,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	USE_OPLINE
 	zend_free_op free_op2;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -34230,15 +34234,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_UN
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -34249,7 +34252,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -39993,6 +39996,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -40148,7 +40154,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	USE_OPLINE
 
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -40179,15 +40185,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -40197,7 +40202,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -41225,6 +41230,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -42913,6 +42921,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -46959,7 +46970,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	USE_OPLINE
 
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -46990,15 +47001,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -47008,7 +47018,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -50905,7 +50915,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	USE_OPLINE
 	zend_free_op free_op2;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -50936,15 +50946,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_CV
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -50955,7 +50964,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -52821,6 +52830,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -52976,7 +52988,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	USE_OPLINE
 	zend_free_op free_op1;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -53007,15 +53019,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CONST == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -53025,7 +53036,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -53410,6 +53421,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -54020,6 +54034,9 @@ is_static_prop_return:
 
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value);
+#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -55226,7 +55243,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	USE_OPLINE
 	zend_free_op free_op1;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -55257,15 +55274,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((IS_CV == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -55275,7 +55291,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
@@ -56483,7 +56499,7 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	USE_OPLINE
 	zend_free_op free_op1, free_op2;
 	zval *container;
-	int result;
+	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
 #ifdef ZEND_MONITOR
   zval *internal_value = NULL;
@@ -56514,15 +56530,14 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_ISSET_ISEMPTY_PROP_OBJ_SPEC_TM
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 isset_no_object:
-		result = ((opline->extended_value & ZEND_ISSET) == 0);
+		result = isset;
 	} else {
 		result =
-			((opline->extended_value & ZEND_ISSET) == 0) ^
-			Z_OBJ_HT_P(container)->has_property(container, offset, (opline->extended_value & ZEND_ISSET) == 0, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if (result && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
       zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_R, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, (((IS_TMP_VAR|IS_VAR) == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
     }
 #endif
 	}
@@ -56533,7 +56548,7 @@ isset_no_object:
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
 #ifdef ZEND_MONITOR
   if (internal_value != NULL) {
-    ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
+    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
   }
 #endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
