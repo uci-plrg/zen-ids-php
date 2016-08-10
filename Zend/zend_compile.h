@@ -877,6 +877,9 @@ ZEND_API zend_opcode_monitor_t *get_opcode_monitor();
 #define BP_VAR_IS			3
 #define BP_VAR_FUNC_ARG		4
 #define BP_VAR_UNSET		5
+#ifdef ZEND_MONITOR
+# define BP_VAR_REF		6
+#endif
 
 /* Bottom 3 bits are the type, top bits are arg num for BP_VAR_FUNC_ARG */
 #define BP_VAR_SHIFT 3

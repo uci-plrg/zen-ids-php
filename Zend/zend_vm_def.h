@@ -6674,11 +6674,8 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMPVAR|UNUSED|THIS|CV, C
 	USE_OPLINE
 	zend_free_op free_op1, free_op2;
 	zval *container;
-	int result, isset = ((opline->extended_value & ZEND_ISSET) == 0);
+	int result, isempty = ((opline->extended_value & ZEND_ISSET) == 0);
 	zval *offset;
-#ifdef ZEND_MONITOR
-  zval *internal_value = NULL;
-#endif
 
 	SAVE_OPLINE();
 	container = GET_OP1_OBJ_ZVAL_PTR(BP_VAR_IS);
@@ -6705,14 +6702,15 @@ ZEND_VM_HANDLER(148, ZEND_ISSET_ISEMPTY_PROP_OBJ, CONST|TMPVAR|UNUSED|THIS|CV, C
 	if (UNEXPECTED(!Z_OBJ_HT_P(container)->has_property)) {
 		zend_error(E_NOTICE, "Trying to check property of non-object");
 ZEND_VM_C_LABEL(isset_no_object):
-		result = isset;
+		result = isempty;
 	} else {
 		result =
-			isset ^ Z_OBJ_HT_P(container)->has_property(container, offset, isset, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
+			isempty ^ Z_OBJ_HT_P(container)->has_property(container, offset, isempty, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL));
 #ifdef ZEND_MONITOR
-    if ((isset == result) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
-      zval rv; // placeholder
-      internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_IS, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+    if ((isempty == (result == 0)) && EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
+      zval rv /* placeholder */, *internal_value = Z_OBJ_HT_P(container)->read_property(container, offset, BP_VAR_REF, ((OP2_TYPE == IS_CONST) ? CACHE_ADDR(Z_CACHE_SLOT_P(offset)) : NULL), &rv);
+      if (internal_value != NULL)
+        ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
     }
 #endif
 	}
@@ -6721,11 +6719,6 @@ ZEND_VM_C_LABEL(isset_no_object):
 	FREE_OP1();
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
-#ifdef ZEND_MONITOR
-  if (internal_value != NULL) {
-    ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
-  }
-#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 

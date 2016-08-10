@@ -890,8 +890,8 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 
 # define ZVAL_FLOW_HT(z, val, ht) \
 	do { \
-    if (UNEXPECTED(dataflow_monitor.is_enabled) && (ht) != NULL && \
-        ((ht) == (HashTable *) (void *) 1ULL || \
+    if (UNEXPECTED(dataflow_monitor.is_enabled) && \
+        ((ht) == NULL || (ht) == (HashTable *) (void *) 1ULL || \
          ((ht)->u.v.reserve & HASH_RESERVE_INTERNAL) == 0)) { \
       dataflow_monitor.dataflow_stack->dst = (z);        \
       dataflow_monitor.dataflow_stack->src = (val);      \

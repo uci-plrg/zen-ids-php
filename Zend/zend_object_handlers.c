@@ -588,12 +588,16 @@ ZEND_API uint32_t *zend_get_property_guard(zend_object *zobj, zend_string *membe
 
 zval *zend_std_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv) /* {{{ */
 {
-	zend_object *zobj;
+	zend_object *zobj = Z_OBJ_P(object);
 	zval tmp_member;
-	zval *retval;
 	uint32_t property_offset;
-
-	zobj = Z_OBJ_P(object);
+  int silent = (type == BP_VAR_IS) || (zobj->ce->__get != NULL);
+#ifdef ZEND_MONITOR
+	zval *retval = NULL;
+  silent |= (type == BP_VAR_REF);
+#else
+	zval *retval;
+#endif
 
 	ZVAL_UNDEF(&tmp_member);
 	if (UNEXPECTED(Z_TYPE_P(member) != IS_STRING)) {
@@ -607,7 +611,7 @@ zval *zend_std_read_property(zval *object, zval *member, int type, void **cache_
 #endif
 
 	/* make zend_get_property_info silent if we have getter - we may want to use it */
-	property_offset = zend_get_property_offset(zobj->ce, Z_STR_P(member), (type == BP_VAR_IS) || (zobj->ce->__get != NULL), cache_slot);
+	property_offset = zend_get_property_offset(zobj->ce, Z_STR_P(member), silent, cache_slot);
 
 	if (EXPECTED(property_offset != ZEND_WRONG_PROPERTY_OFFSET)) {
 		if (EXPECTED(property_offset != ZEND_DYNAMIC_PROPERTY_OFFSET)) {
@@ -620,7 +624,10 @@ zval *zend_std_read_property(zval *object, zval *member, int type, void **cache_
 			if (EXPECTED(retval)) goto exit;
 		}
 	} else if (UNEXPECTED(EG(exception))) {
-		retval = &EG(uninitialized_zval);
+#ifdef ZEND_MONITOR
+    if (type != BP_VAR_REF)
+#endif
+  		retval = &EG(uninitialized_zval);
 		goto exit;
 	}
 
@@ -649,6 +656,9 @@ zval *zend_std_read_property(zval *object, zval *member, int type, void **cache_
 		}
 	}
 
+#ifdef ZEND_MONITOR
+  if (type != BP_VAR_REF) {
+#endif
 	/* magic get */
 	if (zobj->ce->__get) {
 		uint32_t *guard = zend_get_property_guard(zobj, Z_STR_P(member));
@@ -687,6 +697,9 @@ zval *zend_std_read_property(zval *object, zval *member, int type, void **cache_
 		zend_error(E_NOTICE,"Undefined property: %s::$%s", ZSTR_VAL(zobj->ce->name), Z_STRVAL_P(member));
 	}
 	retval = &EG(uninitialized_zval);
+#ifdef ZEND_MONITOR
+  }
+#endif
 
 exit:
 	if (UNEXPECTED(Z_REFCOUNTED(tmp_member))) {
