@@ -5646,6 +5646,11 @@ void zend_compile_func_decl(znode *result, zend_ast *ast) /* {{{ */
 	zend_stack_del_top(&CG(loop_var_stack));
 
 	CG(active_op_array) = orig_op_array;
+
+#ifdef ZEND_MONITOR
+  if (dataflow_monitor.is_opcache_fallback)
+    zend_notify_function_copied(NULL /*new function*/, op_array);
+#endif
 }
 /* }}} */
 

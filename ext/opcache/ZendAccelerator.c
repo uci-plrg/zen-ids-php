@@ -79,6 +79,9 @@ typedef int gid_t;
 
 #ifdef ZEND_MONITOR
 # include "ZendAccelerator.monitor_patch.h"
+# define ZEND_MONITOR_SET_FALLBACK_MODE(mode) get_dataflow_monitor()->is_opcache_fallback = mode
+#else
+# define ZEND_MONITOR_SET_FALLBACK_MODE(mode)
 #endif
 
 #define SHM_PROTECT() \
@@ -1463,6 +1466,7 @@ static zend_persistent_script *opcache_compile_file(zend_file_handle *file_handl
 	/* check blacklist right after ensuring that file was opened */
 	if (file_handle->opened_path && zend_accel_blacklist_is_blacklisted(&accel_blacklist, ZSTR_VAL(file_handle->opened_path))) {
 		ZCSG(blacklist_misses)++;
+    ZEND_MONITOR_SET_FALLBACK_MODE(1);
 		*op_array_p = accelerator_orig_compile_file(file_handle, type);
 		return NULL;
 	}
@@ -1481,6 +1485,7 @@ static zend_persistent_script *opcache_compile_file(zend_file_handle *file_handl
 		 *  we won't cache it
 		 */
 		if (timestamp == 0) {
+      ZEND_MONITOR_SET_FALLBACK_MODE(1);
 			*op_array_p = accelerator_orig_compile_file(file_handle, type);
 			return NULL;
 		}
@@ -1488,12 +1493,14 @@ static zend_persistent_script *opcache_compile_file(zend_file_handle *file_handl
 		/* check if file is too new (may be it's not written completely yet) */
 		if (ZCG(accel_directives).file_update_protection &&
 		    ((accel_time_t)(ZCG(request_time) - ZCG(accel_directives).file_update_protection) < timestamp)) {
+      ZEND_MONITOR_SET_FALLBACK_MODE(1);
 			*op_array_p = accelerator_orig_compile_file(file_handle, type);
 			return NULL;
 		}
 
 		if (ZCG(accel_directives).max_file_size > 0 && size > (size_t)ZCG(accel_directives).max_file_size) {
 			ZCSG(blacklist_misses)++;
+      ZEND_MONITOR_SET_FALLBACK_MODE(1);
 			*op_array_p = accelerator_orig_compile_file(file_handle, type);
 			return NULL;
 		}
@@ -1662,9 +1669,13 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
   zend_dataflow_monitor_t *dataflow_monitor = get_dataflow_monitor();
   zend_bool was_enabled = dataflow_monitor->is_enabled;
 
+  // if (strstr(file_handle->filename, "/git/cache/") != NULL)
+  //  fprintf(stderr, "wait\n");
+
   dataflow_monitor->is_enabled = 0;
   ops = _persistent_compile_file(file_handle, type);
   dataflow_monitor->is_enabled = was_enabled;
+  ZEND_MONITOR_SET_FALLBACK_MODE(0);
   return ops;
 }
 
@@ -1680,13 +1691,16 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
 
 	if (!file_handle->filename || !ZCG(enabled) || !accel_startup_ok) {
 		/* The Accelerator is disabled, act as if without the Accelerator */
+    ZEND_MONITOR_SET_FALLBACK_MODE(1);
 		return accelerator_orig_compile_file(file_handle, type);
 #ifdef HAVE_OPCACHE_FILE_CACHE
 	} else if (ZCG(accel_directives).file_cache_only) {
+    ZEND_MONITOR_SET_FALLBACK_MODE(1);
 		return file_cache_compile_file(file_handle, type);
 #endif
 	} else if ((!ZCG(counted) && !ZCSG(accelerator_enabled)) ||
 	           (ZCSG(restart_in_progress) && accel_restart_is_active())) {
+    ZEND_MONITOR_SET_FALLBACK_MODE(1);
 #ifdef HAVE_OPCACHE_FILE_CACHE
 		if (ZCG(accel_directives).file_cache) {
 			return file_cache_compile_file(file_handle, type);
@@ -1718,6 +1732,7 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
 			/* try to find cached script by key */
 			key = accel_make_persistent_key(file_handle->filename, strlen(file_handle->filename), &key_length);
 			if (!key) {
+        ZEND_MONITOR_SET_FALLBACK_MODE(1);
 				return accelerator_orig_compile_file(file_handle, type);
 			}
 			persistent_script = zend_accel_hash_str_find(&ZCSG(hash), key, key_length);
@@ -1772,6 +1787,7 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
      */
 	if (!ZCG(counted)) {
 		if (accel_activate_add() == FAILURE) {
+      ZEND_MONITOR_SET_FALLBACK_MODE(1);
 #ifdef HAVE_OPCACHE_FILE_CACHE
 			if (ZCG(accel_directives).file_cache) {
 				return file_cache_compile_file(file_handle, type);
@@ -1848,6 +1864,7 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
 		if (ZSMMG(memory_exhausted) || ZCSG(restart_pending)) {
 			SHM_PROTECT();
 			HANDLE_UNBLOCK_INTERRUPTIONS();
+      ZEND_MONITOR_SET_FALLBACK_MODE(1);
 			return accelerator_orig_compile_file(file_handle, type);
 		}
 

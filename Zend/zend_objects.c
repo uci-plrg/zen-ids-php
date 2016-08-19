@@ -153,7 +153,13 @@ ZEND_API void zend_objects_destroy_object(zend_object *object)
 		}
 		orig_fake_scope = EG(fake_scope);
 		EG(fake_scope) = NULL;
+#ifdef ZEND_MONITOR
+    dataflow_monitor.is_destructor_call = 1;
+#endif
 		zend_call_method_with_0_params(&obj, object->ce, &destructor, ZEND_DESTRUCTOR_FUNC_NAME, NULL);
+#ifdef ZEND_MONITOR
+    dataflow_monitor.is_destructor_call = 0;
+#endif
 		if (old_exception) {
 			if (EG(exception)) {
 				zend_exception_set_previous(EG(exception), old_exception);
