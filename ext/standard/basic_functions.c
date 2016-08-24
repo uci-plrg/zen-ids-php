@@ -4028,7 +4028,7 @@ PHP_FUNCTION(long2ip)
  ********************/
 
 /* {{{ proto string getenv([string varname])
-   Get the value of an environment variable or every available environment variable 
+   Get the value of an environment variable or every available environment variable
    if no varname is present  */
 PHP_FUNCTION(getenv)
 {
@@ -4946,6 +4946,9 @@ static int user_shutdown_function_call(zval *zv) /* {{{ */
 		zend_string_release(function_name);
 	}
 
+#ifdef ZEND_MONITOR
+  dataflow_monitor.is_destructor_call = 1;
+#endif
 	if (call_user_function(EG(function_table), NULL,
 				&shutdown_function_entry->arguments[0],
 				&retval,
@@ -4954,6 +4957,9 @@ static int user_shutdown_function_call(zval *zv) /* {{{ */
 	{
 		zval_dtor(&retval);
 	}
+#ifdef ZEND_MONITOR
+  dataflow_monitor.is_destructor_call = 0;
+#endif
 	return 0;
 }
 /* }}} */

@@ -940,7 +940,7 @@ static zend_always_inline uint32_t zval_delref_p(zval* pz) {
 		zend_refcounted *_gc = Z_COUNTED_P(_z2);		\
 		uint32_t _t = Z_TYPE_INFO_P(_z2);				\
 		ZVAL_COPY_VALUE_INT_EX(_z1, _z2, _gc, _t);			\
-    ZVAL_FLOW_HT(v, z, ht); \
+    ZVAL_FLOW_HT(z, v, ht); \
 	} while (0)
 
 #else /* !ZEND_MONITOR */

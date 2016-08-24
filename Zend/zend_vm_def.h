@@ -6514,11 +6514,11 @@ ZEND_VM_C_LABEL(is_static_prop_return):
 		result = !value || !i_zend_is_true(value);
 	}
 
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), value); /* var address is always valid, even if outsmarted */
+#endif
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
-#ifdef ZEND_MONITOR
-  ZVAL_FLOW(EX_VAR(opline->result.var), value);
-#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
@@ -6661,11 +6661,11 @@ ZEND_VM_C_LABEL(isset_not_found):
 ZEND_VM_C_LABEL(isset_dim_obj_exit):
 	FREE_OP2();
 	FREE_OP1();
+#ifdef ZEND_MONITOR
+  ZVAL_FLOW(EX_VAR(opline->result.var), internal_value);
+#endif
 	ZEND_VM_SMART_BRANCH(result, 1);
 	ZVAL_BOOL(EX_VAR(opline->result.var), result);
-#ifdef ZEND_MONITOR
-  ZVAL_FLOW(internal_value, EX_VAR(opline->result.var));
-#endif
 	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
 }
 
