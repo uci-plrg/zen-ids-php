@@ -1,4 +1,4 @@
-# zen-ids-php
+# Zen IDS PHP Interpreter
 
 Welcome to the ZenIDS fork of the reference implementation of the PHP interpreter (version 7.1.0 alpha3). This fork contains several hooks that facilitate the [zen-ids](https://github.com/uci-plrg/zen-ids) PHP extension.
 
