@@ -11,6 +11,7 @@ Welcome to the ZenIDS fork of the reference implementation of the PHP interprete
     * `wget http://www.xmailserver.org/libxdiff-0.23.tar.gz`
     * `tar -xzf libxdiff-0.23.tar.gz && cd libxdiff-0.23`
     * `./configure && make && sudo make install`
+  * [Apache HTTP Server](http://httpd.apache.org/) with module [MPM Prefork](https://httpd.apache.org/docs/2.4/mod/prefork.html)
 2. Environment:
   * Export variable `$PHP_HOME` pointing to the local clone of this repository.
 3. Build:
@@ -19,4 +20,9 @@ Welcome to the ZenIDS fork of the reference implementation of the PHP interprete
     *  Use option `-d` for a debug build
   * `make -j`
   * `sudo make -j install`
+* Configure:
   * `sudo chmod a+x scripts/phpize` (this is basically a bug in the PHP build system)
+  * As root: 
+    * `cp $PHP_HOME/php7.conf.default /etc/apache2/mods-available/php7.conf`
+    * `cd /etc/apache2/mods-enabled`
+    * `ln -s ../mods-available/php7.conf php7.conf`
