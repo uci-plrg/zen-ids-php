@@ -11,7 +11,12 @@ Welcome to the ZenIDS fork of the reference implementation of the PHP interprete
     * `wget http://www.xmailserver.org/libxdiff-0.23.tar.gz`
     * `tar -xzf libxdiff-0.23.tar.gz && cd libxdiff-0.23`
     * `./configure && make && sudo make install`
-  * [Apache HTTP Server](http://httpd.apache.org/) with module [MPM Prefork](https://httpd.apache.org/docs/2.4/mod/prefork.html)
+  * [Apache HTTP Server](http://httpd.apache.org/) 
+    * Configure module [MPM Prefork](https://httpd.apache.org/docs/2.4/mod/prefork.html) (as root):
+      * `cd /etc/apache2/mods-enabled`
+      * `rm mpm_*`
+      * `ln -s ../mods-available/mpm_prefork.conf mpm_prefork.conf`
+      * `ln -s ../mods-available/mpm_prefork.load mpm_prefork.load`
 2. Environment:
   * Export variable `$PHP_HOME` pointing to the local clone of this repository.
 3. Build:
