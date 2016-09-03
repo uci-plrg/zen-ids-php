@@ -19,3 +19,4 @@ Welcome to the ZenIDS fork of the reference implementation of the PHP interprete
     *  Use option `-d` for a debug build
   * `make -j`
   * `sudo make -j install`
+  * `sudo chmod a+x scripts/phpize` (this is basically a bug in the PHP build system)
